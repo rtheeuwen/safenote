@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="js/angular.min.js"></script>
+    <script src="js/angular-route.min.js"></script>
+    <script src="js/appModule.js"></script>
+    <link rel="stylesheet" href="main.css">
+    <title>SafeNote Client 0.3</title>
+</head>
+<body ng-app="appModule">
+
+<div class="app" ng-controller="NotesController">
+    <img ng-show="!synchronized" class="loading" src="img/loading.gif"/>
+    <div class="outerdiv" ng-show="synchronized">
+    <table border=0 height="99%" max-height="99%">
+        <tr>
+            <td width="1%" oncontextmenu="return false;">
+            </td>
+            <td width="98%" height="100%" class="headerColumn" oncontextmenu="return false;">
+                <div class="headerList">
+
+                    <input type="text" class="search" id="search" ng-keypress="searchEnter($event)"
+                           ng-model="searchArgs" ng-blur="resetSearchArgs()" ng-click="clickSearch()"/>
+                    <img src="img/clear.gif" class="clearIcon" ng-click="clearSearchArgs()">
+
+
+                    <input type="text" class="input" id="headerInput" ng-click="newText()"
+                           ng-blur="resetNewText()" ng-keypress="create($event)" ng-model="newHeader"/>
+
+                    <div class="header" ng-repeat="header in headers">
+                        <label ng-click="open($index)" ng-class="{hover: hover}" ng-mouseenter="hover =true"
+                               ng-mouseleave="hover = false">
+                            {{header.header}}
+                        </label>
+                    </div>
+                </div>
+            </td>
+            <td width="1%" oncontextmenu="return false;">
+            </td>
+
+            <td width="60%">
+                <textarea id="editor" ng-model="text"></textarea>
+            </td>
+            <td width="20%" oncontextmenu="return false;" class="menuColumn" ondragstart="return false;" ondrop="return false;">
+                <a class="metadataTitle">{{title}}</a>
+                <br>
+                <a class="metadata" ng-show="title">{{wordCount}} words</a>
+                <br>
+                <a class="metadata" ng-show="title">{{charCount}} characters</a>
+                <br>
+                <div class="block"></div>
+                 <img ng-class="{icon: true, iconHover: hover0}" src="img/refresh.gif" ng-mouseenter="hover0 =true"
+                      ng-mouseleave="hover0 = false" ng-click="synchronize()">
+                </br>
+                </br>
+                <img ng-class="{icon: true, iconHover: hover2}" src="img/info.gif" ng-mouseenter="hover2 =true"
+                     ng-mouseleave="hover2 = false" ng-click="about()">
+                </br>
+                </br>
+                <img ng-class="{icon: true, iconHover: hover3}" src="img/save.gif" ng-mouseenter="hover3 =true"
+                     ng-mouseleave="hover3 = false">
+                </br>
+                </br>
+                <img ng-class="{icon: true, iconHover: hover4}" src="img/trash.gif" ng-mouseenter="hover4 =true"
+                     ng-mouseleave="hover4 = false" ng-click="delete()">
+                </br>
+                </br>
+                <a href="key.html">
+                    <img ng-class="{icon: true, iconHover: hover1}" src="img/export.gif" ng-mouseenter="hover1 =true"
+                         ng-mouseleave="hover1 = false">
+                </a>
+                </br>
+                </br>
+            </td>
+
+    </table>
+    </div>
+</div>
+
+</body>
+</html>
