@@ -4,6 +4,7 @@ package safenote.client.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.GsonHttpMessageConverter;
 import org.springframework.scheduling.annotation.Async;
@@ -36,7 +37,7 @@ public interface SynchronizationService {
 @Service
 class SynchronizationServiceImpl implements SynchronizationService {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     private final NoteRepository noteRepository;
     private final CryptoService cryptoService;
@@ -46,12 +47,16 @@ class SynchronizationServiceImpl implements SynchronizationService {
     private String publicKey;
     private long serverTimeOffset = 0;
 
-
     @Autowired
     public SynchronizationServiceImpl(Environment environment, NoteRepository noteRepository, CryptoService cryptoService) {
         this.noteRepository = noteRepository;
         this.remoteHostUri = "http://"+environment.getProperty("remotehostname")+":"+environment.getProperty("port")+"/"+environment.getProperty("contextroot")+"/";
         this.cryptoService = cryptoService;
+        HttpComponentsClientHttpRequestFactory httpRequestFactory = new HttpComponentsClientHttpRequestFactory();
+        httpRequestFactory.setConnectionRequestTimeout(1000);
+        httpRequestFactory.setConnectTimeout(1000);
+        httpRequestFactory.setReadTimeout(1000);
+        this.restTemplate = new RestTemplate(httpRequestFactory);
         List<HttpMessageConverter<?>> gson = new ArrayList<>();
         gson.add(new GsonHttpMessageConverter());
         restTemplate.setMessageConverters(gson);

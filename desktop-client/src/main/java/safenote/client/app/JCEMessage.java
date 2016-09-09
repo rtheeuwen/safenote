@@ -44,11 +44,12 @@ class JCEMessage {
         }
 
         display.close();
+
         try {
             Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (InterruptedException e) {}
+        finally {
+            System.exit(1);
         }
-        System.exit(1);
     }
 }

@@ -45,7 +45,7 @@ public abstract class AbstractAesService {
         } catch (NoSuchAlgorithmException | NoSuchPaddingException |
                 InvalidKeyException | InvalidParameterSpecException |
                 IllegalBlockSizeException | BadPaddingException e) {
-            throw new SecurityException("Encryption error.");
+            throw new SecurityException(e);
         }
     }
 
@@ -59,8 +59,7 @@ public abstract class AbstractAesService {
         } catch (NoSuchAlgorithmException | NoSuchPaddingException |
                 InvalidAlgorithmParameterException |
                 InvalidKeyException | IllegalBlockSizeException | BadPaddingException e) {
-            e.printStackTrace();
-            throw new AssertionError("Local data is compromised.");
+            throw new SecurityException(e);
         }
     }
 }

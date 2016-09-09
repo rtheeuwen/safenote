@@ -91,7 +91,7 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
             byte[] digest = mac.doFinal((note.getContent()+note.getHeader()+note.getId()).getBytes("ASCII"));
             return DatatypeConverter.printHexBinary(digest);
         } catch(NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e){
-            return null;
+            throw new RuntimeException(e);
         }
     }
 
@@ -110,7 +110,7 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
             message.setSignature(userId + DatatypeConverter.printBase64Binary(signature.sign()));
             return message;
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-            throw new SecurityException(e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 }

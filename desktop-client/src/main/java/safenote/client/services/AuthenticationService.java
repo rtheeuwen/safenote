@@ -52,12 +52,14 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
         FileIO.write(encipherStorage(keyStore, passphrase));
         synchronizationService.enlist(DatatypeConverter.printBase64Binary(((PublicKey) keyMap.get("publicKey")).getEncoded()));
         cryptoService.init((SecretKeySpec) keyMap.get("AES"), (SecretKeySpec) keyMap.get("HMAC"), (PrivateKey) keyMap.get("privateKey"));
+        synchronizationService.synchronize();
     }
 
     private void load(String passphrase){
         Map<String, Object> keyMap = KeyUtils.keyStoreFromByteArray(decipherStorage(FileIO.read(), passphrase));
         synchronizationService.enlist(DatatypeConverter.printBase64Binary(((PublicKey) keyMap.get("publicKey")).getEncoded()));
         cryptoService.init((SecretKeySpec) keyMap.get("AES"), (SecretKeySpec) keyMap.get("HMAC"), (PrivateKey) keyMap.get("privateKey"));
+        synchronizationService.synchronize();
     }
 
     private byte[] encipherStorage(byte[] keyStore, String password){
@@ -77,7 +79,7 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
             System.arraycopy(enciphered, 0, output, 128, enciphered.length);
             return output;
         } catch (NoSuchAlgorithmException e) {
-            throw new AssertionError();
+            throw new AssertionError(e);
         }
     }
 
@@ -99,7 +101,7 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
             md.update(password);
             return md.digest();
         } catch (NoSuchAlgorithmException e) {
-            throw new SecurityException(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 

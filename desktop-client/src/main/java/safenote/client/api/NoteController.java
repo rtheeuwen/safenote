@@ -92,7 +92,7 @@ public class NoteController {
         try {
             license = new BufferedReader(new InputStreamReader(new ClassPathResource("/gpl.txt").getInputStream())).lines().collect(Collectors.joining("\n"));
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new AssertionError(e.getCause());
         }
         return license;
     }

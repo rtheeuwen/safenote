@@ -1,15 +1,6 @@
 package safenote.client.model;
 
-/**
- * Provides a generic message structure which contains required metadata for making a request to the safenote server.
- * All messages sent need to be signed with the user's private key to ensure the server will only take authorized
- * requests into consideration. A message has an expiration date to ensure it cannot be stolen and resent by someone who
- * is monitoring the network.
- * @Author Roel Theeuwen
- * @Verion 1.0
- * @Since 2016-09-04
- * @param <T> type
- */
+
 public final class Message<T> {
 
     private T body;

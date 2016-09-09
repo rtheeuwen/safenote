@@ -29,8 +29,7 @@ class Launcher {
                 new Launcher().launch(properties);
                 new Window().initializeApplication("http://localhost:"+embeddedport + "/safenote/" + (FileIO.dataExists()?"login.html":"newkey.html"));
             } catch (IOException e) {
-                e.printStackTrace();
-                throw new AssertionError();
+                throw new AssertionError(e);
             }
         }
     }
