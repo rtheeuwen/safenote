@@ -24,9 +24,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import safenote.client.api.AuthenticationController;
 import safenote.client.api.NoteController;
-import safenote.client.persistence.IdGenerator;
 import safenote.client.services.CryptoService;
-import safenote.client.persistence.InstanceRepository;
 import safenote.client.persistence.NoteRepository;
 import safenote.client.services.SynchronizationService;
 import safenote.client.services.SearchService;
@@ -41,7 +39,7 @@ import java.util.Properties;
 @EnableWebMvc
 @EnableTransactionManagement
 @PropertySource(value = {"classpath:application.properties"})
-@ComponentScan(basePackageClasses = {NoteController.class, AuthenticationController.class, NoteRepository.class, InstanceRepository.class, IdGenerator.class, SynchronizationService.class, CryptoService.class, SearchService.class})
+@ComponentScan(basePackageClasses = {NoteController.class, AuthenticationController.class, NoteRepository.class, SynchronizationService.class, CryptoService.class, SearchService.class})
 public class Config extends WebMvcConfigurerAdapter {
 
 

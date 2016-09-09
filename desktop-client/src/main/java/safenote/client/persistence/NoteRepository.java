@@ -8,6 +8,7 @@ import safenote.client.model.Note;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 @Transactional
@@ -16,16 +17,9 @@ public class NoteRepository {
     @PersistenceContext
     private EntityManager entityManager;
 
-    private final IdGenerator idGenerator;
-
-    @Autowired
-    public NoteRepository(IdGenerator idGenerator) {
-        this.idGenerator = idGenerator;
-    }
-
     @Transactional(readOnly = true)
     public Note findOne(String id) {
-        return (Note) entityManager.createQuery("from " + Note.class.getName() + " WHERE id= "+id).getSingleResult();
+        return (Note) entityManager.createQuery("from " + Note.class.getName() + " WHERE id=:id").setParameter("id", id).getSingleResult();
     }
 
     @Transactional(readOnly = true)
@@ -55,8 +49,7 @@ public class NoteRepository {
         entityManager.createQuery("DELETE FROM " + Note.class.getName()).executeUpdate();
     }
 
-    @Transactional(readOnly = true)
     public String nextId(){
-        return idGenerator.nextId();
+        return UUID.randomUUID().toString();
     }
 }

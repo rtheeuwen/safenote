@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import safenote.client.services.AuthenticationService;
-import safenote.client.persistence.InstanceRepository;
 
 /**
  * This class serves as an endpoint for authentication
@@ -21,13 +20,11 @@ import safenote.client.persistence.InstanceRepository;
 @RequestMapping(value="/authentication", headers = "Accept=*/*", produces = MediaType.APPLICATION_JSON_VALUE)
 public class AuthenticationController {
 
-    private final InstanceRepository instanceRepository;
     private final AuthenticationService authenticationService;
 
     @Autowired
-    public AuthenticationController(InstanceRepository instanceRepository, AuthenticationService authenticationService) {
+    public AuthenticationController(AuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
-        this.instanceRepository = instanceRepository;
     }
 
     /**
@@ -39,7 +36,6 @@ public class AuthenticationController {
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity authenticate(@RequestBody String passphrase){
         try {
-            instanceRepository.init();
             authenticationService.authenticate(passphrase);
 
             return new ResponseEntity(HttpStatus.OK);

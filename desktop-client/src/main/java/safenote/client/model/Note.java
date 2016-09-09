@@ -1,9 +1,9 @@
 package safenote.client.model;
 
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
 
 @Entity
 public class Note{
@@ -104,9 +104,5 @@ public class Note{
         return this.hash;
     }
 
-    @Override
-    public int hashCode(){
-        return Integer.valueOf(id.substring(6)) ^ Integer.valueOf(modified) + content.charAt(content.length()-1);
-    }
 }
 
