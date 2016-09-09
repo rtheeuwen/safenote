@@ -98,7 +98,7 @@ public final class FileIO {
             Result qrCodeResult = new MultiFormatReader().decode(binaryBitmap, hintMap);
             return DatatypeConverter.parseBase64Binary(qrCodeResult.getText());
         } catch (IOException | NotFoundException e) {
-            throw new AssertionError();
+            throw new AssertionError(e);
         }
     }
 

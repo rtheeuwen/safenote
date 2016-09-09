@@ -23,7 +23,7 @@ public final class KeyUtils {
             KeyFactory kf = KeyFactory.getInstance("RSA");
             return kf.generatePrivate(keySpec);
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-            e.printStackTrace(); throw new AssertionError();
+            throw new AssertionError(e);
         }
     }
 
@@ -33,7 +33,7 @@ public final class KeyUtils {
             KeyFactory kf = KeyFactory.getInstance("RSA");
             return kf.generatePublic(keySpec);
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-            e.printStackTrace(); throw new AssertionError();
+            throw new AssertionError(e);
         }
     }
 
@@ -70,7 +70,7 @@ public final class KeyUtils {
             keyGenerator.init(256);
             return new SecretKeySpec(keyGenerator.generateKey().getEncoded(),"AES");
         } catch (NoSuchAlgorithmException e) {
-            throw new SecurityException(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -81,7 +81,7 @@ public final class KeyUtils {
             random.nextBytes(bytes);
             return new SecretKeySpec(bytes, "HmacSHA256");
         } catch (NoSuchAlgorithmException e) {
-            throw new SecurityException(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -93,7 +93,7 @@ public final class KeyUtils {
             kpg.initialize(rsaKGenSpec, random);
             return kpg.generateKeyPair();
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
-            throw new SecurityException(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 }

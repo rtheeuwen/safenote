@@ -43,7 +43,7 @@ public class AuthenticationController {
             authenticationService.authenticate(passphrase);
 
             return new ResponseEntity(HttpStatus.OK);
-        } catch (Exception e) {
+        } catch (SecurityException e) {
             return new ResponseEntity(HttpStatus.FORBIDDEN);
         }
     }

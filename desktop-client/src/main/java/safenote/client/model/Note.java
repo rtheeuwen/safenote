@@ -106,7 +106,7 @@ public class Note{
 
     @Override
     public int hashCode(){
-        return Integer.valueOf(id.substring(6));
+        return Integer.valueOf(id.substring(6)) ^ Integer.valueOf(modified) + content.charAt(content.length()-1);
     }
 }
 

@@ -1,5 +1,6 @@
 package safenote.client.persistence;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import safenote.client.model.Note;
@@ -15,6 +16,13 @@ public class NoteRepository {
     @PersistenceContext
     private EntityManager entityManager;
 
+    private final IdGenerator idGenerator;
+
+    @Autowired
+    public NoteRepository(IdGenerator idGenerator) {
+        this.idGenerator = idGenerator;
+    }
+
     @Transactional(readOnly = true)
     public Note findOne(String id) {
         return (Note) entityManager.createQuery("from " + Note.class.getName() + " WHERE id= "+id).getSingleResult();
@@ -27,7 +35,7 @@ public class NoteRepository {
     }
 
     public void create(Note note) {
-        entityManager.persist(note);
+            entityManager.persist(note);
     }
 
     public Note update(Note note) {
@@ -49,6 +57,6 @@ public class NoteRepository {
 
     @Transactional(readOnly = true)
     public String nextId(){
-        return InstanceRepository.deviceId + (findAll().stream().filter(note -> note.getId().substring(0, 10).equals(InstanceRepository.deviceId)).map(note -> note.getId().substring(10)).mapToInt(Integer::parseInt).max().orElse(-1)+1);
+        return idGenerator.nextId();
     }
 }
