@@ -6,6 +6,7 @@ import nl.safenote.services.CryptoService;
 import nl.safenote.services.NoteRepository;
 import nl.safenote.services.SearchService;
 import nl.safenote.services.SynchronizationService;
+import nl.safenote.utils.FileIO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
@@ -95,5 +96,10 @@ public class NoteController {
             throw new AssertionError(e.getCause());
         }
         return license;
+    }
+
+    @RequestMapping(value="key", method = RequestMethod.GET, produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> key(){
+        return new ResponseEntity<byte[]>(FileIO.getKeyAsImage(), HttpStatus.OK);
     }
 }

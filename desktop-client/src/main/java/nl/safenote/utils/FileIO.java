@@ -1,5 +1,6 @@
 package nl.safenote.utils;
 
+import com.google.common.io.ByteStreams;
 import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.BitMatrix;
@@ -37,6 +38,13 @@ public final class FileIO {
         return new File(homedir + "/key.png").exists();
     }
 
+    public static byte[] getKeyAsImage(){
+        try {
+            return ByteStreams.toByteArray(new FileInputStream(new File(homedir+"/key.png")));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * Generates and writes a QR code for the local keystore.
