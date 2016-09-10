@@ -11,7 +11,7 @@ import safenote.client.services.CryptoService;
 import safenote.client.services.SynchronizationService;
 import safenote.client.model.Header;
 import safenote.client.model.Note;
-import safenote.client.persistence.NoteRepository;
+import safenote.client.services.NoteRepository;
 import safenote.client.services.SearchService;
 
 import java.io.BufferedReader;
@@ -73,7 +73,7 @@ public class NoteController {
     }
 
     @RequestMapping(value="notes/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity DeleteNote(@PathVariable String id){
+    public ResponseEntity deleteNote(@PathVariable String id){
         Note note = noteRepository.findOne(id);
         noteRepository.delete(note);
         synchronizationService.delete(note);

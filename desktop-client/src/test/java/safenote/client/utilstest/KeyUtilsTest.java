@@ -1,4 +1,4 @@
-package safenote.client.test;
+package safenote.client.utilstest;
 
 import org.junit.Test;
 import safenote.client.utils.KeyUtils;

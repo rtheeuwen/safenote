@@ -20,8 +20,6 @@ public class Note {
 
     @Lob
     private String content;
-    private int wordCount;
-    private int charCount;
     private String modified;
     private long created;
     private String hash;
@@ -35,8 +33,6 @@ public class Note {
         this.id = id;
         this.header = header;
         this.setContent("");
-        this.setCharCount(0);
-        this.setWordCount(0);
         this.setModified(LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE));
         this.hash = "";
         this.deleted = false;
@@ -64,22 +60,6 @@ public class Note {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public int getWordCount() {
-        return wordCount;
-    }
-
-    public void setWordCount(int wordCount) {
-        this.wordCount = wordCount;
-    }
-
-    public int getCharCount() {
-        return charCount;
-    }
-
-    public void setCharCount(int charCount) {
-        this.charCount = charCount;
     }
 
     public String getModified() {

@@ -25,4 +25,17 @@ public final class Header {
         return header;
     }
 
+    @Override
+    public int hashCode(){
+        return id.hashCode()^header.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object){
+        if(object == this) return true;
+        if(!(object instanceof Header)) return false;
+        Header other = (Header) object;
+        return other.hashCode()==this.hashCode();
+    }
+
 }

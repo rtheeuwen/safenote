@@ -25,7 +25,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import safenote.client.api.AuthenticationController;
 import safenote.client.api.NoteController;
 import safenote.client.services.CryptoService;
-import safenote.client.persistence.NoteRepository;
+import safenote.client.services.NoteRepository;
 import safenote.client.services.SynchronizationService;
 import safenote.client.services.SearchService;
 

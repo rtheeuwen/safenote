@@ -16,7 +16,6 @@ import safenote.client.model.Message;
 import safenote.client.model.Note;
 import safenote.client.model.NoteList;
 import safenote.client.model.PublicKeyWrapper;
-import safenote.client.persistence.NoteRepository;
 
 import java.util.*;
 import java.util.concurrent.Future;
@@ -31,7 +30,7 @@ public interface SynchronizationService {
     void enlist(String publicKey);
     void send(Note note);
     void delete(Note note);
-    void synchronize();
+    boolean synchronize();
 }
 
 @Service
@@ -83,7 +82,7 @@ class SynchronizationServiceImpl implements SynchronizationService {
     }
 
     @Override
-    public void synchronize() {
+    public boolean synchronize() {
         if(this.serverTimeOffset==0) {
             try {
                 HttpHeaders headers = new HttpHeaders();
@@ -93,13 +92,14 @@ class SynchronizationServiceImpl implements SynchronizationService {
                 this.serverTimeOffset = responseEntity.getBody();
                 if (this.serverTimeOffset == 0)
                     this.serverTimeOffset--;
-                synchronize();
+                return synchronize();
             } catch (RestClientException e) {
-                e.printStackTrace();
+                return false;
             }
         } else {
             if (this.userId == null) {
                 this.userId = getSupplied(() -> restTemplate.postForObject(remoteHostUri + "enlist", new PublicKeyWrapper(this.publicKey), String.class));
+                return synchronize();
             } else {
                 try {
                     List<Note> notesList = noteRepository.findAll();
@@ -130,9 +130,10 @@ class SynchronizationServiceImpl implements SynchronizationService {
 
                     newNotes.get().stream().filter(n -> n.getHash().equals(cryptoService.checksum(n))).forEachOrdered(noteRepository::create);
                     deletedNotes.stream().filter(notes::containsKey).forEachOrdered(noteRepository::delete);
+                    return true;
 
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    return false;
                 }
             }
         }

@@ -14,8 +14,6 @@ public class Note{
 
     @Lob
     private String content;
-    private int wordCount;
-    private int charCount;
     private String modified;
     private long created;
     private String hash;
@@ -28,8 +26,6 @@ public class Note{
         this.id = id;
         this.header = header;
         this.setContent("");
-        this.setCharCount(0);
-        this.setWordCount(0);
         this.setModified(LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE));
         this.setCreated(System.currentTimeMillis());
         this.hash = "";
@@ -57,22 +53,6 @@ public class Note{
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public int getWordCount() {
-        return wordCount;
-    }
-
-    public void setWordCount(int wordCount) {
-        this.wordCount = wordCount;
-    }
-
-    public int getCharCount() {
-        return charCount;
-    }
-
-    public void setCharCount(int charCount) {
-        this.charCount = charCount;
     }
 
     public String getModified() {
@@ -104,5 +84,18 @@ public class Note{
         return this.hash;
     }
 
+    @Override
+    public int hashCode(){
+        return id.hashCode() ^ modified.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object){
+        if(object==this) return true;
+        if(!(object instanceof Note)) return false;
+        Note other = (Note) object;
+        if(other.hashCode()!=this.hashCode()) return false;
+        return (other.content.equals(this.content)&&(other.header.equals(this.header)));
+    }
 }
 

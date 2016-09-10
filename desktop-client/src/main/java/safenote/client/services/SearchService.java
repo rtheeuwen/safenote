@@ -6,7 +6,6 @@ import org.springframework.util.StringUtils;
 import safenote.client.model.Header;
 import safenote.client.model.Note;
 import safenote.client.model.Result;
-import safenote.client.persistence.NoteRepository;
 
 import java.util.Arrays;
 import java.util.List;

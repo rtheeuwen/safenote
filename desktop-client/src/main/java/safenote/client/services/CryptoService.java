@@ -50,8 +50,6 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
     public Note encipher(Note note) {
         Note copy = new Note();
         copy.setId(note.getId());
-        copy.setCharCount(note.getCharCount());
-        copy.setWordCount(note.getWordCount());
         copy.setModified(note.getModified());
         copy.setCreated(note.getCreated());
         copy.setHeader(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getHeader().getBytes(), this.AESKey)));
@@ -71,8 +69,6 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
         copy.setId(note.getId());
         copy.setHeader(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getHeader()), this.AESKey)));
         if(headerOnly) return copy;
-        copy.setCharCount(note.getCharCount());
-        copy.setWordCount(note.getWordCount());
         copy.setModified(note.getModified());
         String content = note.getContent();
         if(!Objects.equals(content, "") &&content!=null&&content.length()!=0) {
