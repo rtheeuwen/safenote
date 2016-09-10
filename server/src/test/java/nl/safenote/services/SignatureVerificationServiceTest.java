@@ -1,10 +1,9 @@
 package nl.safenote.services;
 
 
-import nl.safenote.model.Message;
-import nl.safenote.model.Note;
+import nl.safenote.server.model.Message;
+import nl.safenote.server.model.Note;
 import nl.safenote.server.model.UserPublicKey;
-import nl.safenote.utils.KeyUtils;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -14,9 +13,10 @@ import nl.safenote.server.persistence.UserPublicKeyRepository;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.*;
+import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -24,16 +24,24 @@ import static org.mockito.Mockito.*;
 
 public class SignatureVerificationServiceTest {
 
-    static CryptoService cryptoService;
+    static PrivateKey privateKey;
     static PublicKey publicKey;
     static UserPublicKey userPublicKey;
 
     @BeforeClass
     public static void init(){
-        cryptoService = new CryptoServiceImpl();
-        Map<String, Object> keyStore = KeyUtils.keyStoreFromByteArray(KeyUtils.generateKeyStore());
-        cryptoService.init((SecretKeySpec) keyStore.get("AES"), (SecretKeySpec) keyStore.get("HMAC"), (PrivateKey) keyStore.get("privateKey"));
-        publicKey = (PublicKey) keyStore.get("publicKey");
+
+        try {
+            SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+            RSAKeyGenParameterSpec rsaKGenSpec = new   RSAKeyGenParameterSpec(2048, RSAKeyGenParameterSpec.F4);
+            KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+            kpg.initialize(rsaKGenSpec, random);
+            KeyPair keyPair = kpg.generateKeyPair();
+            publicKey = keyPair.getPublic();
+            privateKey = keyPair.getPrivate();
+        } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
+            throw new AssertionError(e);
+        }
         userPublicKey = new UserPublicKey(DatatypeConverter.printBase64Binary(((publicKey.getEncoded()))));
         userPublicKey.setUserId("AAAAA");
     }
@@ -55,17 +63,12 @@ public class SignatureVerificationServiceTest {
         UserPublicKeyRepository repository = Mockito.mock(UserPublicKeyRepository.class);
         when(repository.findOne(userPublicKey.getUserId())).thenReturn(userPublicKey);
         SignatureVerificationService service = new SignatureVerificationServiceImpl(repository);
-        nl.safenote.model.Note note = new Note(UUID.randomUUID().toString(), "header");
+        Note note = new Note(UUID.randomUUID().toString(), "header");
         note.setContent("content");
-        note = cryptoService.encipher(note);
-        nl.safenote.model.Message<nl.safenote.model.Note> message = new Message<nl.safenote.model.Note>(note, System.currentTimeMillis()+5000);
-        cryptoService.sign(message, userPublicKey.getUserId());
-
-        nl.safenote.server.model.Message serverMessage = new nl.safenote.server.model.Message();
-        serverMessage.setBody(message.getBody());
-        serverMessage.setExpires(message.getExpires());
-        serverMessage.setSignature(message.getSignature());
-        assertEquals(service.verifySignature(serverMessage), userPublicKey.getUserId());
+        note.setHash("hash");
+        Message<Note> message = new Message<>(note, System.currentTimeMillis()+5000);
+        sign(message, userPublicKey.getUserId());
+        assertEquals(service.verifySignature(message), userPublicKey.getUserId());
     }
 
     @Test
@@ -73,18 +76,14 @@ public class SignatureVerificationServiceTest {
         UserPublicKeyRepository repository = Mockito.mock(UserPublicKeyRepository.class);
         when(repository.findOne(userPublicKey.getUserId())).thenReturn(userPublicKey);
         SignatureVerificationService service = new SignatureVerificationServiceImpl(repository);
-        nl.safenote.model.Note note = new Note(UUID.randomUUID().toString(), "header");
+        Note note = new Note(UUID.randomUUID().toString(), "header");
         note.setContent("content");
-        note = cryptoService.encipher(note);
-        nl.safenote.model.Message<nl.safenote.model.Note> message = new Message<nl.safenote.model.Note>(note, System.currentTimeMillis()+5000);
-        cryptoService.sign(message, userPublicKey.getUserId());
-
-        nl.safenote.server.model.Message serverMessage = new nl.safenote.server.model.Message();
-        serverMessage.setBody(message.getBody());
-        serverMessage.setExpires(message.getExpires());
-        serverMessage.setSignature("AAAAAbad signature");
+        note.setHash("hash");
+        Message<Note> message = new Message<>(note, System.currentTimeMillis()+5000);
+        sign(message, userPublicKey.getUserId());
+        message.setSignature("AAAAA bad signature");
         exception.expect(SecurityException.class);
-        service.verifySignature(serverMessage);
+        service.verifySignature(message);
     }
 
     @Test
@@ -92,17 +91,30 @@ public class SignatureVerificationServiceTest {
         UserPublicKeyRepository repository = Mockito.mock(UserPublicKeyRepository.class);
         when(repository.findOne(userPublicKey.getUserId())).thenReturn(userPublicKey);
         SignatureVerificationService service = new SignatureVerificationServiceImpl(repository);
-        nl.safenote.model.Note note = new Note(UUID.randomUUID().toString(), "header");
+        Note note = new Note(UUID.randomUUID().toString(), "header");
         note.setContent("content");
-        note = cryptoService.encipher(note);
-        nl.safenote.model.Message<nl.safenote.model.Note> message = new Message<nl.safenote.model.Note>(note, System.currentTimeMillis());
-        cryptoService.sign(message, userPublicKey.getUserId());
-
-        nl.safenote.server.model.Message serverMessage = new nl.safenote.server.model.Message();
-        serverMessage.setBody(message.getBody());
-        serverMessage.setExpires(message.getExpires());
-        serverMessage.setSignature(message.getSignature());
+        note.setHash("hash");
+        Message<Note> message = new Message<>(note, System.currentTimeMillis());
+        sign(message, userPublicKey.getUserId());
         exception.expect(SecurityException.class);
-        service.verifySignature(serverMessage);
+        service.verifySignature(message);
+    }
+
+    private Message sign(Message message, String userId) {
+        if(userId==null)throw new SecurityException("No user ID yet");
+        try {
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initSign(this.privateKey);
+            if(message.getBody() instanceof Note) {
+                Note note = (Note) message.getBody();
+                signature.update((note.getContent() + note.getHeader() + message.getExpires()).getBytes());
+            } else {
+                signature.update(Long.valueOf(message.getExpires()).toString().getBytes());
+            }
+            message.setSignature(userId + DatatypeConverter.printBase64Binary(signature.sign()));
+            return message;
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

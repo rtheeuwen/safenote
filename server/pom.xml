@@ -9,14 +9,6 @@
   </parent>
   <artifactId>server</artifactId>
   <packaging>war</packaging>
-  <dependencies>
-    <dependency>
-      <groupId>nl.safenote</groupId>
-      <artifactId>desktop-client</artifactId>
-        <version>0.0.1</version>
-        <scope>test</scope>
-    </dependency>
-  </dependencies>
   <build>
     <finalName>server</finalName>
       <plugins>
