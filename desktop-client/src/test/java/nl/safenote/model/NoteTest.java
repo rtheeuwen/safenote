@@ -1,6 +1,5 @@
-package nl.safenote.servermodel;
+package nl.safenote.model;
 
-import nl.safenote.model.Note;
 import org.junit.Test;
 
 import java.util.UUID;
