@@ -19,10 +19,7 @@ import safenote.client.model.Header;
 import safenote.client.model.Note;
 import safenote.client.testutils.TestHelper;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -30,12 +27,12 @@ import static org.junit.Assert.*;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration( classes = {safenote.client.integrationtests.fakeConfig.class})
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class IntegrationTests {
+public class IntegrationTest {
 
-    public static String firstCreatedNoteId;
-    public static String secondCreatedNoteId;
-    public static Note firstCreatedNote;
-    public static Note secondCreatedNote;
+    private static String firstCreatedNoteId;
+    private static String secondCreatedNoteId;
+    private static Note firstCreatedNote;
+    private static Note secondCreatedNote;
 
 
     @Autowired
