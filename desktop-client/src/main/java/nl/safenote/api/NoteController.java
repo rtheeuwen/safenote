@@ -97,9 +97,4 @@ public class NoteController {
         }
         return license;
     }
-
-    @RequestMapping(value="key", method = RequestMethod.GET, produces = MediaType.IMAGE_PNG_VALUE)
-    public ResponseEntity<byte[]> key(){
-        return new ResponseEntity<byte[]>(FileIO.getKeyAsImage(), HttpStatus.OK);
-    }
 }

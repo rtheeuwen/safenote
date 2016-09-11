@@ -20,7 +20,7 @@ class Launcher {
     public static void main(String[] args) throws Exception {
         if(Cipher.getMaxAllowedKeyLength("AES")==128){
             System.out.println("You need to install the Java cryptography extension in order to run SafeNote.");
-            new JCEMessage().initializeApplication();
+            System.exit(0);
         } else {
             try {
                 Properties properties = new Properties();

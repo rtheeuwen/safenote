@@ -109,14 +109,14 @@ class SynchronizationServiceImpl implements SynchronizationService {
                     List<String> deletedNotes = getDeleted();
 
                     List<String> idsOfNotesToSend;
-                    if (remoteChecksums.size() != 0) {
+                    if (remoteChecksums!=null&&!remoteChecksums.isEmpty()) {
                         idsOfNotesToSend = getUniqueInX(localChecksums, remoteChecksums);
                     } else {
                         idsOfNotesToSend = notesList.stream().map(Note::getId).collect(Collectors.toList());
                     }
 
                     List<String> idsOfNotesToGet;
-                    if (localChecksums.size() != 0) {
+                    if (localChecksums!=null&&!localChecksums.isEmpty()) {
                         idsOfNotesToGet = getUniqueInX(remoteChecksums, localChecksums);
                     } else {
                         idsOfNotesToGet = remoteChecksums.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());

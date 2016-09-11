@@ -1,13 +1,11 @@
 package nl.safenote.utils;
 
-import com.google.common.io.ByteStreams;
 import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import org.springframework.core.io.ClassPathResource;
 
 import javax.imageio.ImageIO;
 import javax.xml.bind.DatatypeConverter;
@@ -40,7 +38,14 @@ public final class FileIO {
 
     public static byte[] getKeyAsImage(){
         try {
-            return ByteStreams.toByteArray(new FileInputStream(new File(homedir+"/key.png")));
+            InputStream inputStream = new FileInputStream(new File(homedir+"/key.png"));
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int read;
+            while((read = inputStream.read(buffer))!=-1){
+                outputStream.write(buffer, 0, read);
+            }
+            return outputStream.toByteArray();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

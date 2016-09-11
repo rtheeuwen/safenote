@@ -1,5 +1,6 @@
 package nl.safenote.api;
 
+import nl.safenote.utils.FileIO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,7 +18,7 @@ import nl.safenote.services.AuthenticationService;
 @RestController
 @Transactional
 @CrossOrigin(origins = "*")
-@RequestMapping(value="/authentication", headers = "Accept=*/*", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(headers = "Accept=*/*")
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
@@ -33,7 +34,7 @@ public class AuthenticationController {
      * @param passphrase passprashe entered by user in plaintext
      * @return returns response code 200 if authentication was successful, if any exceptions occurs returns 403
      */
-    @RequestMapping(method = RequestMethod.POST)
+    @RequestMapping(value="/authentication", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity authenticate(@RequestBody String passphrase){
         try {
             authenticationService.authenticate(passphrase);
@@ -42,5 +43,10 @@ public class AuthenticationController {
         } catch (SecurityException e) {
             return new ResponseEntity(HttpStatus.FORBIDDEN);
         }
+    }
+
+    @RequestMapping(value="key", method = RequestMethod.GET, produces = MediaType.IMAGE_PNG_VALUE)
+    public byte[] key(){
+        return FileIO.getKeyAsImage();
     }
 }
