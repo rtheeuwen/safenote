@@ -51,16 +51,14 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
         byte[] keyStore = KeyUtils.generateKeyStore();
         Map<String, Object> keyMap = KeyUtils.keyStoreFromByteArray(keyStore);
         FileIO.write(encipherStorage(keyStore, passphrase));
-        synchronizationService.enlist(DatatypeConverter.printBase64Binary(((PublicKey) keyMap.get("publicKey")).getEncoded()));
         cryptoService.init((SecretKeySpec) keyMap.get("AES"), (SecretKeySpec) keyMap.get("HMAC"), (PrivateKey) keyMap.get("privateKey"));
-        synchronizationService.synchronize();
+        synchronizationService.enlist(DatatypeConverter.printBase64Binary(((PublicKey) keyMap.get("publicKey")).getEncoded()));
     }
 
     private void load(String passphrase){
         Map<String, Object> keyMap = KeyUtils.keyStoreFromByteArray(decipherStorage(FileIO.read(), passphrase));
-        synchronizationService.enlist(DatatypeConverter.printBase64Binary(((PublicKey) keyMap.get("publicKey")).getEncoded()));
         cryptoService.init((SecretKeySpec) keyMap.get("AES"), (SecretKeySpec) keyMap.get("HMAC"), (PrivateKey) keyMap.get("privateKey"));
-        synchronizationService.synchronize();
+        synchronizationService.enlist(DatatypeConverter.printBase64Binary(((PublicKey) keyMap.get("publicKey")).getEncoded()));
     }
 
     private byte[] encipherStorage(byte[] keyStore, String password){

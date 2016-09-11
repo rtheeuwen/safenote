@@ -12,11 +12,13 @@ import org.springframework.http.converter.json.GsonHttpMessageConverter;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import nl.safenote.model.Message;
 import nl.safenote.model.NoteList;
 
+import java.net.SocketTimeoutException;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -27,7 +29,7 @@ import java.util.stream.Collectors;
 
 public interface SynchronizationService {
 
-    void enlist(String publicKey);
+    boolean enlist(String publicKey);
     void send(Note note);
     void delete(Note note);
     boolean synchronize();
@@ -62,23 +64,9 @@ class SynchronizationServiceImpl implements SynchronizationService {
     }
 
     @Override
-    public void enlist(String publicKey) {
+    public boolean enlist(String publicKey) {
         this.publicKey = publicKey;
-        synchronize();
-    }
-
-    @Async
-    @Override
-    public void send(Note note) {
-        consume(note, n -> restTemplate.put(remoteHostUri, cryptoService.sign(new Message<>(n, getExpires()), this.userId), Message.class));
-    }
-
-    @Async
-    @Override
-    public void delete(Note note) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        consume(note, (n -> restTemplate.exchange(remoteHostUri, HttpMethod.DELETE, new HttpEntity<>(cryptoService.sign(new Message<>(n, getExpires()), this.userId), headers), String.class)));
+        return synchronize();
     }
 
     @Override
@@ -137,6 +125,20 @@ class SynchronizationServiceImpl implements SynchronizationService {
                 }
             }
         }
+    }
+
+    @Async
+    @Override
+    public void send(Note note) {
+        consume(note, n -> restTemplate.put(remoteHostUri, cryptoService.sign(new Message<>(n, getExpires()), this.userId), Message.class));
+    }
+
+    @Async
+    @Override
+    public void delete(Note note) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        consume(note, (n -> restTemplate.exchange(remoteHostUri, HttpMethod.DELETE, new HttpEntity<>(cryptoService.sign(new Message<>(n, getExpires()), this.userId), headers), String.class)));
     }
 
     @Async
