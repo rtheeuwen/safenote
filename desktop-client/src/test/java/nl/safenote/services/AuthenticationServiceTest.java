@@ -118,7 +118,6 @@ public class AuthenticationServiceTest {
         Map<String, Object> keyStore = KeyUtils.keyStoreFromByteArray(deciphered);
 
         verify(synchronizationService).enlist(DatatypeConverter.printBase64Binary(((PublicKey) keyStore.get("publicKey")).getEncoded()));
-        verify(synchronizationService).synchronize();
         verify(cryptoService).init((SecretKeySpec) keyStore.get("AES"), (SecretKeySpec) keyStore.get("HMAC"), (PrivateKey) keyStore.get("privateKey"));
     }
 }
