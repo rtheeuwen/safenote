@@ -13,6 +13,7 @@ import java.io.*;
 import java.security.*;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -61,7 +62,7 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
     }
 
     private void initializeServices(Quadruple<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> keyStore){
-        if(keyStore.getA().getAlgorithm()!="AES"||keyStore.getB().getAlgorithm()!="HmacSHA256") {
+        if(!Objects.equals(keyStore.getA().getAlgorithm(), "AES") || !Objects.equals(keyStore.getB().getAlgorithm(), "HmacSHA256")) {
             throw new IllegalArgumentException("Invalid keys");
         }
             this.cryptoService.init(keyStore.getA(), keyStore.getB(), keyStore.getC());
