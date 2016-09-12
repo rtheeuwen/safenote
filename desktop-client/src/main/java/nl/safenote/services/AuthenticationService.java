@@ -5,14 +5,12 @@ import nl.safenote.utils.KeyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import nl.safenote.utils.FileIO;
-import nl.safenote.utils.KeyUtils;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.security.*;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Objects;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
