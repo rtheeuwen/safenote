@@ -1,7 +1,7 @@
 package nl.safenote.model;
 
 
-public class Quadruple<A, B, C, D> {
+public final class Quadruple<A, B, C, D> {
 
     private final A a;
     private final B b;
