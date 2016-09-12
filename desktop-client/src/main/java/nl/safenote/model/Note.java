@@ -6,8 +6,14 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Entity
+@NamedQueries({
+        @NamedQuery(name = "findById", query = "SELECT n FROM Note n WHERE n.id = :id"),
+        @NamedQuery(name = "findAll", query = "FROM Note"),
+        @NamedQuery(name = "deleteAll", query = "DELETE FROM Note")
+})
 public class Note{
-
+    //TODO photo
+    //TODO // FIXME: 9/12/16 moar variaballs
     @Id
     private String id;
     private String header;

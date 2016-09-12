@@ -1,5 +1,7 @@
 package nl.safenote.utils;
 
+import nl.safenote.model.Quadruple;
+
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
@@ -55,13 +57,12 @@ public final class KeyUtils {
         return total;
     }
 
-    public static Map<String, Object> keyStoreFromByteArray(byte[] total){
-        Map<String, Object> keyStore = new HashMap<>();
-        keyStore.put("AES", new SecretKeySpec(Arrays.copyOfRange(total, 0, 32), "AES"));
-        keyStore.put("HMAC", new SecretKeySpec(Arrays.copyOfRange(total, 32, 288), "HmacSHA256"));
-        keyStore.put("publicKey", decodePublicKey(Arrays.copyOfRange(total, 288, 582)));
-        keyStore.put("privateKey", decodePrivateKey(Arrays.copyOfRange(total, 582, total.length)));
-        return keyStore;
+    public static Quadruple<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> keyStoreFromByteArray(byte[] total){
+        return new Quadruple<>(new SecretKeySpec(Arrays.copyOfRange(total, 0, 32), "AES"),
+                new SecretKeySpec(Arrays.copyOfRange(total, 32, 288), "HmacSHA256"),
+                decodePrivateKey(Arrays.copyOfRange(total, 582, total.length)),
+                decodePublicKey(Arrays.copyOfRange(total, 288, 582))
+        );
     }
 
     private static SecretKeySpec generateAesKey(){

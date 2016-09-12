@@ -1,5 +1,6 @@
 package nl.safenote.utilstest;
 
+import nl.safenote.model.Quadruple;
 import nl.safenote.utils.KeyUtils;
 import org.junit.Test;
 import nl.safenote.utils.KeyUtils;
@@ -15,11 +16,7 @@ public class KeyUtilsTest {
     @Test
     public void keysAreConvertedToByteArrayAndBackCorrectly(){
         byte[] keystore = KeyUtils.generateKeyStore();
-        Map<String, Object> keyMap = KeyUtils.keyStoreFromByteArray(keystore);
+        Quadruple<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> quadruple = KeyUtils.keyStoreFromByteArray(KeyUtils.generateKeyStore());
 
-        assertTrue(keyMap.get("AES") instanceof SecretKeySpec);
-        assertTrue(keyMap.get("HMAC") instanceof SecretKeySpec);
-        assertTrue(keyMap.get("privateKey") instanceof PrivateKey);
-        assertTrue(keyMap.get("publicKey") instanceof PublicKey);
     }
 }

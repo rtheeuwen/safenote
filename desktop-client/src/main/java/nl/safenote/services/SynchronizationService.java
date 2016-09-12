@@ -58,7 +58,7 @@ class SynchronizationServiceImpl implements SynchronizationService {
         httpRequestFactory.setConnectTimeout(1000);
         httpRequestFactory.setReadTimeout(1000);
         this.restTemplate = new RestTemplate(httpRequestFactory);
-        List<HttpMessageConverter<?>> gson = new ArrayList<>();
+        List<HttpMessageConverter<?>> gson = new ArrayList<>(1);
         gson.add(new GsonHttpMessageConverter());
         restTemplate.setMessageConverters(gson);
     }

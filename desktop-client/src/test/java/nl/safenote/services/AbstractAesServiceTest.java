@@ -18,7 +18,7 @@ public class AbstractAesServiceTest {
 
     @Test
     public void encryptionIsDoneCorrectly(){
-        SecretKeySpec key = (SecretKeySpec) KeyUtils.keyStoreFromByteArray(KeyUtils.generateKeyStore()).get("AES");
+        SecretKeySpec key = KeyUtils.keyStoreFromByteArray(KeyUtils.generateKeyStore()).getA();
         String test = "test";
         ConcreteAesService aes = new ConcreteAesService();
         assertEquals(test, new String(aes.aesDecipher(aes.aesEncipher(test.getBytes(), key), key)));
@@ -26,11 +26,11 @@ public class AbstractAesServiceTest {
 
     @Test
     public void decryptionFailsWithInvalidKey(){
-        SecretKeySpec key = (SecretKeySpec) KeyUtils.keyStoreFromByteArray(KeyUtils.generateKeyStore()).get("AES");
+        SecretKeySpec key = KeyUtils.keyStoreFromByteArray(KeyUtils.generateKeyStore()).getA();
         String test = "test";
         ConcreteAesService aes = new ConcreteAesService();
         byte[] enciphered = aes.aesEncipher(test.getBytes(), key);
-        key = (SecretKeySpec) KeyUtils.keyStoreFromByteArray(KeyUtils.generateKeyStore()).get("AES");
+        key = KeyUtils.keyStoreFromByteArray(KeyUtils.generateKeyStore()).getA();
         exception.expect(SecurityException.class);
         aes.aesDecipher(enciphered, key);
     }

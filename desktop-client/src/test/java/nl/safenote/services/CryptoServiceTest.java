@@ -1,5 +1,6 @@
 package nl.safenote.services;
 
+import nl.safenote.model.Quadruple;
 import nl.safenote.utils.KeyUtils;
 import org.junit.Test;
 import nl.safenote.model.Message;
@@ -21,9 +22,9 @@ public class CryptoServiceTest {
     private final PublicKey publicKey;
 
     public CryptoServiceTest(){
-        Map<String, Object> keyStore = KeyUtils.keyStoreFromByteArray(KeyUtils.generateKeyStore());
-        cryptoService.init((SecretKeySpec) keyStore.get("AES"), (SecretKeySpec) keyStore.get("HMAC"), (PrivateKey) keyStore.get("privateKey"));
-        this.publicKey = (PublicKey) keyStore.get("publicKey");
+        Quadruple<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> keyStore = KeyUtils.keyStoreFromByteArray(KeyUtils.generateKeyStore());
+        cryptoService.init(keyStore.getA(), keyStore.getB(), keyStore.getC());
+        this.publicKey = keyStore.getD();
     }
 
     @Test

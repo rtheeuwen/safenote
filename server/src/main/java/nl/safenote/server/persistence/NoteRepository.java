@@ -19,6 +19,7 @@ public class NoteRepository {
     @Transactional(readOnly = true)
     @SuppressWarnings("unsafe")
     private Note findOne(String id, String userId) {
+        //TODO // FIXME: 9/12/16
         return (Note) entityManager.createQuery("from " + Note.class.getName() + " WHERE id=:id AND DELETED= false AND USERID=:userId").setParameter("id", id).setParameter("userId", userId).getSingleResult();
     }
 
@@ -30,6 +31,7 @@ public class NoteRepository {
     @Transactional(readOnly = true)
     @SuppressWarnings("unchecked")
     public Map<String, String> findChecksums(String userId) {
+        //TODO // FIXME: 9/12/16
         List<Note> notes = entityManager.createQuery("from " + Note.class.getName() + " WHERE USERID =:userId AND DELETED=false").setParameter("userId", userId).getResultList();
         return notes.stream().collect(Collectors.toMap(Note::getId, Note::getHash));
     }
@@ -37,6 +39,7 @@ public class NoteRepository {
     @Transactional(readOnly = true)
     @SuppressWarnings("unchecked")
     public List<String> findDeleted(String userId){
+        //TODO // FIXME: 9/12/16
         List<Note> notes = entityManager.createQuery("from " + Note.class.getName() + " WHERE USERID =:userId").setParameter("userId", userId).getResultList();
         return notes.stream().filter(note -> note.isDeleted()).map(Note::getId).collect(Collectors.toList());
     }
@@ -48,6 +51,7 @@ public class NoteRepository {
 
     @Transactional
     public void update(Note note){
+        //TODO // FIXME: 9/12/16
     entityManager.remove(findOne(note.getId(), note.getUserId()));
         entityManager.persist(note);
 

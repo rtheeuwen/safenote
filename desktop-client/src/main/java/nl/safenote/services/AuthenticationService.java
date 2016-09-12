@@ -1,5 +1,6 @@
 package nl.safenote.services;
 
+import nl.safenote.model.Quadruple;
 import nl.safenote.utils.KeyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
+
+import static nl.safenote.utils.KeyUtils.keyStoreFromByteArray;
 
 public interface AuthenticationService{
 
@@ -49,16 +52,20 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
 
     private void generate(String passphrase){
         byte[] keyStore = KeyUtils.generateKeyStore();
-        Map<String, Object> keyMap = KeyUtils.keyStoreFromByteArray(keyStore);
         FileIO.write(encipherStorage(keyStore, passphrase));
-        cryptoService.init((SecretKeySpec) keyMap.get("AES"), (SecretKeySpec) keyMap.get("HMAC"), (PrivateKey) keyMap.get("privateKey"));
-        synchronizationService.enlist(DatatypeConverter.printBase64Binary(((PublicKey) keyMap.get("publicKey")).getEncoded()));
+        initializeServices(keyStoreFromByteArray(keyStore));
     }
 
     private void load(String passphrase){
-        Map<String, Object> keyMap = KeyUtils.keyStoreFromByteArray(decipherStorage(FileIO.read(), passphrase));
-        cryptoService.init((SecretKeySpec) keyMap.get("AES"), (SecretKeySpec) keyMap.get("HMAC"), (PrivateKey) keyMap.get("privateKey"));
-        synchronizationService.enlist(DatatypeConverter.printBase64Binary(((PublicKey) keyMap.get("publicKey")).getEncoded()));
+        initializeServices(keyStoreFromByteArray(decipherStorage(FileIO.read(), passphrase)));
+    }
+
+    private void initializeServices(Quadruple<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> keyStore){
+        if(keyStore.getA().getAlgorithm()!="AES"||keyStore.getB().getAlgorithm()!="HmacSHA256") {
+            throw new IllegalArgumentException("Invalid keys");
+        }
+            this.cryptoService.init(keyStore.getA(), keyStore.getB(), keyStore.getC());
+            this.synchronizationService.enlist(DatatypeConverter.printBase64Binary(( keyStore.getD()).getEncoded()));
     }
 
     private byte[] encipherStorage(byte[] keyStore, String password){

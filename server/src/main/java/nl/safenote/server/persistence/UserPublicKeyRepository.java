@@ -19,6 +19,7 @@ public class UserPublicKeyRepository {
     @Transactional
     public String create(UserPublicKey userPublicKey){
         try {
+            //TODO // FIXME: 9/12/16
             UserPublicKey existingUserPublicKey = (UserPublicKey) entityManager.createQuery("from " + UserPublicKey.class.getName() + " WHERE PUBLICKEY = '" + userPublicKey.getPublicKey() + "'").getSingleResult();
             return existingUserPublicKey.getUserId();
         }catch (Exception e){

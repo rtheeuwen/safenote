@@ -42,6 +42,7 @@ public class MainController {
     public Message<Note> save(@RequestBody Message<Note> message){
             Note note = message.getBody();
             note.setUserId(signatureVerificationService.verifySignature(message));
+        //TODO // FIXME: 9/12/16
             try{
                 noteRepository.update(note);
             } catch(Exception e){

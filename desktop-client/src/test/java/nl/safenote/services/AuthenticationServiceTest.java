@@ -1,6 +1,7 @@
 package nl.safenote.services;
 
 
+import nl.safenote.model.Quadruple;
 import nl.safenote.utils.FileIO;
 import nl.safenote.utils.KeyUtils;
 import org.junit.*;
@@ -115,9 +116,9 @@ public class AuthenticationServiceTest {
         Method decipherStorage = AuthenticationServiceImpl.class.getDeclaredMethod("decipherStorage", params);
         decipherStorage.setAccessible(true);
         byte[] deciphered = (byte[]) decipherStorage.invoke(authenticationService, FileIO.read(), password);
-        Map<String, Object> keyStore = KeyUtils.keyStoreFromByteArray(deciphered);
+        Quadruple<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> keyStore = KeyUtils.keyStoreFromByteArray(deciphered);
 
-        verify(synchronizationService).enlist(DatatypeConverter.printBase64Binary(((PublicKey) keyStore.get("publicKey")).getEncoded()));
-        verify(cryptoService).init((SecretKeySpec) keyStore.get("AES"), (SecretKeySpec) keyStore.get("HMAC"), (PrivateKey) keyStore.get("privateKey"));
+        verify(synchronizationService).enlist(DatatypeConverter.printBase64Binary(( keyStore.getD()).getEncoded()));
+        verify(cryptoService).init(keyStore.getA(), keyStore.getB(), keyStore.getC());
     }
 }
