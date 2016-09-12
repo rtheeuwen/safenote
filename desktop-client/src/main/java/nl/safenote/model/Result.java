@@ -6,6 +6,8 @@ public final class Result<T> {
     private int score;
 
     public Result(T item) {
+        if(item==null)
+            throw new IllegalArgumentException("item cannot be null");
         this.item = item;
         this.score = 0;
     }

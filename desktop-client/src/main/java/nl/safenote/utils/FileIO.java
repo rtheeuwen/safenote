@@ -13,7 +13,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.channels.FileChannel;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -58,7 +57,8 @@ public final class FileIO {
      * @param data Keystore
      */
     public static void write(byte[] data) {
-
+        if(data==null)
+            throw new IllegalArgumentException("data cannot be null");
         File keyStore = new File(homedir + "/key.png");
         if (!dataExists()) {
             assert keyStore.mkdirs();

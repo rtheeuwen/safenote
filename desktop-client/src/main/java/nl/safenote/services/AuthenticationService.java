@@ -36,12 +36,14 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
 
     @Autowired
     AuthenticationServiceImpl(CryptoService cryptoService, SynchronizationService synchronizationService) {
+        assert cryptoService!= null&&synchronizationService!=null;
         this.cryptoService = cryptoService;
         this.synchronizationService = synchronizationService;
     }
 
     @Override
     public void authenticate(String passphrase) {
+        assert passphrase!= null;
         if(!FileIO.dataExists()){
             generate(passphrase);
         }else {

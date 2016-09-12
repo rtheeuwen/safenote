@@ -8,6 +8,8 @@ public final class Message<T> {
     private String signature;
 
     public Message(T body, long expires){
+        if(body==null)
+            throw new IllegalArgumentException("Body cannot be null.");
         this.body = body;
         this.expires = expires;
     }

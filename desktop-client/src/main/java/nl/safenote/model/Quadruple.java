@@ -9,6 +9,8 @@ public final class Quadruple<A, B, C, D> {
     private final D d;
 
     public Quadruple(A a, B b, C c, D d) {
+        if(a==null||b==null||c==null||d==null)
+            throw new IllegalArgumentException("Elements cannot be null");
         this.a = a;
         this.b = b;
         this.c = c;

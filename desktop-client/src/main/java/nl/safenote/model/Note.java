@@ -29,6 +29,8 @@ public class Note{
     }
 
     public Note(String id, String header){
+        if(id==null||header==null)
+            throw new IllegalArgumentException();
         this.id = id;
         this.header = header;
         this.setContent("");

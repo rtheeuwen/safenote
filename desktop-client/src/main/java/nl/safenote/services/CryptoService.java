@@ -41,6 +41,9 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
 
     @Override
     public void init(SecretKeySpec aesKey, SecretKeySpec hmacSecret, PrivateKey privateKey) {
+        assert aesKey!=null&&hmacSecret!=null&&privateKey!=null;
+        if(!Objects.equals(aesKey.getAlgorithm(), "AES")||!Objects.equals(hmacSecret.getAlgorithm(), "HmacSHA256"))
+            throw new IllegalArgumentException("Invalid keys");
         this.AESKey = aesKey;
         this.HMACSecret = hmacSecret;
         this.privateKey = privateKey;
@@ -48,6 +51,7 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
 
     @Override
     public Note encipher(Note note) {
+        //// TODO: 9/12/16 fixme
         Note copy = new Note();
         copy.setId(note.getId());
         copy.setModified(note.getModified());
@@ -65,6 +69,7 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
 
     @Override
     public Note decipher(Note note, boolean headerOnly) {
+        //TODO // FIXME: 9/12/16
         Note copy = new Note();
         copy.setId(note.getId());
         copy.setHeader(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getHeader()), this.AESKey)));
@@ -81,6 +86,7 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
 
     @Override
     public String checksum(Note note) {
+        //TODO // FIXME: 9/12/16 check input
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(this.HMACSecret);
@@ -93,6 +99,7 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
 
     @Override
     public Message sign(Message message, String userId) {
+        //TODO // FIXME: 9/12/16
         if(userId==null)throw new SecurityException("No user ID yet");
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");

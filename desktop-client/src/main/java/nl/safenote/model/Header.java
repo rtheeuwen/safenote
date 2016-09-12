@@ -10,6 +10,8 @@ package nl.safenote.model;
 public final class Header {
 
     public Header(String id, String header) {
+        if(id==null||header==null)
+            throw new IllegalArgumentException("Constructor parameters cannot be null");
         this.id = id;
         this.header = header;
     }

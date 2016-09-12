@@ -24,6 +24,7 @@ class SearchServiceImpl implements SearchService {
 
     @Autowired
     public SearchServiceImpl(NoteRepository noteRepository, CryptoService cryptoService) {
+        assert noteRepository!=null&&cryptoService!=null;
         this.noteRepository = noteRepository;
         this.cryptoService = cryptoService;
     }

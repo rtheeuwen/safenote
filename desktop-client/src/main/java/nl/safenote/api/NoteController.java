@@ -33,6 +33,7 @@ public class NoteController {
 
     @Autowired
     public NoteController(NoteRepository noteRepository, CryptoService cryptoService, SearchService searchService, SynchronizationService synchronizationService) {
+        assert noteRepository!=null&&cryptoService!=null&&searchService!=null&&synchronizationService!=null;
         this.noteRepository = noteRepository;
         this.cryptoService = cryptoService;
         this.searchService = searchService;
