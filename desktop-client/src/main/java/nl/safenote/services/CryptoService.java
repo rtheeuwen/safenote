@@ -1,6 +1,6 @@
 package nl.safenote.services;
 
-import nl.safenote.model.SafeNote;
+import nl.safenote.model.NoteBuilder;
 import org.springframework.stereotype.Service;
 import nl.safenote.model.Message;
 import nl.safenote.model.Note;
@@ -15,9 +15,9 @@ import java.util.Objects;
 
 public interface CryptoService{
     void init(SecretKeySpec aesKey, SecretKeySpec hmacSecret, PrivateKey privateKey);
-    SafeNote encipher(Note note);
-    Note decipher(SafeNote safeNote, boolean headerOnly);
-    String checksum(SafeNote note);
+    Note encipher(Note note);
+    Note decipher(Note note, boolean headerOnly);
+    String checksum(Note note);
     Message sign(Message message, String userId);
 }
 
@@ -51,49 +51,54 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
     }
 
     @Override
-    public SafeNote encipher(Note note) {
-        SafeNote safeNote = new SafeNote();
-        safeNote.setId(note.getId());
-        safeNote.setModified(note.getModified());
-        safeNote.setCreated(note.getCreated());
-        safeNote.setVersion(note.getVersion());
-        safeNote.setNoteType(note.getNoteType());
-        safeNote.setHeader(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getHeader().getBytes(), this.AESKey)));
+    public Note encipher(Note note) {
+        NoteBuilder noteBuilder = new NoteBuilder()
+                .setId(note.getId())
+                .setModified(note.getModified())
+                .setCreated(note.getCreated())
+                .setVersion(note.getVersion())
+                .setContentType(note.getContentType())
+                .setHeader(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getHeader().getBytes(), this.AESKey)));
+
         String content = note.getContent();
         if(!Objects.equals(content, "")&&content!=null) {
-            safeNote.setContent(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getContent().getBytes(), this.AESKey)));
+            noteBuilder.setContent(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getContent().getBytes(), this.AESKey)));
         } else {
-            safeNote.setContent("");
+            noteBuilder.setContent("");
         }
+        Note safeNote = noteBuilder.setEncrypted(true).build();
         safeNote.setHash(checksum(safeNote));
         return safeNote;
     }
 
     @Override
-    public Note decipher(SafeNote safeNote, boolean headerOnly) {
-        Note note = new Note();
-        note.setId(safeNote.getId());
-        note.setHeader(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(safeNote.getHeader()), this.AESKey)));
-        if(headerOnly) return note;
-        note.setModified(safeNote.getModified());
-        note.setCreated(safeNote.getCreated());
-        note.setVersion(safeNote.getVersion());
-        note.setNoteType(safeNote.getNoteType());
-        String content = safeNote.getContent();
+    public Note decipher(Note note, boolean headerOnly) {
+        NoteBuilder noteBuilder = new NoteBuilder()
+                .setId(note.getId())
+                .setHeader(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getHeader()), this.AESKey)));
+        if(headerOnly)
+            return noteBuilder.build();
+
+        noteBuilder.setModified(note.getModified())
+                .setCreated(note.getCreated())
+                .setVersion(note.getVersion())
+                .setContentType(note.getContentType());
+
+        String content = note.getContent();
         if(!Objects.equals(content, "") &&content!=null&&content.length()!=0) {
-            note.setContent(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(safeNote.getContent()), this.AESKey)));
+            noteBuilder.setContent(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getContent()), this.AESKey)));
         } else {
-            note.setContent("");
+            noteBuilder.setContent("");
         }
-        return note;
+        return noteBuilder.build();
     }
 
     @Override
-    public String checksum(SafeNote safeNote) {
+    public String checksum(Note note) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(this.HMACSecret);
-            byte[] digest = mac.doFinal((safeNote.getContent()+ safeNote.getHeader()+ safeNote.getId()).getBytes("ASCII"));
+            byte[] digest = mac.doFinal((note.getContent()+ note.getHeader()+ note.getId()).getBytes("ASCII"));
             return DatatypeConverter.printHexBinary(digest);
         } catch(NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e){
             throw new RuntimeException(e);
@@ -106,9 +111,9 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(this.privateKey);
-            if(message.getBody() instanceof SafeNote) {
-                SafeNote safeNote = (SafeNote) message.getBody();
-                signature.update((safeNote.getContent() + safeNote.getHeader() + message.getExpires()).getBytes());
+            if(message.getBody() instanceof Note) {
+                Note note = (Note) message.getBody();
+                signature.update((note.getContent() + note.getHeader() + message.getExpires()).getBytes());
             } else {
                 signature.update(Long.valueOf(message.getExpires()).toString().getBytes());
             }

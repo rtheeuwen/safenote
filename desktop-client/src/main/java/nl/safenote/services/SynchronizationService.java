@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 public interface SynchronizationService {
 
     boolean enlist(String publicKey);
-    void send(SafeNote safeNote);
-    void delete(SafeNote safeNote);
+    void send(Note note);
+    void delete(Note note);
     boolean synchronize();
 }
 
@@ -35,7 +35,7 @@ class SynchronizationServiceImpl implements SynchronizationService {
 
     private final RestTemplate restTemplate;
 
-    private final SafeNoteRepository safeNoteRepository;
+    private final NoteRepository noteRepository;
     private final CryptoService cryptoService;
 
     private final String remoteHostUri;
@@ -44,8 +44,8 @@ class SynchronizationServiceImpl implements SynchronizationService {
     private long serverTimeOffset = 0;
 
     @Autowired
-    public SynchronizationServiceImpl(Environment environment, SafeNoteRepository safeNoteRepository, CryptoService cryptoService) {
-        this.safeNoteRepository = safeNoteRepository;
+    public SynchronizationServiceImpl(Environment environment, NoteRepository noteRepository, CryptoService cryptoService) {
+        this.noteRepository = noteRepository;
         this.remoteHostUri = "http://"+environment.getProperty("remotehostname")+":"+environment.getProperty("port")+"/"+environment.getProperty("contextroot")+"/";
         this.cryptoService = cryptoService;
         HttpComponentsClientHttpRequestFactory httpRequestFactory = new HttpComponentsClientHttpRequestFactory();
@@ -90,9 +90,9 @@ class SynchronizationServiceImpl implements SynchronizationService {
                 return synchronize(++stackDepth);
             } else {
                 try {
-                    List<SafeNote> notesList = safeNoteRepository.findAll();
-                    Map<String, SafeNote> notes = notesList.stream().collect(Collectors.toMap(SafeNote::getId, n -> n));
-                    Map<String, String> localChecksums = notesList.stream().collect(Collectors.toMap(SafeNote::getId, SafeNote::getHash));
+                    List<Note> notesList = noteRepository.findAll();
+                    Map<String, Note> notes = notesList.stream().collect(Collectors.toMap(Note::getId, n -> n));
+                    Map<String, String> localChecksums = notesList.stream().collect(Collectors.toMap(Note::getId, Note::getHash));
                     Map<String, String> remoteChecksums = getChecksums();
                     List<String> deletedNotes = getDeleted();
 
@@ -100,7 +100,7 @@ class SynchronizationServiceImpl implements SynchronizationService {
                     if (remoteChecksums!=null&&!remoteChecksums.isEmpty()) {
                         idsOfNotesToSend = getUniqueInX(localChecksums, remoteChecksums);
                     } else {
-                        idsOfNotesToSend = notesList.stream().map(SafeNote::getId).collect(Collectors.toList());
+                        idsOfNotesToSend = notesList.stream().map(Note::getId).collect(Collectors.toList());
                     }
 
                     List<String> idsOfNotesToGet;
@@ -110,14 +110,14 @@ class SynchronizationServiceImpl implements SynchronizationService {
                         idsOfNotesToGet = remoteChecksums.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
                     }
 
-                    Future<SafeNoteList> newNotes = getNotes(idsOfNotesToGet);
+                    Future<NoteList> newNotes = getNotes(idsOfNotesToGet);
                     notes.entrySet().stream().filter(e -> idsOfNotesToSend.contains(e.getKey())).forEachOrdered(e -> send(e.getValue()));
                     while (!newNotes.isDone()) {
                         Thread.sleep(10L);
                     }
 
-                    newNotes.get().stream().filter(n -> n.getHash().equals(cryptoService.checksum(n))).forEachOrdered(safeNoteRepository::create);
-                    deletedNotes.stream().filter(notes::containsKey).forEachOrdered(safeNoteRepository::delete);
+                    newNotes.get().stream().filter(n -> n.getHash().equals(cryptoService.checksum(n))).forEachOrdered(noteRepository::create);
+                    deletedNotes.stream().filter(notes::containsKey).forEachOrdered(noteRepository::delete);
                     return true;
 
                 } catch (Exception e) {
@@ -129,21 +129,25 @@ class SynchronizationServiceImpl implements SynchronizationService {
 
     @Async
     @Override
-    public void send(SafeNote note) {
+    public void send(Note note) {
+        if(!note.isEncrypted())
+            throw new IllegalArgumentException("note must be encrypted");
         consume(note, n -> restTemplate.put(remoteHostUri, cryptoService.sign(new Message<>(n, getExpires()), this.userId), Message.class));
     }
 
     @Async
     @Override
-    public void delete(SafeNote note) {
+    public void delete(Note note) {
+        if(!note.isEncrypted())
+            throw new IllegalArgumentException("note must be encrypted");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         consume(note, (n -> restTemplate.exchange(remoteHostUri, HttpMethod.DELETE, new HttpEntity<>(cryptoService.sign(new Message<>(n, getExpires()), this.userId), headers), String.class)));
     }
 
     @Async
-    private Future<SafeNoteList> getNotes(List<String> ids){
-        return applyFunction(ids, list -> new AsyncResult<>(restTemplate.postForObject(remoteHostUri+"notes", cryptoService.sign(new Message<>(list, getExpires()), this.userId), SafeNoteList.class)));
+    private Future<NoteList> getNotes(List<String> ids){
+        return applyFunction(ids, list -> new AsyncResult<>(restTemplate.postForObject(remoteHostUri+"notes", cryptoService.sign(new Message<>(list, getExpires()), this.userId), NoteList.class)));
     }
 
     @SuppressWarnings("unchecked")

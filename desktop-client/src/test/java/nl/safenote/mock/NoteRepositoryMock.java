@@ -1,9 +1,8 @@
 package nl.safenote.mock;
 
-import nl.safenote.model.SafeNote;
 import nl.safenote.model.Note;
 import nl.safenote.services.CryptoService;
-import nl.safenote.services.SafeNoteRepository;
+import nl.safenote.services.NoteRepository;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,12 +11,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class SafeNoteRepositoryMock implements SafeNoteRepository {
+public class NoteRepositoryMock implements NoteRepository {
 
-    private Map<String, SafeNote> notes;
+    private Map<String, Note> notes;
     private int mockDataSize;
 
-    public SafeNoteRepositoryMock(CryptoService cryptoService){
+    public NoteRepositoryMock(CryptoService cryptoService){
         String[] headers = new String[]{"note1", "note2", "note3", "note4", "note5", "note6"};
         String[] content = new String[]{"hello hello test", "hello test", "hello", "test", "test test", "note"};
         this.notes = IntStream.range(0, 6).mapToObj(i -> createNote(headers[i], content[i])).map(note -> cryptoService.encipher(note)).collect(Collectors.toMap(Note::getId, n -> n));
@@ -27,29 +26,29 @@ public class SafeNoteRepositoryMock implements SafeNoteRepository {
     }
 
     @Override
-    public SafeNote findOne(String id) {
+    public Note findOne(String id) {
         return notes.get(id);
     }
 
     @Override
-    public List<SafeNote> findAll() {
+    public List<Note> findAll() {
         return notes.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
     }
 
     @Override
-    public void create(SafeNote note) {
+    public void create(Note note) {
         notes.put(note.getId(), note);
     }
 
     @Override
-    public Note update(SafeNote note) {
+    public Note update(Note note) {
         delete(note);
         create(note);
         return note;
     }
 
     @Override
-    public void delete(SafeNote note) {
+    public void delete(Note note) {
         notes.remove(note.getId());
     }
 
@@ -69,7 +68,7 @@ public class SafeNoteRepositoryMock implements SafeNoteRepository {
     }
 
     private Note createNote(String header, String content){
-        SafeNote note = new SafeNote();
+        Note note = new Note();
         note.setId(nextId());
         note.setHeader(header);
         note.setContent(content);

@@ -1,6 +1,5 @@
 package nl.safenote.services;
 
-import nl.safenote.model.SafeNote;
 import nl.safenote.model.Quadruple;
 import nl.safenote.utils.KeyUtils;
 import org.junit.Test;
@@ -50,7 +49,7 @@ public class CryptoServiceTest {
 
     @Test
     public void checksumIsDoneCorrectly(){
-        SafeNote note = new SafeNote();
+        Note note = new Note();
         note.setId("id");
         note.setHeader("header");
         note.setContent("content");

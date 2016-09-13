@@ -1,11 +1,10 @@
 package nl.safenote.api;
 
-import nl.safenote.model.SafeNote;
 import nl.safenote.model.Header;
 import nl.safenote.model.Note;
-import nl.safenote.model.NoteType;
+import nl.safenote.model.ContentType;
 import nl.safenote.services.CryptoService;
-import nl.safenote.services.SafeNoteRepository;
+import nl.safenote.services.NoteRepository;
 import nl.safenote.services.SearchService;
 import nl.safenote.services.SynchronizationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,15 +26,15 @@ import java.util.stream.Collectors;
 @RequestMapping(value="/", headers = "Accept=*/*", produces = MediaType.APPLICATION_JSON_VALUE)
 public class NoteController {
 
-    private final SafeNoteRepository safeNoteRepository;
+    private final NoteRepository noteRepository;
     private final CryptoService cryptoService;
     private final SearchService searchService;
     private final SynchronizationService synchronizationService;
 
     @Autowired
-    public NoteController(SafeNoteRepository safeNoteRepository, CryptoService cryptoService, SearchService searchService, SynchronizationService synchronizationService) {
-        assert safeNoteRepository !=null&&cryptoService!=null&&searchService!=null&&synchronizationService!=null;
-        this.safeNoteRepository = safeNoteRepository;
+    public NoteController(NoteRepository noteRepository, CryptoService cryptoService, SearchService searchService, SynchronizationService synchronizationService) {
+        assert noteRepository !=null&&cryptoService!=null&&searchService!=null&&synchronizationService!=null;
+        this.noteRepository = noteRepository;
         this.cryptoService = cryptoService;
         this.searchService = searchService;
         this.synchronizationService = synchronizationService;
@@ -54,32 +53,33 @@ public class NoteController {
     @RequestMapping(value="notes/{id}", method = RequestMethod.GET)
     public Note getNote(@PathVariable String id){
 
-        return cryptoService.decipher(safeNoteRepository.findOne(id), false);
+        return cryptoService.decipher(noteRepository.findOne(id), false);
     }
 
     @RequestMapping(value="notes/{id}", method = RequestMethod.PUT)
     public ResponseEntity updateNote(@PathVariable String id, @RequestBody Note newNote){
-        SafeNote safeNote = cryptoService.encipher(newNote);
-        safeNoteRepository.update(safeNote);
-        synchronizationService.send(safeNote);
+        Note note = cryptoService.encipher(newNote);
+        noteRepository.update(note);
+        synchronizationService.send(note);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
     @RequestMapping(value="notes", method = RequestMethod.POST)
     public String createNote(@RequestBody String header){
-        String id = safeNoteRepository.nextId();
+        String id = noteRepository.nextId();
         if(header.length()>50) header = header.substring(0, 50);
-        Note note = new Note(id, header, NoteType.TEXT);
-        SafeNote safeNote = cryptoService.encipher(note);
-        safeNoteRepository.create(safeNote);
+        Note note = new Note(id, header, ContentType.TEXT);
+        Note safeNote = cryptoService.encipher(note);
+        noteRepository.create(safeNote);
         synchronizationService.send(safeNote);
         return id;
     }
 
     @RequestMapping(value="notes/{id}", method = RequestMethod.DELETE)
     public ResponseEntity deleteNote(@PathVariable String id){
-        SafeNote safeNote = safeNoteRepository.findOne(id);
-        safeNoteRepository.delete(safeNote);
+        Note safeNote = noteRepository.findOne(id);
+        safeNote.setEncrypted(true);
+        noteRepository.delete(safeNote);
         synchronizationService.delete(safeNote);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }

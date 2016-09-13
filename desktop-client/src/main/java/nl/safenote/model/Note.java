@@ -1,23 +1,35 @@
 package nl.safenote.model;
 
+import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+@Entity
+@NamedQueries({
+        @NamedQuery(name = "findById", query = "SELECT n FROM Note n WHERE n.id = :id"),
+        @NamedQuery(name = "findAll", query = "FROM Note"),
+        @NamedQuery(name = "deleteAll", query = "DELETE FROM Note")
+})
 public class Note{
 
-    String id;
-    String header;
-    String content;
-    String modified;
-    long created;
-    int version;
-    NoteType noteType;
+    @Id
+    private String id;
+    private String header;
+
+    @Lob
+    private String content;
+    private transient boolean encrypted;
+    private String modified;
+    private long created;
+    private int version;
+    private ContentType contentType;
+    private String hash;
 
     public Note() {
         this.setCreated(System.currentTimeMillis());
     }
 
-    public Note(String id, String header, NoteType noteType){
+    public Note(String id, String header, ContentType contentType){
         if(id==null||header==null)
             throw new IllegalArgumentException();
         this.id = id;
@@ -25,7 +37,7 @@ public class Note{
         this.setContent("");
         this.setModified(LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE));
         this.setCreated(System.currentTimeMillis());
-        this.noteType = noteType;
+        this.contentType = contentType;
         this.version = 1;
     }
 
@@ -53,6 +65,14 @@ public class Note{
         this.content = content;
     }
 
+    public boolean isEncrypted() {
+        return encrypted;
+    }
+
+    public void setEncrypted(boolean encrypted) {
+        this.encrypted = encrypted;
+    }
+
     public String getModified() {
         return modified;
     }
@@ -73,16 +93,24 @@ public class Note{
         this.version = version;
     }
 
-    public NoteType getNoteType() {
-        return noteType;
+    public ContentType getContentType() {
+        return contentType;
     }
 
-    public void setNoteType(NoteType noteType) {
-        this.noteType = noteType;
+    public void setContentType(ContentType contentType) {
+        this.contentType = contentType;
     }
 
     public void setCreated(long created) {
         this.created = created;
+    }
+
+    public String getHash() {
+        return hash;
+    }
+
+    public void setHash(String hash) {
+        this.hash = hash;
     }
 
     @Override
