@@ -2,7 +2,7 @@ package nl.safenote.services;
 
 import org.junit.Test;
 import nl.safenote.mock.CryptoServiceMock;
-import nl.safenote.mock.NoteRepositoryMock;
+import nl.safenote.mock.SafeNoteRepositoryMock;
 import nl.safenote.model.Header;
 import nl.safenote.model.Note;
 import nl.safenote.model.Result;
@@ -16,7 +16,7 @@ import static org.junit.Assert.*;
 public class SearchServiceTest {
 
     private final CryptoService cryptoService = new CryptoServiceMock();
-    private final NoteRepositoryMock noteRepository = new NoteRepositoryMock(cryptoService);
+    private final SafeNoteRepositoryMock noteRepository = new SafeNoteRepositoryMock(cryptoService);
     private final SearchService searchService = new SearchServiceImpl(noteRepository, cryptoService);
 
     @Test

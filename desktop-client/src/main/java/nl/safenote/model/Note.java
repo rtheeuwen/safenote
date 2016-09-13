@@ -1,34 +1,23 @@
 package nl.safenote.model;
 
-
-import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-@Entity
-@NamedQueries({
-        @NamedQuery(name = "findById", query = "SELECT n FROM Note n WHERE n.id = :id"),
-        @NamedQuery(name = "findAll", query = "FROM Note"),
-        @NamedQuery(name = "deleteAll", query = "DELETE FROM Note")
-})
 public class Note{
-    //TODO photo
-    //TODO // FIXME: 9/12/16 moar variaballs
-    @Id
-    private String id;
-    private String header;
 
-    @Lob
-    private String content;
-    private String modified;
-    private long created;
-    private String hash;
+    String id;
+    String header;
+    String content;
+    String modified;
+    long created;
+    int version;
+    NoteType noteType;
 
     public Note() {
         this.setCreated(System.currentTimeMillis());
     }
 
-    public Note(String id, String header){
+    public Note(String id, String header, NoteType noteType){
         if(id==null||header==null)
             throw new IllegalArgumentException();
         this.id = id;
@@ -36,7 +25,8 @@ public class Note{
         this.setContent("");
         this.setModified(LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE));
         this.setCreated(System.currentTimeMillis());
-        this.hash = "";
+        this.noteType = noteType;
+        this.version = 1;
     }
 
     public String getId() {
@@ -75,21 +65,24 @@ public class Note{
         return created;
     }
 
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
+    public NoteType getNoteType() {
+        return noteType;
+    }
+
+    public void setNoteType(NoteType noteType) {
+        this.noteType = noteType;
+    }
+
     public void setCreated(long created) {
         this.created = created;
-    }
-
-    public String getHash() {
-        return hash;
-    }
-
-    public void setHash(String hash) {
-        this.hash = hash;
-    }
-
-    @Override
-    public String toString(){
-        return this.hash;
     }
 
     @Override

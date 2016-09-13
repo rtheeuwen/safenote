@@ -25,6 +25,7 @@ public class AuthenticationController {
 
     @Autowired
     public AuthenticationController(AuthenticationService authenticationService) {
+        assert authenticationService!=null;
         this.authenticationService = authenticationService;
     }
 

@@ -1,5 +1,6 @@
 package nl.safenote.services;
 
+import nl.safenote.model.SafeNote;
 import org.springframework.stereotype.Service;
 import nl.safenote.model.Message;
 import nl.safenote.model.Note;
@@ -14,9 +15,9 @@ import java.util.Objects;
 
 public interface CryptoService{
     void init(SecretKeySpec aesKey, SecretKeySpec hmacSecret, PrivateKey privateKey);
-    Note encipher(Note note);
-    Note decipher(Note note, boolean headerOnly);
-    String checksum(Note note);
+    SafeNote encipher(Note note);
+    Note decipher(SafeNote safeNote, boolean headerOnly);
+    String checksum(SafeNote note);
     Message sign(Message message, String userId);
 }
 
@@ -50,47 +51,49 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
     }
 
     @Override
-    public Note encipher(Note note) {
-        //// TODO: 9/12/16 fixme
-        Note copy = new Note();
-        copy.setId(note.getId());
-        copy.setModified(note.getModified());
-        copy.setCreated(note.getCreated());
-        copy.setHeader(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getHeader().getBytes(), this.AESKey)));
+    public SafeNote encipher(Note note) {
+        SafeNote safeNote = new SafeNote();
+        safeNote.setId(note.getId());
+        safeNote.setModified(note.getModified());
+        safeNote.setCreated(note.getCreated());
+        safeNote.setVersion(note.getVersion());
+        safeNote.setNoteType(note.getNoteType());
+        safeNote.setHeader(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getHeader().getBytes(), this.AESKey)));
         String content = note.getContent();
         if(!Objects.equals(content, "")&&content!=null) {
-            copy.setContent(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getContent().getBytes(), this.AESKey)));
+            safeNote.setContent(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getContent().getBytes(), this.AESKey)));
         } else {
-            copy.setContent("");
+            safeNote.setContent("");
         }
-        copy.setHash(checksum(copy));
-        return copy;
+        safeNote.setHash(checksum(safeNote));
+        return safeNote;
     }
 
     @Override
-    public Note decipher(Note note, boolean headerOnly) {
-        //TODO // FIXME: 9/12/16
-        Note copy = new Note();
-        copy.setId(note.getId());
-        copy.setHeader(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getHeader()), this.AESKey)));
-        if(headerOnly) return copy;
-        copy.setModified(note.getModified());
-        String content = note.getContent();
+    public Note decipher(SafeNote safeNote, boolean headerOnly) {
+        Note note = new Note();
+        note.setId(safeNote.getId());
+        note.setHeader(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(safeNote.getHeader()), this.AESKey)));
+        if(headerOnly) return note;
+        note.setModified(safeNote.getModified());
+        note.setCreated(safeNote.getCreated());
+        note.setVersion(safeNote.getVersion());
+        note.setNoteType(safeNote.getNoteType());
+        String content = safeNote.getContent();
         if(!Objects.equals(content, "") &&content!=null&&content.length()!=0) {
-            copy.setContent(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getContent()), this.AESKey)));
+            note.setContent(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(safeNote.getContent()), this.AESKey)));
         } else {
-            copy.setContent("");
+            note.setContent("");
         }
-        return copy;
+        return note;
     }
 
     @Override
-    public String checksum(Note note) {
-        //TODO // FIXME: 9/12/16 check input
+    public String checksum(SafeNote safeNote) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(this.HMACSecret);
-            byte[] digest = mac.doFinal((note.getContent()+note.getHeader()+note.getId()).getBytes("ASCII"));
+            byte[] digest = mac.doFinal((safeNote.getContent()+ safeNote.getHeader()+ safeNote.getId()).getBytes("ASCII"));
             return DatatypeConverter.printHexBinary(digest);
         } catch(NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e){
             throw new RuntimeException(e);
@@ -99,14 +102,13 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
 
     @Override
     public Message sign(Message message, String userId) {
-        //TODO // FIXME: 9/12/16
         if(userId==null)throw new SecurityException("No user ID yet");
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(this.privateKey);
-            if(message.getBody() instanceof Note) {
-                Note note = (Note) message.getBody();
-                signature.update((note.getContent() + note.getHeader() + message.getExpires()).getBytes());
+            if(message.getBody() instanceof SafeNote) {
+                SafeNote safeNote = (SafeNote) message.getBody();
+                signature.update((safeNote.getContent() + safeNote.getHeader() + message.getExpires()).getBytes());
             } else {
                 signature.update(Long.valueOf(message.getExpires()).toString().getBytes());
             }

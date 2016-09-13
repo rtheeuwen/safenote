@@ -1,6 +1,7 @@
 package nl.safenote.mock;
 
 
+import nl.safenote.model.SafeNote;
 import nl.safenote.model.Message;
 import nl.safenote.model.Note;
 import nl.safenote.services.CryptoService;
@@ -15,17 +16,23 @@ public class CryptoServiceMock implements CryptoService{
     }
 
     @Override
-    public Note encipher(Note note) {
+    public SafeNote encipher(Note note) {
+        SafeNote safeNote = new SafeNote();
+        safeNote.setContent(note.getContent());
+        safeNote.setId(note.getId());
+        safeNote.setHeader(note.getHeader());
+        safeNote.setModified(note.getModified());
+        safeNote.setCreated(note.getCreated());
+        return safeNote;
+    }
+
+    @Override
+    public Note decipher(SafeNote note, boolean headerOnly) {
         return note;
     }
 
     @Override
-    public Note decipher(Note note, boolean headerOnly) {
-        return note;
-    }
-
-    @Override
-    public String checksum(Note note) {
+    public String checksum(SafeNote note) {
         return null;
     }
 

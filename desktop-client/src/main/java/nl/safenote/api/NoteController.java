@@ -1,12 +1,13 @@
 package nl.safenote.api;
 
+import nl.safenote.model.SafeNote;
 import nl.safenote.model.Header;
 import nl.safenote.model.Note;
+import nl.safenote.model.NoteType;
 import nl.safenote.services.CryptoService;
-import nl.safenote.services.NoteRepository;
+import nl.safenote.services.SafeNoteRepository;
 import nl.safenote.services.SearchService;
 import nl.safenote.services.SynchronizationService;
-import nl.safenote.utils.FileIO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
@@ -26,15 +27,15 @@ import java.util.stream.Collectors;
 @RequestMapping(value="/", headers = "Accept=*/*", produces = MediaType.APPLICATION_JSON_VALUE)
 public class NoteController {
 
-    private final NoteRepository noteRepository;
+    private final SafeNoteRepository safeNoteRepository;
     private final CryptoService cryptoService;
     private final SearchService searchService;
     private final SynchronizationService synchronizationService;
 
     @Autowired
-    public NoteController(NoteRepository noteRepository, CryptoService cryptoService, SearchService searchService, SynchronizationService synchronizationService) {
-        assert noteRepository!=null&&cryptoService!=null&&searchService!=null&&synchronizationService!=null;
-        this.noteRepository = noteRepository;
+    public NoteController(SafeNoteRepository safeNoteRepository, CryptoService cryptoService, SearchService searchService, SynchronizationService synchronizationService) {
+        assert safeNoteRepository !=null&&cryptoService!=null&&searchService!=null&&synchronizationService!=null;
+        this.safeNoteRepository = safeNoteRepository;
         this.cryptoService = cryptoService;
         this.searchService = searchService;
         this.synchronizationService = synchronizationService;
@@ -52,33 +53,34 @@ public class NoteController {
 
     @RequestMapping(value="notes/{id}", method = RequestMethod.GET)
     public Note getNote(@PathVariable String id){
-        return cryptoService.decipher(noteRepository.findOne(id), false);
+
+        return cryptoService.decipher(safeNoteRepository.findOne(id), false);
     }
 
     @RequestMapping(value="notes/{id}", method = RequestMethod.PUT)
     public ResponseEntity updateNote(@PathVariable String id, @RequestBody Note newNote){
-        Note enciphered = cryptoService.encipher(newNote);
-        noteRepository.update(enciphered);
-        synchronizationService.send(enciphered);
+        SafeNote safeNote = cryptoService.encipher(newNote);
+        safeNoteRepository.update(safeNote);
+        synchronizationService.send(safeNote);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
     @RequestMapping(value="notes", method = RequestMethod.POST)
     public String createNote(@RequestBody String header){
-        String id = noteRepository.nextId();
+        String id = safeNoteRepository.nextId();
         if(header.length()>50) header = header.substring(0, 50);
-        Note note = new Note(id, header);
-        Note enciphered = cryptoService.encipher(note);
-        noteRepository.create(enciphered);
-        synchronizationService.send(enciphered);
+        Note note = new Note(id, header, NoteType.TEXT);
+        SafeNote safeNote = cryptoService.encipher(note);
+        safeNoteRepository.create(safeNote);
+        synchronizationService.send(safeNote);
         return id;
     }
 
     @RequestMapping(value="notes/{id}", method = RequestMethod.DELETE)
     public ResponseEntity deleteNote(@PathVariable String id){
-        Note note = noteRepository.findOne(id);
-        noteRepository.delete(note);
-        synchronizationService.delete(note);
+        SafeNote safeNote = safeNoteRepository.findOne(id);
+        safeNoteRepository.delete(safeNote);
+        synchronizationService.delete(safeNote);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
@@ -90,12 +92,10 @@ public class NoteController {
 
     @RequestMapping(value="about", method = RequestMethod.GET)
     public String info(){
-        String license = null;
         try {
-            license = new BufferedReader(new InputStreamReader(new ClassPathResource("/gpl.txt").getInputStream())).lines().collect(Collectors.joining("\n"));
+            return new BufferedReader(new InputStreamReader(new ClassPathResource("/gpl.txt").getInputStream())).lines().collect(Collectors.joining("\n"));
         } catch (IOException e) {
             throw new AssertionError(e.getCause());
         }
-        return license;
     }
 }

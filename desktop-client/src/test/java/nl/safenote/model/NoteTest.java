@@ -67,9 +67,8 @@ public class NoteTest {
     }
 
     private Note createNote(){
-        Note note = new Note("id", "header");
+        Note note = new Note("id", "header", NoteType.TEXT);
         note.setContent("content");
-        note.setHash("hash");
         note.setModified("havetodothis");
         return note;
     }

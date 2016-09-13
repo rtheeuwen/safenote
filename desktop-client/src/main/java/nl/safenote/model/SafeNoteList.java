@@ -8,4 +8,4 @@ import java.util.ArrayList;
  * @Verion 1.0
  * @Since 2016-09-04
  */
-public class NoteList extends ArrayList<Note> {}
+public class SafeNoteList extends ArrayList<SafeNote> {}
