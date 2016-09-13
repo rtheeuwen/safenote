@@ -65,7 +65,12 @@ class SynchronizationServiceImpl implements SynchronizationService {
     }
 
     @Override
-    public boolean synchronize() {
+    public boolean synchronize(){
+        return synchronize(0);
+    }
+    private boolean synchronize(int stackDepth) {
+        if(stackDepth>2)
+            throw new RuntimeException("synchronization failed");
         if(this.serverTimeOffset==0) {
             try {
                 HttpHeaders headers = new HttpHeaders();
@@ -75,14 +80,14 @@ class SynchronizationServiceImpl implements SynchronizationService {
                 this.serverTimeOffset = responseEntity.getBody();
                 if (this.serverTimeOffset == 0)
                     this.serverTimeOffset--;
-                return synchronize();
+                return synchronize(++stackDepth);
             } catch (RestClientException e) {
                 return false;
             }
         } else {
             if (this.userId == null) {
                 this.userId = getSupplied(() -> restTemplate.postForObject(remoteHostUri + "enlist", new PublicKeyWrapper(this.publicKey), String.class));
-                return synchronize();
+                return synchronize(++stackDepth);
             } else {
                 try {
                     List<SafeNote> notesList = safeNoteRepository.findAll();
