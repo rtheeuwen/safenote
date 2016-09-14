@@ -3,18 +3,40 @@ package nl.safenote.server.model;
 
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
 @Entity
+@IdClass(SafeNote.PrimaryKey.class)
 public class SafeNote {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long guid;
+    static class PrimaryKey implements Serializable{
+        private String id;
+        private String userId;
 
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public String getUserId() {
+            return userId;
+        }
+
+        public void setUserId(String userId) {
+            this.userId = userId;
+        }
+    }
+
+    @Id
     private String id;
+
+    @Id
     private String userId;
     private String header;
 
@@ -110,14 +132,6 @@ public class SafeNote {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
-    }
-
-    public long getGuid() {
-        return guid;
-    }
-
-    public void setGuid(long guid) {
-        this.guid = guid;
     }
 
     public String getUserId() {
