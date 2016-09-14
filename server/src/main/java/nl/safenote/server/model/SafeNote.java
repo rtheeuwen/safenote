@@ -49,6 +49,8 @@ public class SafeNote {
     @Column(updatable = false)
     private long created;
     private int version;
+
+    @Column(updatable = false)
     private ContentType contentType;
     private String hash;
     private boolean deleted;

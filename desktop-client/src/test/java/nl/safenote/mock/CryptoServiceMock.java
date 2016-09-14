@@ -22,7 +22,7 @@ public class CryptoServiceMock implements CryptoService{
         safeNote.setHeader(note.getHeader());
         safeNote.setModified(note.getModified());
         safeNote.setCreated(note.getCreated());
-        return safeNote;
+        return note;
     }
 
     @Override

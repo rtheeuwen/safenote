@@ -71,9 +71,11 @@ public class IntegrationTest {
     @Test
     public void E_UserCanUpdateANote(){
         firstCreatedNote.setContent("content");
+        Note copyOfFirst = new Note(firstCreatedNoteId, firstCreatedNote.getHeader(), firstCreatedNote.getContentType());
+        copyOfFirst.setContent(firstCreatedNote.getContent());
         noteController.updateNote(firstCreatedNoteId, firstCreatedNote);
         Note retrieved = noteController.getNote(firstCreatedNoteId);
-        assertTrue(firstCreatedNote.equals(retrieved));
+        assertTrue(copyOfFirst.equals(retrieved));
     }
 
     @Test

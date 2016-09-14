@@ -25,6 +25,8 @@ public class Note{
     @Column(updatable = false)
     private long created;
     private int version;
+
+    @Column(updatable = false)
     private ContentType contentType;
     private String hash;
 
@@ -118,7 +120,7 @@ public class Note{
 
     @Override
     public int hashCode(){
-        return id.hashCode() ^ modified.hashCode();
+        return id.hashCode();
     }
 
     @Override

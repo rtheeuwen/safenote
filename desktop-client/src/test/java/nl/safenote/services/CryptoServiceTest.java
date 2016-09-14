@@ -14,6 +14,7 @@ import java.security.Signature;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 public class CryptoServiceTest {
 
@@ -42,9 +43,10 @@ public class CryptoServiceTest {
         note.setHeader("header");
         note.setContent("content");
 
-        note = cryptoService.decipher(cryptoService.encipher(note), true);
+        cryptoService.encipher(note);
+        cryptoService.decipher(note, true);
         assertEquals(note.getHeader(), "header");
-        assertEquals(note.getContent(), null);
+        assertNotEquals(note.getContent(), "content");
     }
 
     @Test
@@ -62,7 +64,7 @@ public class CryptoServiceTest {
         note.setId(UUID.randomUUID().toString());
         note.setHeader("Header");
         note.setContent("content");
-        note = cryptoService.encipher(note);
+        cryptoService.encipher(note);
 
         Message<Note> message = new Message<>(note, 0);
         cryptoService.sign(message, "AAAAA");
@@ -80,7 +82,8 @@ public class CryptoServiceTest {
         Note note = new Note();
         note.setHeader(header);
         note.setContent(content);
-        note = cryptoService.decipher(cryptoService.encipher(note), false);
+        cryptoService.encipher(note);
+        cryptoService.decipher(note, false);
         assertEquals(note.getHeader(), header);
         assertEquals(note.getContent(), content);
     }

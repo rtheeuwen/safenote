@@ -1,6 +1,5 @@
 package nl.safenote.services;
 
-import nl.safenote.model.NoteBuilder;
 import org.springframework.stereotype.Service;
 import nl.safenote.model.Message;
 import nl.safenote.model.Note;
@@ -52,45 +51,26 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
 
     @Override
     public Note encipher(Note note) {
-        NoteBuilder noteBuilder = new NoteBuilder()
-                .setId(note.getId())
-                .setModified(note.getModified())
-                .setCreated(note.getCreated())
-                .setVersion(note.getVersion())
-                .setContentType(note.getContentType())
-                .setHeader(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getHeader().getBytes(), this.AESKey)));
-
+        note.setHeader(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getHeader().getBytes(), this.AESKey)));
         String content = note.getContent();
         if(!Objects.equals(content, "")&&content!=null) {
-            noteBuilder.setContent(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getContent().getBytes(), this.AESKey)));
-        } else {
-            noteBuilder.setContent("");
+            note.setContent(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getContent().getBytes(), this.AESKey)));
         }
-        Note safeNote = noteBuilder.setEncrypted(true).build();
-        safeNote.setHash(checksum(safeNote));
-        return safeNote;
+        note.setHash(checksum(note));
+        note.setEncrypted(true);
+        return note;
     }
 
     @Override
     public Note decipher(Note note, boolean headerOnly) {
-        NoteBuilder noteBuilder = new NoteBuilder()
-                .setId(note.getId())
-                .setHeader(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getHeader()), this.AESKey)));
+        note.setHeader(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getHeader()), this.AESKey)));
         if(headerOnly)
-            return noteBuilder.build();
-
-        noteBuilder.setModified(note.getModified())
-                .setCreated(note.getCreated())
-                .setVersion(note.getVersion())
-                .setContentType(note.getContentType());
-
+            return note;
         String content = note.getContent();
         if(!Objects.equals(content, "") &&content!=null&&content.length()!=0) {
-            noteBuilder.setContent(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getContent()), this.AESKey)));
-        } else {
-            noteBuilder.setContent("");
+            note.setContent(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getContent()), this.AESKey)));
         }
-        return noteBuilder.build();
+        return note;
     }
 
     @Override
@@ -111,8 +91,9 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(this.privateKey);
-            if(message.getBody() instanceof Note) {
-                Note note = (Note) message.getBody();
+            Object object = message.getBody();
+            if(object instanceof Note) {
+                Note note = (Note) object;
                 signature.update((note.getContent() + note.getHeader() + message.getExpires()).getBytes());
             } else {
                 signature.update(Long.valueOf(message.getExpires()).toString().getBytes());

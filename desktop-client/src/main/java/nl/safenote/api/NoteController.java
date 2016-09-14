@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@Transactional
 @RequestMapping(value="/", headers = "Accept=*/*", produces = MediaType.APPLICATION_JSON_VALUE)
 public class NoteController {
 
@@ -57,8 +56,8 @@ public class NoteController {
     }
 
     @RequestMapping(value="notes/{id}", method = RequestMethod.PUT)
-    public ResponseEntity updateNote(@PathVariable String id, @RequestBody Note newNote){
-        Note note = cryptoService.encipher(newNote);
+    public ResponseEntity updateNote(@PathVariable String id, @RequestBody Note note){
+        cryptoService.encipher(note);
         noteRepository.update(note);
         synchronizationService.send(note);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
@@ -66,21 +65,24 @@ public class NoteController {
 
     @RequestMapping(value="notes", method = RequestMethod.POST)
     public String createNote(@RequestBody String header){
+        if(header.isEmpty())
+            header = "nameless note";
         String id = noteRepository.nextId();
         if(header.length()>50) header = header.substring(0, 50);
         Note note = new Note(id, header, ContentType.TEXT);
-        Note safeNote = cryptoService.encipher(note);
-        noteRepository.create(safeNote);
-        synchronizationService.send(safeNote);
+        cryptoService.encipher(note);
+        noteRepository.create(note);
+        synchronizationService.send(note);
         return id;
     }
 
+    @Transactional
     @RequestMapping(value="notes/{id}", method = RequestMethod.DELETE)
     public ResponseEntity deleteNote(@PathVariable String id){
-        Note safeNote = noteRepository.findOne(id);
-        safeNote.setEncrypted(true);
-        noteRepository.delete(safeNote);
-        synchronizationService.delete(safeNote);
+        Note note = noteRepository.findOne(id);
+        note.setEncrypted(true);
+        noteRepository.delete(note);
+        synchronizationService.delete(note);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
