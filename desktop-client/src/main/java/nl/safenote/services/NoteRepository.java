@@ -32,13 +32,13 @@ class NoteRepositoryImpl implements NoteRepository {
     @Transactional(readOnly = true)
     @Override
     public Note findOne(String id) {
-        return entityManager.createNamedQuery("findById", Note.class).setParameter("id", id).getSingleResult();
+        return entityManager.createNamedQuery(Note.FINDBYID, Note.class).setParameter("id", id).getSingleResult();
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<Note> findAll() {
-        return entityManager.createNamedQuery("findAll", Note.class).getResultList();
+        return entityManager.createNamedQuery(Note.FINDALL, Note.class).getResultList();
     }
 
     @Override
@@ -73,7 +73,7 @@ class NoteRepositoryImpl implements NoteRepository {
 
     @Override
     public void deleteAll(){
-        entityManager.createNamedQuery("deleteAll", Note.class).executeUpdate();
+        entityManager.createNamedQuery(Note.DELETEALL, Note.class).executeUpdate();
     }
 
     @Override

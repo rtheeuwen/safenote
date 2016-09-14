@@ -12,6 +12,10 @@ import java.time.format.DateTimeFormatter;
 })
 public class Note{
 
+    public final static transient String FINDBYID = "findById";
+    public final static transient String FINDALL = "findAll";
+    public final static transient String DELETEALL = "deleteAll";
+
     public enum ContentType {TEXT, IMAGE}
 
     @Id
