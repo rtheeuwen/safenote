@@ -34,15 +34,19 @@ public class SafeNote {
     }
 
     @Id
+    @Column(updatable = false)
     private String id;
 
     @Id
+    @Column(updatable = false)
     private String userId;
     private String header;
 
     @Lob
     private String content;
     private String modified;
+
+    @Column(updatable = false)
     private long created;
     private int version;
     private ContentType contentType;

@@ -45,15 +45,8 @@ public class SafeNoteRepository {
     }
 
     @Transactional
-    public void create(SafeNote safeNote){
-        entityManager.persist(safeNote);
-    }
-
-    @Transactional
-    public void update(SafeNote safeNote){
-        //TODO // FIXME: 9/12/16
-    entityManager.remove(findOne(safeNote.getId(), safeNote.getUserId()));
-        entityManager.persist(safeNote);
+    public void save(SafeNote safeNote){
+    entityManager.merge(safeNote);
 
 
     }
@@ -61,7 +54,7 @@ public class SafeNoteRepository {
     @Transactional
     public void setDelete(SafeNote safeNote) {
         safeNote.setDeleted(true);
-        update(safeNote);
+        save(safeNote);
     }
 
     @Transactional

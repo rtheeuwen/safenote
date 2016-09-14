@@ -40,15 +40,9 @@ public class MainController {
 
     @RequestMapping(method = RequestMethod.PUT, consumes = {"text/plain", "application/json"})
     public Message<SafeNote> save(@RequestBody Message<SafeNote> message){
-            SafeNote safeNote = message.getBody();
-            safeNote.setUserId(signatureVerificationService.verifySignature(message));
-        //TODO // FIXME: 9/12/16
-            try{
-                safeNoteRepository.update(safeNote);
-            } catch(Exception e){
-            safeNoteRepository.create(safeNote);
-            }
-
+        SafeNote safeNote = message.getBody();
+        safeNote.setUserId(signatureVerificationService.verifySignature(message));
+        safeNoteRepository.save(safeNote);
         return message;
     }
 

@@ -87,7 +87,6 @@ class SynchronizationServiceImpl implements SynchronizationService {
         } else {
             if (this.userId == null) {
                 this.userId = getSupplied(() -> restTemplate.postForObject(remoteHostUri + "enlist", new PublicKeyWrapper(this.publicKey), String.class));
-                System.out.println("enlist userid: " + this.userId);
                 return synchronize(++stackDepth);
             } else {
                 try {

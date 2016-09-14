@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 public class Note{
 
     @Id
+    @Column(updatable = false)
     private String id;
     private String header;
 
@@ -20,6 +21,8 @@ public class Note{
     private String content;
     private transient boolean encrypted;
     private String modified;
+
+    @Column(updatable = false)
     private long created;
     private int version;
     private ContentType contentType;
