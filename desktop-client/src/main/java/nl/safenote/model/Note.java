@@ -38,8 +38,8 @@ public class Note{
     }
 
     public Note(String id, String header, ContentType contentType){
-        if(id==null||header==null)
-            throw new IllegalArgumentException();
+        if(id==null||header==null||contentType==null)
+            throw new IllegalArgumentException("Constructor parameter cannot be null");
         this.id = id;
         this.header = header;
         this.setContent("");
