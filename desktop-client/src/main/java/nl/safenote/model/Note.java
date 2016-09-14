@@ -26,7 +26,7 @@ public class Note{
     private String hash;
 
     public Note() {
-        this.setCreated(System.currentTimeMillis());
+
     }
 
     public Note(String id, String header, ContentType contentType){
