@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter;
 
 
 @Entity
-public class Note {
+public class SafeNote {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -22,14 +22,16 @@ public class Note {
     private String content;
     private String modified;
     private long created;
+    private int version;
+    private ContentType contentType;
     private String hash;
     private boolean deleted;
 
-    public Note() {
+    public SafeNote() {
         this.setCreated(System.currentTimeMillis());
     }
 
-    public Note(String id, String header){
+    public SafeNote(String id, String header){
         this.id = id;
         this.header = header;
         this.setContent("");
@@ -76,6 +78,22 @@ public class Note {
 
     public void setCreated(long created) {
         this.created = created;
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
+    public ContentType getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(ContentType contentType) {
+        this.contentType = contentType;
     }
 
     public String getHash() {

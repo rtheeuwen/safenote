@@ -2,7 +2,7 @@ package nl.safenote.services;
 
 
 import nl.safenote.server.model.Message;
-import nl.safenote.server.model.Note;
+import nl.safenote.server.model.SafeNote;
 import nl.safenote.server.model.UserPublicKey;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -11,12 +11,9 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 import nl.safenote.server.persistence.UserPublicKeyRepository;
 
-import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.security.*;
 import java.security.spec.RSAKeyGenParameterSpec;
-import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -63,10 +60,10 @@ public class SignatureVerificationServiceTest {
         UserPublicKeyRepository repository = Mockito.mock(UserPublicKeyRepository.class);
         when(repository.findOne(userPublicKey.getUserId())).thenReturn(userPublicKey);
         SignatureVerificationService service = new SignatureVerificationServiceImpl(repository);
-        Note note = new Note(UUID.randomUUID().toString(), "header");
-        note.setContent("content");
-        note.setHash("hash");
-        Message<Note> message = new Message<>(note, System.currentTimeMillis()+5000);
+        SafeNote safeNote = new SafeNote(UUID.randomUUID().toString(), "header");
+        safeNote.setContent("content");
+        safeNote.setHash("hash");
+        Message<SafeNote> message = new Message<>(safeNote, System.currentTimeMillis()+5000);
         sign(message, userPublicKey.getUserId());
         assertEquals(service.verifySignature(message), userPublicKey.getUserId());
     }
@@ -76,10 +73,10 @@ public class SignatureVerificationServiceTest {
         UserPublicKeyRepository repository = Mockito.mock(UserPublicKeyRepository.class);
         when(repository.findOne(userPublicKey.getUserId())).thenReturn(userPublicKey);
         SignatureVerificationService service = new SignatureVerificationServiceImpl(repository);
-        Note note = new Note(UUID.randomUUID().toString(), "header");
-        note.setContent("content");
-        note.setHash("hash");
-        Message<Note> message = new Message<>(note, System.currentTimeMillis()+5000);
+        SafeNote safeNote = new SafeNote(UUID.randomUUID().toString(), "header");
+        safeNote.setContent("content");
+        safeNote.setHash("hash");
+        Message<SafeNote> message = new Message<>(safeNote, System.currentTimeMillis()+5000);
         sign(message, userPublicKey.getUserId());
         message.setSignature("AAAAA bad signature");
         exception.expect(SecurityException.class);
@@ -91,10 +88,10 @@ public class SignatureVerificationServiceTest {
         UserPublicKeyRepository repository = Mockito.mock(UserPublicKeyRepository.class);
         when(repository.findOne(userPublicKey.getUserId())).thenReturn(userPublicKey);
         SignatureVerificationService service = new SignatureVerificationServiceImpl(repository);
-        Note note = new Note(UUID.randomUUID().toString(), "header");
-        note.setContent("content");
-        note.setHash("hash");
-        Message<Note> message = new Message<>(note, System.currentTimeMillis());
+        SafeNote safeNote = new SafeNote(UUID.randomUUID().toString(), "header");
+        safeNote.setContent("content");
+        safeNote.setHash("hash");
+        Message<SafeNote> message = new Message<>(safeNote, System.currentTimeMillis());
         sign(message, userPublicKey.getUserId());
         exception.expect(SecurityException.class);
         service.verifySignature(message);
@@ -105,9 +102,9 @@ public class SignatureVerificationServiceTest {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(this.privateKey);
-            if(message.getBody() instanceof Note) {
-                Note note = (Note) message.getBody();
-                signature.update((note.getContent() + note.getHeader() + message.getExpires()).getBytes());
+            if(message.getBody() instanceof SafeNote) {
+                SafeNote safeNote = (SafeNote) message.getBody();
+                signature.update((safeNote.getContent() + safeNote.getHeader() + message.getExpires()).getBytes());
             } else {
                 signature.update(Long.valueOf(message.getExpires()).toString().getBytes());
             }

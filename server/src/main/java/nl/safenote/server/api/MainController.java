@@ -2,14 +2,14 @@ package nl.safenote.server.api;
 
 import nl.safenote.services.SignatureVerificationService;
 import nl.safenote.server.model.Message;
-import nl.safenote.server.model.Note;
+import nl.safenote.server.model.SafeNote;
 import nl.safenote.server.model.UserPublicKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import nl.safenote.server.persistence.NoteRepository;
+import nl.safenote.server.persistence.SafeNoteRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -18,12 +18,12 @@ import java.util.Map;
 @RequestMapping(value="/", headers = "Accept=*/*", produces = MediaType.APPLICATION_JSON_VALUE)
 public class MainController {
 
-    private final NoteRepository noteRepository;
+    private final SafeNoteRepository safeNoteRepository;
     private final SignatureVerificationService signatureVerificationService;
 
     @Autowired
-    public MainController(NoteRepository noteRepository, SignatureVerificationService signatureVerificationService) {
-        this.noteRepository = noteRepository;
+    public MainController(SafeNoteRepository safeNoteRepository, SignatureVerificationService signatureVerificationService) {
+        this.safeNoteRepository = safeNoteRepository;
         this.signatureVerificationService = signatureVerificationService;
     }
 
@@ -39,24 +39,24 @@ public class MainController {
     }
 
     @RequestMapping(method = RequestMethod.PUT, consumes = {"text/plain", "application/json"})
-    public Message<Note> save(@RequestBody Message<Note> message){
-            Note note = message.getBody();
-            note.setUserId(signatureVerificationService.verifySignature(message));
+    public Message<SafeNote> save(@RequestBody Message<SafeNote> message){
+            SafeNote safeNote = message.getBody();
+            safeNote.setUserId(signatureVerificationService.verifySignature(message));
         //TODO // FIXME: 9/12/16
             try{
-                noteRepository.update(note);
+                safeNoteRepository.update(safeNote);
             } catch(Exception e){
-            noteRepository.create(note);
+            safeNoteRepository.create(safeNote);
             }
 
         return message;
     }
 
     @RequestMapping(method = RequestMethod.DELETE, consumes = {"text/plain", "application/json"})
-    public void delete(@RequestBody Message<Note> message){
-        Note note = message.getBody();
-        note.setUserId(signatureVerificationService.verifySignature(message));
-        noteRepository.setDelete(note);
+    public void delete(@RequestBody Message<SafeNote> message){
+        SafeNote safeNote = message.getBody();
+        safeNote.setUserId(signatureVerificationService.verifySignature(message));
+        safeNoteRepository.setDelete(safeNote);
     }
 
     @RequestMapping(value = "time", method = RequestMethod.GET, consumes = {"text/plain", "application/json"})
@@ -65,17 +65,17 @@ public class MainController {
     }
 
     @RequestMapping(value = "notes", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
-    public List<Note> getNotes(@RequestBody Message<List<String>> message){
-        return noteRepository.findNotes(message.getBody(), signatureVerificationService.verifySignature(message));
+    public List<SafeNote> getNotes(@RequestBody Message<List<String>> message){
+        return safeNoteRepository.findNotes(message.getBody(), signatureVerificationService.verifySignature(message));
     }
 
     @RequestMapping(value = "checksums", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
     public Map<String, String> getChecksums(@RequestBody Message message){
-            return noteRepository.findChecksums(signatureVerificationService.verifySignature(message));
+            return safeNoteRepository.findChecksums(signatureVerificationService.verifySignature(message));
     }
 
     @RequestMapping(value = "deleted", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
     public List<String> getDeletedIds(@RequestBody Message message){
-            return noteRepository.findDeleted(signatureVerificationService.verifySignature(message));
+            return safeNoteRepository.findDeleted(signatureVerificationService.verifySignature(message));
     }
 }

@@ -21,7 +21,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-import nl.safenote.server.persistence.NoteRepository;
+import nl.safenote.server.persistence.SafeNoteRepository;
 import nl.safenote.server.persistence.UserPublicKeyRepository;
 
 
@@ -33,7 +33,7 @@ import java.util.Properties;
 @EnableWebMvc
 @EnableTransactionManagement
 @PropertySource(value = {"classpath:application.properties"})
-@ComponentScan(basePackageClasses = {MainController.class, NoteRepository.class, UserPublicKeyRepository.class, SignatureVerificationService.class})
+@ComponentScan(basePackageClasses = {MainController.class, SafeNoteRepository.class, UserPublicKeyRepository.class, SignatureVerificationService.class})
 public class Config extends WebMvcConfigurerAdapter {
 
 
@@ -61,7 +61,7 @@ public class Config extends WebMvcConfigurerAdapter {
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         LocalContainerEntityManagerFactoryBean factoryBean = new LocalContainerEntityManagerFactoryBean();
         factoryBean.setDataSource(dataSource());
-        factoryBean.setPackagesToScan("nl.safenote.servermodel");
+        factoryBean.setPackagesToScan("nl.safenote.server.model");
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         factoryBean.setJpaVendorAdapter(vendorAdapter);
         Properties properties = new Properties();

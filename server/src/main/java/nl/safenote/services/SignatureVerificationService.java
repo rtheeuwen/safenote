@@ -1,7 +1,7 @@
 package nl.safenote.services;
 
 import nl.safenote.server.model.Message;
-import nl.safenote.server.model.Note;
+import nl.safenote.server.model.SafeNote;
 import nl.safenote.server.model.UserPublicKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,9 +46,9 @@ class SignatureVerificationServiceImpl implements SignatureVerificationService {
             PublicKey publicKey = kf.generatePublic(keySpec);
             Object messageBody = message.getBody();
             byte[] data;
-            if(messageBody!=null&&messageBody instanceof Note){
-                Note note = (Note) messageBody;
-                data = (note.getContent() + note.getHeader() + message.getExpires()).getBytes();
+            if(messageBody!=null&&messageBody instanceof SafeNote){
+                SafeNote safeNote = (SafeNote) messageBody;
+                data = (safeNote.getContent() + safeNote.getHeader() + message.getExpires()).getBytes();
             } else {
                 data = Long.valueOf(message.getExpires()).toString().getBytes();
             }
