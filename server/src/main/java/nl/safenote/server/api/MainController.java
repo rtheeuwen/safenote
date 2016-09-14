@@ -34,7 +34,6 @@ public class MainController {
 
     @RequestMapping(value = "enlist", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
     public String enlist(@RequestBody UserPublicKey publicKey){
-        String user = signatureVerificationService.enlist(publicKey);
         return signatureVerificationService.enlist(publicKey);
     }
 
