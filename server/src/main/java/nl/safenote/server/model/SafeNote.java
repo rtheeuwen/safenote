@@ -33,6 +33,8 @@ public class SafeNote {
         }
     }
 
+    public static enum ContentType {TEXT, IMAGE}
+
     @Id
     @Column(updatable = false)
     private String id;
@@ -51,6 +53,7 @@ public class SafeNote {
     private int version;
 
     @Column(updatable = false)
+    @Enumerated(value = EnumType.STRING)
     private ContentType contentType;
     private String hash;
     private boolean deleted;

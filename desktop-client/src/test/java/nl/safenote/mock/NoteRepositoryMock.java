@@ -48,6 +48,11 @@ public class NoteRepositoryMock implements NoteRepository {
     }
 
     @Override
+    public boolean isUpdateable(Note note) {
+        return false;
+    }
+
+    @Override
     public void delete(Note note) {
         notes.remove(note.getId());
     }

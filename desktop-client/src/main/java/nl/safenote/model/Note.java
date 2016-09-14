@@ -12,6 +12,8 @@ import java.time.format.DateTimeFormatter;
 })
 public class Note{
 
+    public enum ContentType {TEXT, IMAGE}
+
     @Id
     @Column(updatable = false)
     private String id;
@@ -27,6 +29,7 @@ public class Note{
     private int version;
 
     @Column(updatable = false)
+    @Enumerated(value = EnumType.STRING)
     private ContentType contentType;
     private String hash;
 

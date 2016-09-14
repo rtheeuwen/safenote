@@ -15,6 +15,7 @@ public interface NoteRepository {
     List<Note> findAll();
     void create(Note Note);
     Note update(Note Note);
+    boolean isUpdateable(Note note);
     void delete(Note Note);
     void delete(String id);
     void deleteAll();
@@ -50,6 +51,12 @@ class NoteRepositoryImpl implements NoteRepository {
     public Note update(Note note) {
         isEncrypted(note);
         return entityManager.merge(note);
+    }
+
+    @Override
+    public boolean isUpdateable(Note note) {
+        //TODO // FIXME: 9/14/16 return content type in query
+        return findOne(note.getId()).getContentType()== Note.ContentType.TEXT;
     }
 
     @Override

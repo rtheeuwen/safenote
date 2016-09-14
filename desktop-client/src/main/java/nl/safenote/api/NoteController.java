@@ -2,7 +2,6 @@ package nl.safenote.api;
 
 import nl.safenote.model.Header;
 import nl.safenote.model.Note;
-import nl.safenote.model.ContentType;
 import nl.safenote.services.CryptoService;
 import nl.safenote.services.NoteRepository;
 import nl.safenote.services.SearchService;
@@ -57,6 +56,8 @@ public class NoteController {
 
     @RequestMapping(value="notes/{id}", method = RequestMethod.PUT)
     public ResponseEntity updateNote(@PathVariable String id, @RequestBody Note note){
+        if(!noteRepository.isUpdateable(note))
+            throw new IllegalArgumentException("This type of content cannot be updated");
         cryptoService.encipher(note);
         noteRepository.update(note);
         synchronizationService.send(note);
@@ -69,7 +70,7 @@ public class NoteController {
             header = "nameless note";
         String id = noteRepository.nextId();
         if(header.length()>50) header = header.substring(0, 50);
-        Note note = new Note(id, header, ContentType.TEXT);
+        Note note = new Note(id, header, Note.ContentType.TEXT);
         cryptoService.encipher(note);
         noteRepository.create(note);
         synchronizationService.send(note);
