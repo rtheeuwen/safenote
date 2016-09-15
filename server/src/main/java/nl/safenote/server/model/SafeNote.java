@@ -5,14 +5,27 @@ package nl.safenote.server.model;
 import com.google.gson.annotations.Expose;
 
 import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-
+@NamedQueries({
+    @NamedQuery(name="findOne", query = "SELECT n from SafeNote n WHERE n.id=:id AND n.userId=:userId AND DELETED= false"),
+    @NamedQuery(name="findAll", query = "FROM SafeNote n WHERE n.userId=:userId AND deleted=false"),
+    @NamedQuery(name="findDeleted", query = "FROM SafeNote n WHERE n.userId=:userId AND deleted=true") ,
+    @NamedQuery(name = "deleteAll", query = "DELETE FROM SafeNote")
+})
 @Entity
 @IdClass(SafeNote.PrimaryKey.class)
 public class SafeNote {
+
+    public final static transient String FINDONE = "findOne";
+    public final static transient String FINDALL = "findAll";
+    public final static transient String FINDDELETED = "findDeleted";
+    public final static transient String DELETEALL = "deleteAll";
 
     static class PrimaryKey implements Serializable{
         private String id;
@@ -64,7 +77,7 @@ public class SafeNote {
     private boolean deleted;
 
     public SafeNote() {
-        this.setCreated(System.currentTimeMillis());
+
     }
 
     public SafeNote(String id, String header){
