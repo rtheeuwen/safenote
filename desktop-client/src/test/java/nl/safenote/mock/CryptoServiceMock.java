@@ -16,12 +16,6 @@ public class CryptoServiceMock implements CryptoService{
 
     @Override
     public Note encipher(Note note) {
-        Note safeNote = new Note();
-        safeNote.setContent(note.getContent());
-        safeNote.setId(note.getId());
-        safeNote.setHeader(note.getHeader());
-        safeNote.setModified(note.getModified());
-        safeNote.setCreated(note.getCreated());
         return note;
     }
 

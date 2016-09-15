@@ -73,9 +73,7 @@ public class NoteRepositoryMock implements NoteRepository {
     }
 
     private Note createNote(String header, String content){
-        Note note = new Note();
-        note.setId(nextId());
-        note.setHeader(header);
+        Note note = new Note(nextId(), header, Note.ContentType.TEXT);
         note.setContent(content);
         return note;
     }

@@ -22,7 +22,7 @@ public class NoteTest {
         Note one = createNote();
         Note two = createNote();
         Note three = createNote();
-        three.setId(UUID.randomUUID().toString());
+        three.setContent("hi");
 
         assertSymmetrical(one, three, false);
         assertTransitive(one, two, three, false);
@@ -69,7 +69,6 @@ public class NoteTest {
     private Note createNote(){
         Note note = new Note("id", "header", Note.ContentType.TEXT);
         note.setContent("content");
-        note.setModified(0L);
         return note;
     }
 
@@ -78,11 +77,9 @@ public class NoteTest {
         private String variable;
 
         public SubNote(Note note){
-            this.setId(note.getId());
+            super(note.getId(), note.getHeader(), note.getContentType());
             this.setHeader(note.getHeader());
             this.setContent(note.getContent());
-            this.setModified(note.getModified());
-            this.setCreated(note.getCreated());
             this.variable = "test";
         }
     }

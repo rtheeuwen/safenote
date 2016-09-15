@@ -4,10 +4,12 @@ import javax.persistence.*;
 
 
 @Entity
+@Access(AccessType.FIELD)
 @NamedQueries({
         @NamedQuery(name = "findAll", query = "SELECT n FROM Note n ORDER BY n.created DESC"),
         @NamedQuery(name = "deleteAll", query = "DELETE FROM Note"),
-        @NamedQuery(name = "getContentType", query = "SELECT n.contentType FROM Note n WHERE n.id=:id")
+        @NamedQuery(name = "getContentType", query = "SELECT n.contentType FROM Note n WHERE n.id=:id"),
+        @NamedQuery(name = "getHeaders", query = "SELECT n.id, n.header FROM Note n ORDER BY n.created DESC")
 })
 @Table(indexes = {@Index(columnList = "created")})
 public class Note{
@@ -15,6 +17,7 @@ public class Note{
     public final static String FINDALL = "findAll";
     public final static String DELETEALL = "deleteAll";
     public final static String GETCONTENTTYPE = "getContentType";
+    public final static String GETHEADERS = "getHeaders";
 
     public enum ContentType {TEXT, IMAGE}
 
@@ -74,10 +77,6 @@ public class Note{
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
     public String getHeader() {
         return header;
     }
@@ -106,10 +105,6 @@ public class Note{
         return modified;
     }
 
-    public void setModified(long modified) {
-        this.modified = modified;
-    }
-
     public long getCreated() {
         return created;
     }
@@ -118,20 +113,8 @@ public class Note{
         return version;
     }
 
-    public void setVersion(long version) {
-        this.version = version;
-    }
-
     public ContentType getContentType() {
         return contentType;
-    }
-
-    public void setContentType(ContentType contentType) {
-        this.contentType = contentType;
-    }
-
-    public void setCreated(long created) {
-        this.created = this.modified = created;
     }
 
     public String getHash() {

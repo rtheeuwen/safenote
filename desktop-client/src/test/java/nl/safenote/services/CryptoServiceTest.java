@@ -51,19 +51,14 @@ public class CryptoServiceTest {
 
     @Test
     public void checksumIsDoneCorrectly(){
-        Note note = new Note();
-        note.setId("id");
-        note.setHeader("header");
+        Note note = new Note("id", "header", Note.ContentType.TEXT);
         note.setContent("content");
         assertEquals(cryptoService.checksum(note), cryptoService.checksum(note));
     }
 
     @Test
     public void signingIsDoneCorrectly() throws Exception{
-        Note note = new Note();
-        note.setId(UUID.randomUUID().toString());
-        note.setHeader("Header");
-        note.setContent("content");
+        Note note = new Note("id", "header", Note.ContentType.TEXT);
         cryptoService.encipher(note);
 
         Message<Note> message = new Message<>(note, 0);
