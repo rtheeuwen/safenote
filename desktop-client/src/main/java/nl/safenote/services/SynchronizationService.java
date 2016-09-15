@@ -82,6 +82,7 @@ class SynchronizationServiceImpl implements SynchronizationService {
                     this.serverTimeOffset--;
                 return synchronize(++stackDepth);
             } catch (RestClientException e) {
+                e.printStackTrace();
                 return false;
             }
         } else {
@@ -116,11 +117,12 @@ class SynchronizationServiceImpl implements SynchronizationService {
                         Thread.sleep(10L);
                     }
 
-                    newNotes.get().stream().filter(n -> n.getHash().equals(cryptoService.checksum(n))).forEachOrdered(noteRepository::create);
+                    newNotes.get().stream().filter(n -> n.getHash().equals(cryptoService.checksum(n))).map(n -> {n.setEncrypted(true); return n;}).forEachOrdered(noteRepository::create);
                     deletedNotes.stream().filter(notes::containsKey).forEachOrdered(noteRepository::delete);
                     return true;
 
                 } catch (Exception e) {
+                    e.printStackTrace();
                     return false;
                 }
             }
