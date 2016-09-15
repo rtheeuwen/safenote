@@ -129,7 +129,7 @@ public class Note{
 
     @Override
     public int hashCode(){
-        return id.hashCode();
+        return 13^id.hashCode()^content.hashCode()^header.hashCode();
     }
 
     @Override
@@ -137,8 +137,7 @@ public class Note{
         if(object==this) return true;
         if(!(object instanceof Note)) return false;
         Note other = (Note) object;
-        if(other.hashCode()!=this.hashCode()) return false;
-        return (other.content.equals(this.content)&&(other.header.equals(this.header)));
+        return (other.id.equals(this.id)&&other.content.equals(this.content)&&(other.header.equals(this.header)));
     }
 }
 

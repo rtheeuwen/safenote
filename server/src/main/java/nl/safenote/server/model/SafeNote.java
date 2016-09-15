@@ -176,7 +176,7 @@ public class SafeNote {
 
     @Override
     public int hashCode(){
-        return id.hashCode()^userId.hashCode();
+        return 13^id.hashCode()^userId.hashCode()^header.hashCode()^content.hashCode();
     }
 
     @Override
@@ -184,8 +184,7 @@ public class SafeNote {
         if(object==this) return true;
         if(!(object instanceof SafeNote)) return false;
         SafeNote other = (SafeNote) object;
-        if(other.hashCode()!=this.hashCode()) return false;
-        return (other.content.equals(this.content)&&(other.header.equals(this.header)));
+        return (other.id.equals(this.id)&&other.userId.equals(this.userId)&&other.content.equals(this.content)&&(other.header.equals(this.header)));
     }
 }
 
