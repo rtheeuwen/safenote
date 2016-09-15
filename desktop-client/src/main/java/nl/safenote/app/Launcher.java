@@ -1,5 +1,8 @@
 package nl.safenote.app;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -18,10 +21,7 @@ import java.io.*;
 class Launcher {
 
     public static void main(String[] args) throws Exception {
-        if(Cipher.getMaxAllowedKeyLength("AES")==128){
-            System.out.println("You need to install the Java cryptography extension in order to run SafeNote.");
-            System.exit(0);
-        } else {
+            enableCrypto();
             try {
                 Properties properties = new Properties();
                 properties.load(new ClassPathResource("/application.properties").getInputStream());
@@ -31,7 +31,6 @@ class Launcher {
             } catch (IOException e) {
                 throw new AssertionError(e);
             }
-        }
     }
 
     private void launch(Properties properties) throws Exception {
@@ -56,5 +55,20 @@ class Launcher {
         context.register(Config.class);
         context.getEnvironment().setActiveProfiles(profile);
         return context;
+    }
+
+    private static void enableCrypto(){
+        try {
+            if(Cipher.getMaxAllowedKeyLength("AES")==128) {
+                Field field = Class.forName("javax.crypto.JceSecurity").getDeclaredField("isRestricted");
+                field.setAccessible(true);
+                Field modifiers = Field.class.getDeclaredField("modifiers");
+                modifiers.setAccessible(true);
+                modifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+                field.set(null, Boolean.FALSE);
+            }
+        } catch (NoSuchFieldException | ClassNotFoundException | IllegalAccessException | NoSuchAlgorithmException e) {
+            throw new AssertionError("You need to install the Java cryptography extension in order to run SafeNote.");
+        }
     }
 }

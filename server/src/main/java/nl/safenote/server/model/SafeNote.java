@@ -2,6 +2,8 @@ package nl.safenote.server.model;
 
 
 
+import com.google.gson.annotations.Expose;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -41,6 +43,7 @@ public class SafeNote {
 
     @Id
     @Column(updatable = false)
+    @Expose(serialize = false, deserialize = false)
     private String userId;
     private String header;
 
@@ -56,6 +59,8 @@ public class SafeNote {
     @Enumerated(value = EnumType.STRING)
     private ContentType contentType;
     private String hash;
+
+    @Expose(serialize = false, deserialize = false)
     private boolean deleted;
 
     public SafeNote() {
