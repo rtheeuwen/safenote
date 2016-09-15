@@ -1,11 +1,6 @@
 package nl.safenote.server.model;
 
-import javax.persistence.NamedQueries;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.NamedQuery;
+import javax.persistence.*;
 
 @Entity
 @NamedQueries({
@@ -13,6 +8,7 @@ import javax.persistence.NamedQuery;
     @NamedQuery(name = "findByPublicKey", query = "SELECT u FROM UserPublicKey u WHERE u.publicKey=:publicKey"),
     @NamedQuery(name = "lastId", query = "SELECT COUNT (u.publicKey) FROM UserPublicKey u")
 })
+@Table(indexes = {@Index(columnList = "publicKey")})
 public class UserPublicKey {
 
     public final static String EXISTS ="exists";

@@ -31,7 +31,7 @@ class SearchServiceImpl implements SearchService {
 
     @Override
     public List<Header> search(String args) {
-        return args.length()==0 ? noteRepository.findAll().stream().sorted((a, b) -> (int)(b.getCreated()-a.getCreated())).map(note -> new Header(note.getId(), cryptoService.decipher(note, true).getHeader())).collect(Collectors.toList())
+        return args.length()==0 ? noteRepository.findAll().stream().map(note -> new Header(note.getId(), cryptoService.decipher(note, true).getHeader())).collect(Collectors.toList())
         : noteRepository.findAll().stream().map(note -> cryptoService.decipher(note, false)).map(note -> getResult(note, (args.split(" ")))).filter(result -> result!=null).sorted((a, b) -> b.getScore() - a.getScore()).map(result -> new Header(result.getItem().getId(), result.getItem().getHeader())).collect(Collectors.toList());
     }
 
