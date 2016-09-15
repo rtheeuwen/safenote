@@ -22,10 +22,10 @@ import java.time.format.DateTimeFormatter;
 @IdClass(SafeNote.PrimaryKey.class)
 public class SafeNote {
 
-    public final static transient String FINDONE = "findOne";
-    public final static transient String FINDALL = "findAll";
-    public final static transient String FINDDELETED = "findDeleted";
-    public final static transient String DELETEALL = "deleteAll";
+    public final static String FINDONE = "findOne";
+    public final static String FINDALL = "findAll";
+    public final static String FINDDELETED = "findDeleted";
+    public final static String DELETEALL = "deleteAll";
 
     static class PrimaryKey implements Serializable{
         private String id;
@@ -48,7 +48,7 @@ public class SafeNote {
         }
     }
 
-    public static enum ContentType {TEXT, IMAGE}
+    public enum ContentType {TEXT, IMAGE}
 
     @Id
     @Column(updatable = false)
@@ -62,11 +62,11 @@ public class SafeNote {
 
     @Lob
     private String content;
-    private String modified;
+    private long modified;
 
     @Column(updatable = false)
     private long created;
-    private int version;
+    private long version;
 
     @Column(updatable = false)
     @Enumerated(value = EnumType.STRING)
@@ -78,15 +78,6 @@ public class SafeNote {
 
     public SafeNote() {
 
-    }
-
-    public SafeNote(String id, String header){
-        this.id = id;
-        this.header = header;
-        this.setContent("");
-        this.setModified(LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE));
-        this.hash = "";
-        this.deleted = false;
     }
 
     public String getId() {
@@ -113,11 +104,11 @@ public class SafeNote {
         this.content = content;
     }
 
-    public String getModified() {
+    public long getModified() {
         return modified;
     }
 
-    public void setModified(String modified) {
+    public void setModified(long modified) {
         this.modified = modified;
     }
 
@@ -129,11 +120,11 @@ public class SafeNote {
         this.created = created;
     }
 
-    public int getVersion() {
+    public long getVersion() {
         return version;
     }
 
-    public void setVersion(int version) {
+    public void setVersion(long version) {
         this.version = version;
     }
 

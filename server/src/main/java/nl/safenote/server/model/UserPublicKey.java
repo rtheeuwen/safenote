@@ -15,9 +15,9 @@ import javax.persistence.NamedQuery;
 })
 public class UserPublicKey {
 
-    public final static transient String EXISTS ="exists";
-    public final static transient String FINDBYPUBLICKEY ="findByPublicKey";
-    public final static transient String LASTID = "lastId";
+    public final static String EXISTS ="exists";
+    public final static String FINDBYPUBLICKEY ="findByPublicKey";
+    public final static String LASTID = "lastId";
 
     @Id
     private String userId;

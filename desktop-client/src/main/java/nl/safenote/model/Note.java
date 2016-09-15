@@ -1,8 +1,7 @@
 package nl.safenote.model;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+
 
 @Entity
 @NamedQueries({
@@ -13,31 +12,51 @@ import java.time.format.DateTimeFormatter;
 })
 public class Note{
 
-    public final static transient String FINDBYID = "findById";
-    public final static transient String FINDALL = "findAll";
-    public final static transient String DELETEALL = "deleteAll";
-    public final static transient String GETCONTENTTYPE = "getContentType";
+    public final static String FINDBYID = "findById";
+    public final static String FINDALL = "findAll";
+    public final static String DELETEALL = "deleteAll";
+    public final static String GETCONTENTTYPE = "getContentType";
 
     public enum ContentType {TEXT, IMAGE}
 
     @Id
     @Column(updatable = false)
     private String id;
+    @Column(nullable = false)
     private String header;
 
     @Lob
+    @Column(nullable = false)
     private String content;
-    private transient boolean encrypted;
-    private String modified;
 
-    @Column(updatable = false)
+    @Transient
+    private boolean encrypted;
+
+    @Column(nullable = false)
+    private long modified;
+
+    @Column(updatable = false, nullable = false)
     private long created;
-    private int version;
 
-    @Column(updatable = false)
+    private long version;
+
+    @Column(updatable = false, nullable = false)
     @Enumerated(value = EnumType.STRING)
     private ContentType contentType;
+
+    @Column(nullable = false)
     private String hash;
+
+    @PrePersist
+    private void setCreated(){
+        this.created = this.modified = System.currentTimeMillis();
+    }
+
+    @PreUpdate
+    private void setModified(){
+        this.modified = System.currentTimeMillis();
+        this.version++;
+    }
 
     public Note() {
 
@@ -48,11 +67,8 @@ public class Note{
             throw new IllegalArgumentException("Constructor parameter cannot be null");
         this.id = id;
         this.header = header;
-        this.setContent("");
-        this.setModified(LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE));
-        this.setCreated(System.currentTimeMillis());
+        this.content = "";
         this.contentType = contentType;
-        this.version = 1;
     }
 
     public String getId() {
@@ -87,11 +103,11 @@ public class Note{
         this.encrypted = encrypted;
     }
 
-    public String getModified() {
+    public long getModified() {
         return modified;
     }
 
-    public void setModified(String modified) {
+    public void setModified(long modified) {
         this.modified = modified;
     }
 
@@ -99,11 +115,11 @@ public class Note{
         return created;
     }
 
-    public int getVersion() {
+    public long getVersion() {
         return version;
     }
 
-    public void setVersion(int version) {
+    public void setVersion(long version) {
         this.version = version;
     }
 
@@ -116,7 +132,7 @@ public class Note{
     }
 
     public void setCreated(long created) {
-        this.created = created;
+        this.created = this.modified = created;
     }
 
     public String getHash() {
@@ -140,4 +156,6 @@ public class Note{
         return (other.id.equals(this.id)&&other.content.equals(this.content)&&(other.header.equals(this.header)));
     }
 }
+
+
 

@@ -83,6 +83,6 @@ class NoteRepositoryImpl implements NoteRepository {
 
     private void isEncrypted(Note note){
         if(!note.isEncrypted())
-            throw new IllegalArgumentException("note must be encrypted");
+            throw new IllegalStateException("note must be encrypted");
     }
 }

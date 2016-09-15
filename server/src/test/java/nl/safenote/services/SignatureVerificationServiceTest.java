@@ -60,7 +60,9 @@ public class SignatureVerificationServiceTest {
         UserPublicKeyRepository repository = Mockito.mock(UserPublicKeyRepository.class);
         when(repository.findOne(userPublicKey.getUserId())).thenReturn(userPublicKey);
         SignatureVerificationService service = new SignatureVerificationServiceImpl(repository);
-        SafeNote safeNote = new SafeNote(UUID.randomUUID().toString(), "header");
+        SafeNote safeNote = new SafeNote();
+        safeNote.setId(UUID.randomUUID().toString());
+        safeNote.setHeader("header");
         safeNote.setContent("content");
         safeNote.setHash("hash");
         Message<SafeNote> message = new Message<>(safeNote, System.currentTimeMillis()+5000);
@@ -73,7 +75,9 @@ public class SignatureVerificationServiceTest {
         UserPublicKeyRepository repository = Mockito.mock(UserPublicKeyRepository.class);
         when(repository.findOne(userPublicKey.getUserId())).thenReturn(userPublicKey);
         SignatureVerificationService service = new SignatureVerificationServiceImpl(repository);
-        SafeNote safeNote = new SafeNote(UUID.randomUUID().toString(), "header");
+        SafeNote safeNote = new SafeNote();
+        safeNote.setId(UUID.randomUUID().toString());
+        safeNote.setHeader("header");
         safeNote.setContent("content");
         safeNote.setHash("hash");
         Message<SafeNote> message = new Message<>(safeNote, System.currentTimeMillis()+5000);
@@ -88,7 +92,9 @@ public class SignatureVerificationServiceTest {
         UserPublicKeyRepository repository = Mockito.mock(UserPublicKeyRepository.class);
         when(repository.findOne(userPublicKey.getUserId())).thenReturn(userPublicKey);
         SignatureVerificationService service = new SignatureVerificationServiceImpl(repository);
-        SafeNote safeNote = new SafeNote(UUID.randomUUID().toString(), "header");
+        SafeNote safeNote = new SafeNote();
+        safeNote.setId(UUID.randomUUID().toString());
+        safeNote.setHeader("header");
         safeNote.setContent("content");
         safeNote.setHash("hash");
         Message<SafeNote> message = new Message<>(safeNote, System.currentTimeMillis());
