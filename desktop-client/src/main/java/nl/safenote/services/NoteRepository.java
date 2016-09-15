@@ -55,8 +55,8 @@ class NoteRepositoryImpl implements NoteRepository {
 
     @Override
     public boolean isUpdateable(Note note) {
-        //TODO // FIXME: 9/14/16 return content type in query
-        return findOne(note.getId()).getContentType()== Note.ContentType.TEXT;
+        return entityManager.createNamedQuery(Note.GETCONTENTTYPE, Note.ContentType.class)
+                .setParameter("id", note.getId()).getSingleResult()==Note.ContentType.TEXT;
     }
 
     @Override

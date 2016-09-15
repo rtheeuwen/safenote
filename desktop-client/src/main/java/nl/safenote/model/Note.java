@@ -8,13 +8,15 @@ import java.time.format.DateTimeFormatter;
 @NamedQueries({
         @NamedQuery(name = "findById", query = "SELECT n FROM Note n WHERE n.id = :id"),
         @NamedQuery(name = "findAll", query = "FROM Note"),
-        @NamedQuery(name = "deleteAll", query = "DELETE FROM Note")
+        @NamedQuery(name = "deleteAll", query = "DELETE FROM Note"),
+        @NamedQuery(name = "getContentType", query = "SELECT n.contentType FROM Note n WHERE n.id=:id")
 })
 public class Note{
 
     public final static transient String FINDBYID = "findById";
     public final static transient String FINDALL = "findAll";
     public final static transient String DELETEALL = "deleteAll";
+    public final static transient String GETCONTENTTYPE = "getContentType";
 
     public enum ContentType {TEXT, IMAGE}
 
