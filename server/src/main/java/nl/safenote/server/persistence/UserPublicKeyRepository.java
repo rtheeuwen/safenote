@@ -17,26 +17,23 @@ public class UserPublicKeyRepository {
 
 
     @Transactional
-    public String create(UserPublicKey userPublicKey){
-        try {
-            //TODO // FIXME: 9/12/16
-            UserPublicKey existingUserPublicKey = (UserPublicKey) entityManager.createQuery("from " + UserPublicKey.class.getName() + " WHERE PUBLICKEY = '" + userPublicKey.getPublicKey() + "'").getSingleResult();
-            return existingUserPublicKey.getUserId();
-        }catch (Exception e){
-            String id = Integer.valueOf(entityManager.createQuery("from "+UserPublicKey.class.getName()).getResultList().size()).toString();
-            StringBuilder sb = new StringBuilder("1");
-            int length = 4-id.length();
-            IntStream.range(0, length).forEachOrdered(i -> sb.append("0"));
-            sb.append(id);
-            id = sb.toString();
-            userPublicKey.setUserId(id);
-            entityManager.persist(userPublicKey);
-            return id;
-        }
+    public String enlist(UserPublicKey userPublicKey){
+        if(entityManager.createNamedQuery(UserPublicKey.EXISTS, Long.class).setParameter("publicKey", userPublicKey.getPublicKey()).getSingleResult()==1L)
+            return entityManager.createNamedQuery(UserPublicKey.FINDBYPUBLICKEY, UserPublicKey.class).setParameter("publicKey", userPublicKey.getPublicKey()).getSingleResult().getUserId();
+
+        String id = entityManager.createNamedQuery(UserPublicKey.LASTID, Long.class).getSingleResult().toString();
+        StringBuilder sb = new StringBuilder("1");
+        int length = 4-id.length();
+        IntStream.range(0, length).forEachOrdered(i -> sb.append("0"));
+        sb.append(id);
+        id = sb.toString();
+        userPublicKey.setUserId(id);
+        entityManager.persist(userPublicKey);
+        return id;
     }
 
     @Transactional(readOnly = true)
     public UserPublicKey findOne(String id){
-        return (UserPublicKey) entityManager.createQuery("from " + UserPublicKey.class.getName() + " WHERE id = "+id).getSingleResult();
+        return entityManager.find(UserPublicKey.class, id);
     }
 }

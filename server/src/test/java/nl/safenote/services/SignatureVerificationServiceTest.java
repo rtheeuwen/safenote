@@ -49,10 +49,10 @@ public class SignatureVerificationServiceTest {
     @Test
     public void enlistWorksCorrectly(){
         UserPublicKeyRepository repository = Mockito.mock(UserPublicKeyRepository.class);
-        when(repository.create(userPublicKey)).thenReturn(userPublicKey.getUserId());
+        when(repository.enlist(userPublicKey)).thenReturn(userPublicKey.getUserId());
         SignatureVerificationService service = new SignatureVerificationServiceImpl(repository);
         assertEquals(service.enlist(userPublicKey), userPublicKey.getUserId());
-        verify(repository).create(userPublicKey);
+        verify(repository).enlist(userPublicKey);
     }
 
     @Test

@@ -31,7 +31,7 @@ class SignatureVerificationServiceImpl implements SignatureVerificationService {
 
     @Override
     public String enlist(UserPublicKey publicKey) {
-        return userPublicKeyRepository.create(publicKey);
+        return userPublicKeyRepository.enlist(publicKey);
     }
 
     @Override
