@@ -5,14 +5,12 @@ import javax.persistence.*;
 
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "findById", query = "SELECT n FROM Note n WHERE n.id = :id"),
         @NamedQuery(name = "findAll", query = "FROM Note"),
         @NamedQuery(name = "deleteAll", query = "DELETE FROM Note"),
         @NamedQuery(name = "getContentType", query = "SELECT n.contentType FROM Note n WHERE n.id=:id")
 })
 public class Note{
 
-    public final static String FINDBYID = "findById";
     public final static String FINDALL = "findAll";
     public final static String DELETEALL = "deleteAll";
     public final static String GETCONTENTTYPE = "getContentType";

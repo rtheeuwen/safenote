@@ -32,7 +32,7 @@ class NoteRepositoryImpl implements NoteRepository {
     @Transactional(readOnly = true)
     @Override
     public Note findOne(String id) {
-        return entityManager.createNamedQuery(Note.FINDBYID, Note.class).setParameter("id", id).getSingleResult();
+        return entityManager.find(Note.class, id);
     }
 
     @Transactional(readOnly = true)
