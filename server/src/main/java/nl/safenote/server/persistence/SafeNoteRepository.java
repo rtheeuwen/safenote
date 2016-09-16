@@ -30,7 +30,6 @@ public class SafeNoteRepository {
         return safeNotes.stream().collect(Collectors.toMap(SafeNote::getId, SafeNote::getHash));
     }
 
-    @SuppressWarnings("unchecked")
     public List<String> findDeleted(String userId){
         List<SafeNote> safeNotes = entityManager.createNamedQuery(SafeNote.FINDDELETED, SafeNote.class).setParameter("userId", userId).getResultList();
         return safeNotes.stream().map(SafeNote::getId).collect(Collectors.toList());

@@ -51,7 +51,7 @@ public class Note{
 
     @PrePersist
     private void setCreated(){
-        this.created = this.modified = System.currentTimeMillis();
+            this.created = this.modified = System.currentTimeMillis();
     }
 
     @PreUpdate

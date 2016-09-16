@@ -8,6 +8,7 @@ import javax.persistence.*;
     @NamedQuery(name = "findByPublicKey", query = "SELECT u FROM UserPublicKey u WHERE u.publicKey=:publicKey"),
     @NamedQuery(name = "lastId", query = "SELECT COUNT (u.publicKey) FROM UserPublicKey u")
 })
+@Access(AccessType.FIELD)
 @Table(indexes = {@Index(columnList = "publicKey")})
 public class UserPublicKey {
 
@@ -40,7 +41,4 @@ public class UserPublicKey {
         return publicKey;
     }
 
-    public void setPublicKey(String publicKey) {
-        this.publicKey = publicKey;
-    }
 }

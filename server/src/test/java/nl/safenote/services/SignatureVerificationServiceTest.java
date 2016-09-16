@@ -12,6 +12,7 @@ import org.mockito.Mockito;
 import nl.safenote.server.persistence.UserPublicKeyRepository;
 
 import javax.xml.bind.DatatypeConverter;
+import java.lang.reflect.Field;
 import java.security.*;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.UUID;
@@ -56,31 +57,22 @@ public class SignatureVerificationServiceTest {
     }
 
     @Test
-    public void validMessageIsVerified(){
+    public void validMessageIsVerified() throws Exception {
         UserPublicKeyRepository repository = Mockito.mock(UserPublicKeyRepository.class);
         when(repository.findOne(userPublicKey.getUserId())).thenReturn(userPublicKey);
         SignatureVerificationService service = new SignatureVerificationServiceImpl(repository);
-        SafeNote safeNote = new SafeNote();
-        safeNote.setId(UUID.randomUUID().toString());
-        safeNote.setHeader("header");
-        safeNote.setContent("content");
-        safeNote.setHash("hash");
-        Message<SafeNote> message = new Message<>(safeNote, System.currentTimeMillis()+5000);
+
+        Message<SafeNote> message = new Message<>(getSafeNote(), System.currentTimeMillis()+5000);
         sign(message, userPublicKey.getUserId());
         assertEquals(service.verifySignature(message), userPublicKey.getUserId());
     }
 
     @Test
-    public void invalidMessageIsRejected(){
+    public void invalidMessageIsRejected() throws Exception {
         UserPublicKeyRepository repository = Mockito.mock(UserPublicKeyRepository.class);
         when(repository.findOne(userPublicKey.getUserId())).thenReturn(userPublicKey);
         SignatureVerificationService service = new SignatureVerificationServiceImpl(repository);
-        SafeNote safeNote = new SafeNote();
-        safeNote.setId(UUID.randomUUID().toString());
-        safeNote.setHeader("header");
-        safeNote.setContent("content");
-        safeNote.setHash("hash");
-        Message<SafeNote> message = new Message<>(safeNote, System.currentTimeMillis()+5000);
+        Message<SafeNote> message = new Message<>(getSafeNote(), System.currentTimeMillis()+5000);
         sign(message, userPublicKey.getUserId());
         message.setSignature("AAAAA bad signature");
         exception.expect(SecurityException.class);
@@ -88,16 +80,11 @@ public class SignatureVerificationServiceTest {
     }
 
     @Test
-    public void expiredMessageIsRejected(){
+    public void expiredMessageIsRejected() throws Exception {
         UserPublicKeyRepository repository = Mockito.mock(UserPublicKeyRepository.class);
         when(repository.findOne(userPublicKey.getUserId())).thenReturn(userPublicKey);
         SignatureVerificationService service = new SignatureVerificationServiceImpl(repository);
-        SafeNote safeNote = new SafeNote();
-        safeNote.setId(UUID.randomUUID().toString());
-        safeNote.setHeader("header");
-        safeNote.setContent("content");
-        safeNote.setHash("hash");
-        Message<SafeNote> message = new Message<>(safeNote, System.currentTimeMillis());
+        Message<SafeNote> message = new Message<>(getSafeNote(), System.currentTimeMillis());
         sign(message, userPublicKey.getUserId());
         exception.expect(SecurityException.class);
         service.verifySignature(message);
@@ -119,5 +106,25 @@ public class SignatureVerificationServiceTest {
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private SafeNote getSafeNote() throws Exception{
+        SafeNote safeNote = new SafeNote();
+        Field id = SafeNote.class.getDeclaredField("id");
+        id.setAccessible(true);
+        id.set(safeNote, UUID.randomUUID().toString());
+
+        Field header = SafeNote.class.getDeclaredField("header");
+        header.setAccessible(true);
+        header.set(safeNote, "header");
+
+        Field content = SafeNote.class.getDeclaredField("content");
+        content.setAccessible(true);
+        content.set(safeNote, "content");
+
+        Field hash = SafeNote.class.getDeclaredField("hash");
+        hash.setAccessible(true);
+        hash.set(safeNote, "hash");
+        return safeNote;
     }
 }
