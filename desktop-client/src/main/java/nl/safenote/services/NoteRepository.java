@@ -1,5 +1,6 @@
 package nl.safenote.services;
 
+import nl.safenote.model.Header;
 import nl.safenote.model.Note;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,11 +9,14 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public interface NoteRepository {
 
     Note findOne(String id);
     List<Note> findAll();
+    List<Header> findHeaders();
+    List<Note> findAllText();
     void create(Note Note);
     Note update(Note Note);
     boolean isUpdateable(Note note);
@@ -39,6 +43,17 @@ class NoteRepositoryImpl implements NoteRepository {
     @Override
     public List<Note> findAll() {
         return entityManager.createNamedQuery(Note.FINDALL, Note.class).getResultList();
+    }
+
+    @Override
+    public List<Header> findHeaders() {
+        return entityManager.createNamedQuery(Note.GETHEADERS, Object[].class).getResultList()
+                .stream().map(a -> new Header((String)a[0], (String)a[1])).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Note> findAllText() {
+        return entityManager.createNamedQuery(Note.FINDALLTEXT, Note.class).getResultList();
     }
 
     @Override

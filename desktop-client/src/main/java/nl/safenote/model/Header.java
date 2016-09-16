@@ -17,7 +17,7 @@ public final class Header {
     }
 
     private final String id;
-    private final String header;
+    private String header;
 
     public String getId() {
         return id;
@@ -25,6 +25,10 @@ public final class Header {
 
     public String getHeader() {
         return header;
+    }
+
+    public void setHeader(String header) {
+        this.header = header;
     }
 
     @Override

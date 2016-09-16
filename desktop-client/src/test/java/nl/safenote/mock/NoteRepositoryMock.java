@@ -1,5 +1,6 @@
 package nl.safenote.mock;
 
+import nl.safenote.model.Header;
 import nl.safenote.model.Note;
 import nl.safenote.services.CryptoService;
 import nl.safenote.services.NoteRepository;
@@ -33,6 +34,16 @@ public class NoteRepositoryMock implements NoteRepository {
     @Override
     public List<Note> findAll() {
         return notes.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Header> findHeaders() {
+        return null;
+    }
+
+    @Override
+    public List<Note> findAllText() {
+        return null;
     }
 
     @Override

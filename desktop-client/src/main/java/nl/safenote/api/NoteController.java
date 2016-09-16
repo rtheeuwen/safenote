@@ -4,7 +4,7 @@ import nl.safenote.model.Header;
 import nl.safenote.model.Note;
 import nl.safenote.services.CryptoService;
 import nl.safenote.services.NoteRepository;
-import nl.safenote.services.SearchService;
+import nl.safenote.services.TextSearchService;
 import nl.safenote.services.SynchronizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -26,32 +26,32 @@ public class NoteController {
 
     private final NoteRepository noteRepository;
     private final CryptoService cryptoService;
-    private final SearchService searchService;
+    private final TextSearchService textSearchService;
     private final SynchronizationService synchronizationService;
 
     @Autowired
-    public NoteController(NoteRepository noteRepository, CryptoService cryptoService, SearchService searchService, SynchronizationService synchronizationService) {
-        assert noteRepository !=null&&cryptoService!=null&&searchService!=null&&synchronizationService!=null;
+    public NoteController(NoteRepository noteRepository, CryptoService cryptoService, TextSearchService textSearchService, SynchronizationService synchronizationService) {
+        assert noteRepository !=null&&cryptoService!=null&& textSearchService !=null&&synchronizationService!=null;
         this.noteRepository = noteRepository;
         this.cryptoService = cryptoService;
-        this.searchService = searchService;
+        this.textSearchService = textSearchService;
         this.synchronizationService = synchronizationService;
     }
 
     @RequestMapping(value="headers", method = RequestMethod.GET)
     public List<Header> getHeaders(){
-        return searchService.search("");
+        return textSearchService.search("");
     }
 
     @RequestMapping(value="search", method = RequestMethod.GET)
     public List<Header> search(@RequestParam("q") String args){
-        return searchService.search(args);
+        return textSearchService.search(args);
     }
 
     @RequestMapping(value="notes/{id}", method = RequestMethod.GET)
     public Note getNote(@PathVariable String id){
 
-        return cryptoService.decipher(noteRepository.findOne(id), false);
+        return cryptoService.decipher(noteRepository.findOne(id));
     }
 
     @RequestMapping(value="notes/{id}", method = RequestMethod.PUT)

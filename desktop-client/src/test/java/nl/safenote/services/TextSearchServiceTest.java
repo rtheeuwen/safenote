@@ -13,28 +13,28 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
-public class SearchServiceTest {
+public class TextSearchServiceTest {
 
     private final CryptoService cryptoService = new CryptoServiceMock();
     private final NoteRepositoryMock noteRepository = new NoteRepositoryMock(cryptoService);
-    private final SearchService searchService = new SearchServiceImpl(noteRepository, cryptoService);
+    private final TextSearchService textSearchService = new TextSearchServiceImpl(noteRepository, cryptoService);
 
     @Test
     public void ensureAllNotesAreFoundWhenNoArgs(){
-        ArrayList<Header> found = (ArrayList<Header>) searchService.search("");
-        ArrayList<Header> allHeaders = (ArrayList<Header>) noteRepository.findAll().stream().sorted((a, b) -> (int)(b.getCreated()-a.getCreated())).map(note -> new Header(note.getId(), cryptoService.decipher(note, true).getHeader())).collect(Collectors.toList());
+        ArrayList<Header> found = (ArrayList<Header>) textSearchService.search("");
+        ArrayList<Header> allHeaders = (ArrayList<Header>) noteRepository.findAll().stream().sorted((a, b) -> (int)(b.getCreated()-a.getCreated())).map(note -> new Header(note.getId(), cryptoService.decipher(note).getHeader())).collect(Collectors.toList());
         assertTrue(found.equals(allHeaders));
     }
 
     @Test
     public void ensureMostRelevantNoteIsFirst(){
-        Header found = searchService.search("hello").get(0);
+        Header found = textSearchService.search("hello").get(0);
         assertEquals("note1", found.getHeader());
     }
 
     @Test
     public void ensureNoNotesAreReturnedWhenNoRelevantResults(){
-        assertTrue(searchService.search("gibberish").isEmpty());
+        assertTrue(textSearchService.search("gibberish").isEmpty());
     }
 
     @Test
@@ -44,9 +44,9 @@ public class SearchServiceTest {
         Class[] params = new Class[2];
         params[0] = Note.class;
         params[1] = String[].class;
-        Method getResult = SearchServiceImpl.class.getDeclaredMethod("getResult", params);
+        Method getResult = TextSearchServiceImpl.class.getDeclaredMethod("getResult", params);
         getResult.setAccessible(true);
-        Result<Note> result = (Result<Note>) getResult.invoke(searchService, note, new String[]{"test"});
+        Result<Note> result = (Result<Note>) getResult.invoke(textSearchService, note, new String[]{"test"});
         assertEquals(result.getScore(), 3);
     }
 }

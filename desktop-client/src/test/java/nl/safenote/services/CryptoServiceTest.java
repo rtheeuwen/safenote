@@ -11,7 +11,6 @@ import javax.xml.bind.DatatypeConverter;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -44,7 +43,7 @@ public class CryptoServiceTest {
         note.setContent("content");
 
         cryptoService.encipher(note);
-        cryptoService.decipher(note, true);
+        cryptoService.decipher(note);
         assertEquals(note.getHeader(), "header");
         assertNotEquals(note.getContent(), "content");
     }
@@ -78,7 +77,7 @@ public class CryptoServiceTest {
         note.setHeader(header);
         note.setContent(content);
         cryptoService.encipher(note);
-        cryptoService.decipher(note, false);
+        cryptoService.decipher(note);
         assertEquals(note.getHeader(), header);
         assertEquals(note.getContent(), content);
     }

@@ -11,19 +11,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public interface SearchService {
+public interface TextSearchService {
 
     List<Header> search(String args);
 }
 
 @Service
-class SearchServiceImpl implements SearchService {
+class TextSearchServiceImpl implements TextSearchService {
 
     private final NoteRepository noteRepository;
     private final CryptoService cryptoService;
 
     @Autowired
-    public SearchServiceImpl(NoteRepository noteRepository, CryptoService cryptoService) {
+    public TextSearchServiceImpl(NoteRepository noteRepository, CryptoService cryptoService) {
         assert noteRepository !=null&&cryptoService!=null;
         this.noteRepository = noteRepository;
         this.cryptoService = cryptoService;
@@ -31,8 +31,9 @@ class SearchServiceImpl implements SearchService {
 
     @Override
     public List<Header> search(String args) {
-        return args.length()==0 ? noteRepository.findAll().stream().map(note -> new Header(note.getId(), cryptoService.decipher(note, true).getHeader())).collect(Collectors.toList())
-        : noteRepository.findAll().stream().map(note -> cryptoService.decipher(note, false)).map(note -> getResult(note, (args.split(" ")))).filter(result -> result!=null).sorted((a, b) -> b.getScore() - a.getScore()).map(result -> new Header(result.getItem().getId(), result.getItem().getHeader())).collect(Collectors.toList());
+        return args.length()==0 ? noteRepository.findHeaders().stream().map(h -> {h.setHeader(cryptoService.decipherHeader(h.getHeader())); return h;}).collect(Collectors.toList())
+        : noteRepository.findAllText().stream().map(note -> cryptoService.decipher(note)).map(note -> getResult(note, (args.split(" ")))).filter(result -> result!=null)
+                .sorted((a, b) -> b.getScore() - a.getScore()).map(result -> new Header(result.getItem().getId(), result.getItem().getHeader())).collect(Collectors.toList());
     }
 
     private Result<Note> getResult(Note note, String[] args){

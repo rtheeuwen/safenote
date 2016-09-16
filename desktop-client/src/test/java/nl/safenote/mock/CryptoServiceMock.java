@@ -20,8 +20,13 @@ public class CryptoServiceMock implements CryptoService{
     }
 
     @Override
-    public Note decipher(Note note, boolean headerOnly) {
+    public Note decipher(Note note) {
         return note;
+    }
+
+    @Override
+    public String decipherHeader(String header) {
+        return null;
     }
 
     @Override

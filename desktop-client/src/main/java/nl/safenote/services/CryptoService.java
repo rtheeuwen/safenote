@@ -15,7 +15,8 @@ import java.util.Objects;
 public interface CryptoService{
     void init(SecretKeySpec aesKey, SecretKeySpec hmacSecret, PrivateKey privateKey);
     Note encipher(Note note);
-    Note decipher(Note note, boolean headerOnly);
+    Note decipher(Note note);
+    String decipherHeader(String header);
     String checksum(Note note);
     Message sign(Message message, String userId);
 }
@@ -62,15 +63,18 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
     }
 
     @Override
-    public Note decipher(Note note, boolean headerOnly) {
+    public Note decipher(Note note) {
         note.setHeader(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getHeader()), this.AESKey)));
-        if(headerOnly)
-            return note;
         String content = note.getContent();
         if(!Objects.equals(content, "") &&content!=null&&content.length()!=0) {
             note.setContent(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getContent()), this.AESKey)));
         }
         return note;
+    }
+
+    @Override
+    public String decipherHeader(String header) {
+        return new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(header), this.AESKey));
     }
 
     @Override
