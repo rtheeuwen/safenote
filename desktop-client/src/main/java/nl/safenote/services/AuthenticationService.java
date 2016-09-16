@@ -6,10 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import nl.safenote.utils.FileIO;
 
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.security.*;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.zip.DeflaterOutputStream;
@@ -74,12 +77,7 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
             SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
             byte[] salt = new byte[128];
             secureRandom.nextBytes(salt);
-            byte[] passBytes = password.getBytes();
-            byte[] saltedPassword = new byte[128+passBytes.length];
-            System.arraycopy(salt, 0, saltedPassword, 0, 128);
-            System.arraycopy(passBytes, 0, saltedPassword, 128, passBytes.length);
-            byte[] digest = digest(saltedPassword);
-            SecretKeySpec key = new SecretKeySpec(Arrays.copyOfRange(digest, 0, 32), "AES");
+            SecretKeySpec key = deriveKey(password, salt);
             byte[] enciphered = aesEncipher(compress(keyStore), key);
             byte[] output = new byte[128 + enciphered.length];
             System.arraycopy(salt, 0, output, 0, 128);
@@ -92,22 +90,15 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
 
     private byte[] decipherStorage(byte[] cipherText, String password){
         byte[] salt = Arrays.copyOfRange(cipherText, 0, 128);
-        byte[] passBytes = password.getBytes();
-        byte[] digest = new byte[salt.length + passBytes.length];
-        System.arraycopy(salt, 0, digest, 0, 128);
-        System.arraycopy(passBytes, 0, digest, 128, passBytes.length);
-        digest = digest(digest);
-        SecretKeySpec key = new SecretKeySpec(Arrays.copyOfRange(digest, 0, 32), "AES");
+        SecretKeySpec key = deriveKey(password, salt);
         return decompress(aesDecipher(Arrays.copyOfRange(cipherText, 128, cipherText.length), key));
     }
 
-    private byte[] digest(byte[] password){
-        MessageDigest md;
+    private SecretKeySpec deriveKey(String password, byte[] salt){
         try {
-            md = MessageDigest.getInstance("SHA-256");
-            md.update(password);
-            return md.digest();
-        } catch (NoSuchAlgorithmException e) {
+            return new SecretKeySpec(SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")
+                    .generateSecret(new PBEKeySpec(password.toCharArray(), salt, 800000, 256)).getEncoded(), "AES");
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             throw new AssertionError(e);
         }
     }
@@ -132,7 +123,7 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
         InputStream inputStream = new InflaterInputStream(new ByteArrayInputStream(bytes));
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try {
-            byte[] buffer = new byte[4000];
+            byte[] buffer = new byte[1024];
             int len;
             while ((len = inputStream.read(buffer)) > 0)
                 byteArrayOutputStream.write(buffer, 0, len);
