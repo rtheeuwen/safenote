@@ -45,6 +45,7 @@ class SynchronizationServiceImpl implements SynchronizationService {
 
     @Autowired
     public SynchronizationServiceImpl(Environment environment, NoteRepository noteRepository, CryptoService cryptoService) {
+        assert(environment!=null&&noteRepository!=null&&cryptoService!=null);
         this.noteRepository = noteRepository;
         this.remoteHostUri = "http://"+environment.getProperty("remotehostname")+":"+environment.getProperty("port")+"/"+environment.getProperty("contextroot")+"/";
         this.cryptoService = cryptoService;

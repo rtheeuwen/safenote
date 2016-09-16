@@ -47,11 +47,8 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
     @Override
     public void authenticate(String passphrase) {
         assert passphrase!= null;
-        if(!FileIO.dataExists()){
-            generate(passphrase);
-        }else {
-            load(passphrase);
-        }
+        if(FileIO.dataExists()) load(passphrase);
+        else generate(passphrase);
     }
 
     private void generate(String passphrase){
@@ -124,9 +121,9 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try {
             byte[] buffer = new byte[1024];
-            int len;
-            while ((len = inputStream.read(buffer)) > 0)
-                byteArrayOutputStream.write(buffer, 0, len);
+            int length;
+            while ((length = inputStream.read(buffer)) > 0)
+                byteArrayOutputStream.write(buffer, 0, length);
             return byteArrayOutputStream.toByteArray();
         } catch (IOException e) {
             throw new AssertionError(e);

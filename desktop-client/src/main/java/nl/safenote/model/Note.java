@@ -40,6 +40,7 @@ public class Note{
     @Column(updatable = false, nullable = false)
     private long created;
 
+    @Column(nullable = false)
     private long version;
 
     @Column(updatable = false, nullable = false)

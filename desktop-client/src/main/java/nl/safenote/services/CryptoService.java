@@ -78,8 +78,7 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(this.HMACSecret);
-            byte[] digest = mac.doFinal((note.getContent()+ note.getHeader()+ note.getId()).getBytes("ASCII"));
-            return DatatypeConverter.printHexBinary(digest);
+            return DatatypeConverter.printBase64Binary(mac.doFinal((note.getContent()+ note.getHeader()+ note.getId()).getBytes("ASCII")));
         } catch(NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e){
             throw new RuntimeException(e);
         }

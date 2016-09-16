@@ -16,7 +16,6 @@ import nl.safenote.services.AuthenticationService;
  * @Since 2016-09-04
  */
 @RestController
-@Transactional
 @CrossOrigin(origins = "*")
 @RequestMapping(headers = "Accept=*/*")
 public class AuthenticationController {
