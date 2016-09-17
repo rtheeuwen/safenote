@@ -32,7 +32,7 @@ class TextSearchServiceImpl implements TextSearchService {
     @Override
     public List<Header> search(String args) {
         return args.length()==0 ? noteRepository.findHeaders().stream().map(h -> {h.setHeader(cryptoService.decipherHeader(h.getHeader())); return h;}).collect(Collectors.toList())
-        : noteRepository.findAllText().stream().map(cryptoService::decipher).map(note -> getResult(note, (args.split(" ")))).filter(result -> result!=null)
+        : noteRepository.findAllText().parallelStream().map(cryptoService::decipher).map(note -> getResult(note, (args.split(" ")))).filter(result -> result!=null)
                 .sorted((a, b) -> b.getScore() - a.getScore()).map(result -> new Header(result.getItem().getId(), result.getItem().getHeader())).collect(Collectors.toList());
     }
 
