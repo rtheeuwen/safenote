@@ -38,12 +38,12 @@ public class NoteRepositoryMock implements NoteRepository {
 
     @Override
     public List<Header> findHeaders() {
-        return null;
+        return this.notes.entrySet().stream().map(e -> new Header(e.getKey(), e.getValue().getHeader())).collect(Collectors.toList());
     }
 
     @Override
-    public List<Note> findAllText() {
-        return null;
+    public List<Note> findAllTextNotes() {
+        return this.notes.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
     }
 
     @Override

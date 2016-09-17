@@ -16,7 +16,7 @@ public interface CryptoService{
     void init(SecretKeySpec aesKey, SecretKeySpec hmacSecret, PrivateKey privateKey);
     Note encipher(Note note);
     Note decipher(Note note);
-    String decipherHeader(String header);
+    String decipher(String header);
     String checksum(Note note);
     Message sign(Message message, String userId);
 }
@@ -73,7 +73,7 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
     }
 
     @Override
-    public String decipherHeader(String header) {
+    public String decipher(String header) {
         return new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(header), this.AESKey));
     }
 

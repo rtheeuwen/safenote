@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @NamedQueries({
-    @NamedQuery(name="findOne", query = "SELECT n from SafeNote n WHERE n.id=:id AND n.userId=:userId AND DELETED= false"),
-    @NamedQuery(name="findAll", query = "FROM SafeNote n WHERE n.userId=:userId AND deleted=false"),
-    @NamedQuery(name="findDeleted", query = "FROM SafeNote n WHERE n.userId=:userId AND deleted=true") ,
+    @NamedQuery(name="findOne", query = "SELECT n FROM SafeNote n WHERE n.id=:id AND n.userId=:userId AND DELETED= false"),
+    @NamedQuery(name="findAll", query = "SELECT n FROM SafeNote n WHERE n.userId=:userId AND deleted=false"),
+    @NamedQuery(name="findDeleted", query = "SELECT n FROM SafeNote n WHERE n.userId=:userId AND deleted=true") ,
     @NamedQuery(name = "deleteAll", query = "DELETE FROM SafeNote"),
 })
 @Entity

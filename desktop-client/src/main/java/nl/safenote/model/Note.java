@@ -7,7 +7,7 @@ import javax.persistence.*;
 @Access(AccessType.FIELD)
 @NamedQueries({
         @NamedQuery(name = "findAll", query = "SELECT n FROM Note n ORDER BY n.created DESC"),
-        @NamedQuery(name = "findAllText", query = "SELECT n FROM Note n WHERE n.contentType = 'TEXT'"),
+        @NamedQuery(name = "findAllTextNotes", query = "SELECT n FROM Note n WHERE n.contentType = 'TEXT'"),
         @NamedQuery(name = "deleteAll", query = "DELETE FROM Note"),
         @NamedQuery(name = "getContentType", query = "SELECT n.contentType FROM Note n WHERE n.id=:id"),
         @NamedQuery(name = "getHeaders", query = "SELECT n.id, n.header FROM Note n ORDER BY n.created DESC")
@@ -16,7 +16,7 @@ import javax.persistence.*;
 public class Note{
 
     public final static String FINDALL = "findAll";
-    public final static String FINDALLTEXT = "findAllText";
+    public final static String FINDALLTEXTNOTES = "findAllTextNotes";
     public final static String DELETEALL = "deleteAll";
     public final static String GETCONTENTTYPE = "getContentType";
     public final static String GETHEADERS = "getHeaders";

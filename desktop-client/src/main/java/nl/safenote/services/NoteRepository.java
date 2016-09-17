@@ -16,7 +16,7 @@ public interface NoteRepository {
     Note findOne(String id);
     List<Note> findAll();
     List<Header> findHeaders();
-    List<Note> findAllText();
+    List<Note> findAllTextNotes();
     void create(Note Note);
     Note update(Note Note);
     boolean isUpdateable(Note note);
@@ -52,8 +52,8 @@ class NoteRepositoryImpl implements NoteRepository {
     }
 
     @Override
-    public List<Note> findAllText() {
-        return entityManager.createNamedQuery(Note.FINDALLTEXT, Note.class).getResultList();
+    public List<Note> findAllTextNotes() {
+        return entityManager.createNamedQuery(Note.FINDALLTEXTNOTES, Note.class).getResultList();
     }
 
     @Override

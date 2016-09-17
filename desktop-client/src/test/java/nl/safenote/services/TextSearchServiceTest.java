@@ -9,6 +9,7 @@ import nl.safenote.model.Result;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
@@ -22,7 +23,7 @@ public class TextSearchServiceTest {
     @Test
     public void ensureAllNotesAreFoundWhenNoArgs(){
         ArrayList<Header> found = (ArrayList<Header>) textSearchService.search("");
-        ArrayList<Header> allHeaders = (ArrayList<Header>) noteRepository.findAll().stream().sorted((a, b) -> (int)(b.getCreated()-a.getCreated())).map(note -> new Header(note.getId(), cryptoService.decipher(note).getHeader())).collect(Collectors.toList());
+        List<Header> allHeaders = noteRepository.findHeaders();
         assertTrue(found.equals(allHeaders));
     }
 

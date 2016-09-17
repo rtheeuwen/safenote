@@ -45,7 +45,6 @@ public class CryptoServiceTest {
         cryptoService.encipher(note);
         cryptoService.decipher(note);
         assertEquals(note.getHeader(), "header");
-        assertNotEquals(note.getContent(), "content");
     }
 
     @Test

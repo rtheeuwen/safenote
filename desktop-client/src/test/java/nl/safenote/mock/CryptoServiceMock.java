@@ -25,8 +25,8 @@ public class CryptoServiceMock implements CryptoService{
     }
 
     @Override
-    public String decipherHeader(String header) {
-        return null;
+    public String decipher(String header) {
+        return header;
     }
 
     @Override
