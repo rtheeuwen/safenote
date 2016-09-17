@@ -38,7 +38,6 @@ class TextSearchServiceImpl implements TextSearchService {
 
     private Result<Note> getResult(Note note, String[] args){
         Result<Note> result = new Result<>(note);
-
         for (String arg : args) {
             Pattern pattern = Pattern.compile(arg, Pattern.CASE_INSENSITIVE);
             Matcher matcher = pattern.matcher(note.getContent());
