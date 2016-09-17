@@ -8,6 +8,7 @@ import nl.safenote.model.Note;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public interface TextSearchService {
@@ -37,9 +38,9 @@ class TextSearchServiceImpl implements TextSearchService {
 
     private Result<Note> getResult(Note note, String[] args){
         Result<Note> result = new Result<>(note);
-        String text = note.getContent();
+        String text = note.getContent().toLowerCase(Locale.getDefault());
         for (String query : args) {
-            int count = StringUtils.countOccurrencesOf(text, query);
+            int count = StringUtils.countOccurrencesOf(text, query.toLowerCase(Locale.getDefault()));
             if (count == 0)
                 return null; //AND condition -> note will be filtered out
             else
