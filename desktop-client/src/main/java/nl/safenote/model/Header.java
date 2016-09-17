@@ -27,8 +27,9 @@ public final class Header {
         return header;
     }
 
-    public void setHeader(String header) {
+    public Header setHeader(String header) {
         this.header = header;
+        return this;
     }
 
     @Override
