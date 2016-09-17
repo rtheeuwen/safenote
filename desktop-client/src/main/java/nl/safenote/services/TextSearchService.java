@@ -5,10 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import nl.safenote.model.Header;
 import nl.safenote.model.Note;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public interface TextSearchService {
@@ -38,14 +37,11 @@ class TextSearchServiceImpl implements TextSearchService {
 
     private Result<Note> getResult(Note note, String[] args){
         Result<Note> result = new Result<>(note);
-        for (String arg : args) {
-            Pattern pattern = Pattern.compile(arg, Pattern.CASE_INSENSITIVE);
-            Matcher matcher = pattern.matcher(note.getContent());
-            int count = 0;
-            while (matcher.find())
-                count++;
+        String text = note.getContent();
+        for (String query : args) {
+            int count = StringUtils.countOccurrencesOf(text, query);
             if (count == 0)
-                return null;
+                return null; //AND condition -> note will be filtered out
             else
                 result.incrementScore(count);
         }
