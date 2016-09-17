@@ -10,6 +10,8 @@ import nl.safenote.model.Note;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public interface TextSearchService {
@@ -39,8 +41,18 @@ class TextSearchServiceImpl implements TextSearchService {
 
     private Result<Note> getResult(Note note, String[] args){
         Result<Note> result = new Result<>(note);
-        String content = note.getContent().toLowerCase();
-        Arrays.stream(args).forEachOrdered(arg -> result.incrementScore(StringUtils.countOccurrencesOf(content, arg.toLowerCase())));
-        return result.getScore()!=0?result:null;
+
+        for (String arg : args) {
+            Pattern pattern = Pattern.compile(arg, Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pattern.matcher(note.getContent());
+            int count = 0;
+            while (matcher.find())
+                count++;
+            if (count == 0)
+                return null;
+            else
+                result.incrementScore(count);
+        }
+        return result;
     }
 }
