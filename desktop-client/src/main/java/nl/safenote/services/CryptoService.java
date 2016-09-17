@@ -66,7 +66,7 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
     public Note decipher(Note note) {
         note.setHeader(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getHeader()), this.AESKey)));
         String content = note.getContent();
-        if(!Objects.equals(content, "") &&content!=null&&content.length()!=0) {
+        if(!Objects.equals(content, "") &&content!=null) {
             note.setContent(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getContent()), this.AESKey)));
         }
         return note;
