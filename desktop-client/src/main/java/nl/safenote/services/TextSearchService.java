@@ -3,12 +3,9 @@ package nl.safenote.services;
 import nl.safenote.model.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import nl.safenote.model.Header;
 import nl.safenote.model.Note;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
