@@ -20,7 +20,7 @@ class LoadingScreen {
         frame.setLocation(dim.width/2-128, dim.height/2-128);
         frame.setVisible(true);
 
-        JLabel label = new JLabel(new ImageIcon(new ClassPathResource("/WEB-INF/img/logo.png").getURL()));
+        JLabel label = new JLabel(new ImageIcon(new ClassPathResource("/logo.png").getURL()));
 
         frame.add(label);
         frame.pack();
