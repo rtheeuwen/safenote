@@ -4,7 +4,7 @@ import nl.safenote.model.Header;
 import nl.safenote.model.Note;
 import nl.safenote.services.CryptoService;
 import nl.safenote.services.NoteRepository;
-import nl.safenote.services.TextSearchService;
+import nl.safenote.services.SearchService;
 import nl.safenote.services.SynchronizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -26,26 +26,28 @@ public class NoteController {
 
     private final NoteRepository noteRepository;
     private final CryptoService cryptoService;
-    private final TextSearchService textSearchService;
+    private final SearchService searchService;
     private final SynchronizationService synchronizationService;
 
     @Autowired
-    public NoteController(NoteRepository noteRepository, CryptoService cryptoService, TextSearchService textSearchService, SynchronizationService synchronizationService) {
-        assert noteRepository !=null&&cryptoService!=null&& textSearchService !=null&&synchronizationService!=null;
+    public NoteController(NoteRepository noteRepository, CryptoService cryptoService, SearchService searchService, SynchronizationService synchronizationService) {
+        assert noteRepository !=null&&cryptoService!=null&& searchService !=null&&synchronizationService!=null;
         this.noteRepository = noteRepository;
         this.cryptoService = cryptoService;
-        this.textSearchService = textSearchService;
+        this.searchService = searchService;
         this.synchronizationService = synchronizationService;
     }
 
     @RequestMapping(value="headers", method = RequestMethod.GET)
     public List<Header> getHeaders(){
-        return textSearchService.search("");
+        return noteRepository.findHeaders().stream()
+                .map(h -> h.setHeader(cryptoService.decipher(h.getHeader())))
+                .collect(Collectors.toList());
     }
 
     @RequestMapping(value="search", method = RequestMethod.GET)
     public List<Header> search(@RequestParam("q") String args){
-        return textSearchService.search(args);
+        return searchService.search(args);
     }
 
     @RequestMapping(value="notes/{id}", method = RequestMethod.GET)

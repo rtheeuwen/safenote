@@ -28,7 +28,7 @@ import nl.safenote.api.NoteController;
 import nl.safenote.services.CryptoService;
 import nl.safenote.services.NoteRepository;
 import nl.safenote.services.SynchronizationService;
-import nl.safenote.services.TextSearchService;
+import nl.safenote.services.SearchService;
 
 
 import java.sql.SQLException;
@@ -40,7 +40,7 @@ import java.util.Properties;
 @EnableWebMvc
 @EnableTransactionManagement
 @PropertySource(value = {"classpath:application.properties"})
-@ComponentScan(basePackageClasses = {NoteController.class, AuthenticationController.class, NoteRepository.class, SynchronizationService.class, CryptoService.class, TextSearchService.class})
+@ComponentScan(basePackageClasses = {NoteController.class, AuthenticationController.class, NoteRepository.class, SynchronizationService.class, CryptoService.class, SearchService.class})
 public class Config extends WebMvcConfigurerAdapter {
 
 

@@ -10,32 +10,31 @@ import nl.safenote.model.Result;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
-public class TextSearchServiceTest {
+public class SearchServiceTest {
 
     private final CryptoService cryptoService = new CryptoServiceMock();
     private final NoteRepositoryMock noteRepository = new NoteRepositoryMock(cryptoService);
-    private final TextSearchService textSearchService = new TextSearchServiceImpl(noteRepository, cryptoService);
+    private final SearchService searchService = new SearchServiceImpl(noteRepository, cryptoService);
 
     @Test
     public void ensureAllNotesAreFoundWhenNoArgs(){
-        ArrayList<Header> found = (ArrayList<Header>) textSearchService.search("");
+        ArrayList<Header> found = (ArrayList<Header>) searchService.search("");
         List<Header> allHeaders = noteRepository.findHeaders();
         assertTrue(found.equals(allHeaders));
     }
 
     @Test
     public void ensureMostRelevantNoteIsFirst(){
-        Header found = textSearchService.search("hello").get(0);
+        Header found = searchService.search("hello").get(0);
         assertEquals("note1", found.getHeader());
     }
 
     @Test
     public void ensureNoNotesAreReturnedWhenNoRelevantResults(){
-        assertTrue(textSearchService.search("gibberish").isEmpty());
+        assertTrue(searchService.search("gibberish").isEmpty());
     }
 
     @Test
@@ -45,9 +44,9 @@ public class TextSearchServiceTest {
         Class[] params = new Class[2];
         params[0] = Note.class;
         params[1] = String[].class;
-        Method getResult = TextSearchServiceImpl.class.getDeclaredMethod("getResult", params);
+        Method getResult = SearchServiceImpl.class.getDeclaredMethod("getResult", params);
         getResult.setAccessible(true);
-        Result<Note> result = (Result<Note>) getResult.invoke(textSearchService, note, new String[]{"test"});
+        Result<Note> result = (Result<Note>) getResult.invoke(searchService, note, new String[]{"test"});
         assertEquals(result.getScore(), 3);
     }
 }

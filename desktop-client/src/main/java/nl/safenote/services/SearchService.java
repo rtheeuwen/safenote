@@ -11,19 +11,19 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-public interface TextSearchService {
+public interface SearchService {
 
     List<Header> search(String args);
 }
 
 @Service
-class TextSearchServiceImpl implements TextSearchService {
+class SearchServiceImpl implements SearchService {
 
     private final NoteRepository noteRepository;
     private final CryptoService cryptoService;
 
     @Autowired
-    public TextSearchServiceImpl(NoteRepository noteRepository, CryptoService cryptoService) {
+    public SearchServiceImpl(NoteRepository noteRepository, CryptoService cryptoService) {
         assert noteRepository !=null&&cryptoService!=null;
         this.noteRepository = noteRepository;
         this.cryptoService = cryptoService;
@@ -31,9 +31,15 @@ class TextSearchServiceImpl implements TextSearchService {
 
     @Override
     public List<Header> search(String args) {
-        return args.length()==0 ? noteRepository.findHeaders().stream().map(h -> h.setHeader(cryptoService.decipher(h.getHeader()))).collect(Collectors.toList())
-        : noteRepository.findAllTextNotes().parallelStream().map(cryptoService::decipher).map(note -> getResult(note, (args.split(" ")))).filter(result -> result!=null)
-                .sorted((a, b) -> b.getScore() - a.getScore()).map(result -> new Header(result.getItem().getId(), result.getItem().getHeader())).collect(Collectors.toList());
+        if(args==null||args.length()==0)
+            throw new IllegalArgumentException("Query must be provided");
+        return noteRepository.findAllTextNotes().parallelStream()
+                .map(cryptoService::decipher)
+                .map(note -> this.getResult(note, (args.split(" "))))
+                .filter(result -> result!=null)
+                .sorted((a, b) -> b.getScore() - a.getScore())
+                .map(result -> new Header(result.getItem().getId(), result.getItem().getHeader()))
+                .collect(Collectors.toList());
     }
 
     private Result<Note> getResult(Note note, String[] args){
