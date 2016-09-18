@@ -2,6 +2,7 @@ package nl.safenote.app;
 
 import nl.safenote.api.AuthenticationController;
 import nl.safenote.api.NoteController;
+import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Composite;
@@ -11,10 +12,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Table;
@@ -25,11 +22,13 @@ import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-import nl.safenote.utils.SWTResourceManager;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
 
 @Component
 public class View {
@@ -68,7 +67,8 @@ public class View {
         shell = new Shell();
         shell.setSize(1200, 800);
         shell.setText("SafeNote");
-        shell.setImage(SWTResourceManager.getImage(View.class, "/logo.png"));
+        shell.setImage(getImage("/logo.png"));
+
 
         final StackLayout layout = new StackLayout();
         shell.setLayout(layout);
@@ -121,7 +121,8 @@ public class View {
         gd_middleFiller.heightHint = 1;
         middleFiller.setLayoutData(gd_middleFiller);
 
-        Image loginIcon = SWTResourceManager.getImage(View.class, "/lock.gif");
+        Image loginIcon = getImage("/lock.gif");
+
         loginButton = new Button(login, SWT.NONE | SWT.CENTER);
         loginButton.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
         loginButton.setImage(loginIcon);
@@ -136,19 +137,16 @@ public class View {
                 if(generate){
                     String passphrase = passphraseText.getText();
                     String confirm = gen_confirmText.getText();
-                    if(passphrase!=""&&passphrase.equals(confirm)){
-                        View.authenticationController.authenticate(passphrase);
-                        layout.topControl = workbench;
-                        login.dispose();
-                        shell.layout();
+                    if(passphrase!=""&&passphrase.equals(confirm)&&View.authenticationController.authenticate(passphrase)){
+                            layout.topControl = workbench;
+                            login.dispose();
+                            shell.layout();
                         //TODO authenticantioncontroller generate
                     }
                     else
                         wrongPassLabel.setVisible(true);
                 } else {
-                    boolean success = true;
-                    if(success){
-                        View.authenticationController.authenticate(passphraseText.getText());
+                    if(View.authenticationController.authenticate(passphraseText.getText())){
                         layout.topControl = workbench;
                         login.dispose();
                         shell.layout();
@@ -166,8 +164,7 @@ public class View {
                     if(generate){
                         String passphrase = passphraseText.getText();
                         String confirm = gen_confirmText.getText();
-                        if(passphrase!=""&&passphrase.equals(confirm)){
-                            View.authenticationController.authenticate(passphrase);
+                        if(passphrase!=""&&passphrase.equals(confirm)&&View.authenticationController.authenticate(passphrase)){
                             layout.topControl = workbench;
                             login.dispose();
                             shell.layout();
@@ -175,9 +172,7 @@ public class View {
                         else
                             wrongPassLabel.setVisible(true);
                     } else {
-                        boolean success = true;
-                        if(success){
-                            View.authenticationController.authenticate(passphraseText.getText());
+                        if(View.authenticationController.authenticate(passphraseText.getText())){
                             layout.topControl = workbench;
                             login.dispose();
                             shell.layout();
@@ -208,7 +203,8 @@ public class View {
             }
         });
 
-        Image loadingIcon = SWTResourceManager.getImage(View.class, "/loading.gif");
+        Image loadingIcon = getImage("/loading.gif");
+
         Label loadingLabel = new Label(login, SWT.CENTER);
         loadingLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
         loadingLabel.setImage(loadingIcon);
@@ -236,8 +232,8 @@ public class View {
         topLeftFiller.setLayoutData(gd_topLeftFiller);
 
         searchText = new Text(workbench, SWT.BORDER);
-        final Image searchIcon = SWTResourceManager.getImage(View.class, "/search.gif");
-        final Image clearIcon = SWTResourceManager.getImage(View.class, "/clear.gif");
+        final Image searchIcon = getImage("/search.gif");
+        final Image clearIcon = getImage("/clear.gif");
         final Label searchLabel = new Label(workbench, SWT.NONE);
         searchLabel.setImage(searchIcon);
 
@@ -249,25 +245,27 @@ public class View {
         searchText.setLocation(new Point(location.x+80, location.y));
         searchText.setLayoutData(gd_text);
 
-        Image newIcon = SWTResourceManager.getImage(View.class, "/new.gif");
+        Image newIcon = getImage("/new.gif");
+
         Button newButton = new Button(workbench, SWT.PUSH);
         newButton.setBackground(backGroundColor);
         newButton.setImage(newIcon);
         newButton.setText("  new note   ");
 
-        Image deleteIcon = SWTResourceManager.getImage(View.class, "/delete.gif");
+        Image deleteIcon = getImage("/delete.gif");
         Button deleteButton = new Button(workbench, SWT.PUSH);
         deleteButton.setBackground(backGroundColor);
         deleteButton.setImage(deleteIcon);
         deleteButton.setText(" delete note ");
 
-        Image syncIcon = SWTResourceManager.getImage(View.class, "/sync.gif");
+        Image syncIcon = getImage("/sync.gif");
         Button syncButton = new Button(workbench, SWT.PUSH);
         syncButton.setBackground(backGroundColor);
         syncButton.setImage(syncIcon);
         syncButton.setText(" synchronize ");
 
-        Image exportIcon = SWTResourceManager.getImage(View.class, "/lock.gif");
+        Image exportIcon = getImage("/lock.gif");
+
         Button exportButton = new Button(workbench, SWT.PUSH);
         exportButton.setBackground(backGroundColor);
         exportButton.setImage(exportIcon);
@@ -411,5 +409,17 @@ public class View {
             }
         });
 
+    }
+
+    private static Image getImage(String path) {
+        try {
+            Display display = Display.getCurrent();
+            ImageData data = new ImageData(new ClassPathResource(path).getInputStream());
+            if (data.transparentPixel > 0)
+                return new Image(display, data, data.getTransparencyMask());
+            return new Image(display, data);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
