@@ -52,9 +52,10 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
     }
 
     private void generate(String passphrase){
-        byte[] keyStore = KeyUtils.generateKeyStore();
-        FileIO.write(encipherStorage(keyStore, passphrase));
-        initializeServices(keyStoreFromByteArray(keyStore));
+            SecureRandom secureRandom = new SecureRandom();
+            byte[] keyStore = KeyUtils.generateKeyStore(secureRandom);
+            FileIO.write(encipherStorage(keyStore, passphrase, secureRandom));
+            initializeServices(keyStoreFromByteArray(keyStore));
     }
 
     private void load(String passphrase){
@@ -69,9 +70,7 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
             this.synchronizationService.enlist(DatatypeConverter.printBase64Binary(( keyStore.getD()).getEncoded()));
     }
 
-    private byte[] encipherStorage(byte[] keyStore, String password){
-        try {
-            SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
+    private byte[] encipherStorage(byte[] keyStore, String password, SecureRandom secureRandom){
             byte[] salt = new byte[32];
             secureRandom.nextBytes(salt);
             SecretKeySpec key = deriveKey(password, salt);
@@ -80,9 +79,6 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
             System.arraycopy(salt, 0, output, 0, 32);
             System.arraycopy(enciphered, 0, output, 32, enciphered.length);
             return output;
-        } catch (NoSuchAlgorithmException e) {
-            throw new AssertionError(e);
-        }
     }
 
     private byte[] decipherStorage(byte[] cipherText, String password){

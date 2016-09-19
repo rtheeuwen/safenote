@@ -39,9 +39,9 @@ public final class KeyUtils {
         }
     }
 
-    public static byte[] generateKeyStore(){
-        KeyPair keyPair = generateRsaKeyPair();
-        return keyStoreToByteArray(generateAesKey(), generateHmacKey(), keyPair.getPrivate(), keyPair.getPublic());
+    public static byte[] generateKeyStore(SecureRandom secureRandom){
+        KeyPair keyPair = generateRsaKeyPair(secureRandom);
+        return keyStoreToByteArray(generateAesKey(), generateHmacKey(secureRandom), keyPair.getPrivate(), keyPair.getPublic());
     }
 
     private static byte[] keyStoreToByteArray(SecretKeySpec aes, SecretKeySpec hmac, PrivateKey privateKey, PublicKey publicKey){
@@ -75,23 +75,17 @@ public final class KeyUtils {
         }
     }
 
-    private static SecretKeySpec generateHmacKey(){
-        try {
-            SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+    private static SecretKeySpec generateHmacKey(SecureRandom secureRandom){
             byte[] bytes = new byte[256];
-            random.nextBytes(bytes);
+            secureRandom.nextBytes(bytes);
             return new SecretKeySpec(bytes, "HmacSHA256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new AssertionError(e);
-        }
     }
 
-    private static KeyPair generateRsaKeyPair(){
+    private static KeyPair generateRsaKeyPair(SecureRandom secureRandom){
         try {
-            SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
             RSAKeyGenParameterSpec rsaKGenSpec = new   RSAKeyGenParameterSpec(2048, RSAKeyGenParameterSpec.F4);
             KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-            kpg.initialize(rsaKGenSpec, random);
+            kpg.initialize(rsaKGenSpec, secureRandom);
             return kpg.generateKeyPair();
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
             throw new AssertionError(e);
