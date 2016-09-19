@@ -72,13 +72,13 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
     private byte[] encipherStorage(byte[] keyStore, String password){
         try {
             SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
-            byte[] salt = new byte[128];
+            byte[] salt = new byte[32];
             secureRandom.nextBytes(salt);
             SecretKeySpec key = deriveKey(password, salt);
             byte[] enciphered = aesEncipher(compress(keyStore), key);
-            byte[] output = new byte[128 + enciphered.length];
-            System.arraycopy(salt, 0, output, 0, 128);
-            System.arraycopy(enciphered, 0, output, 128, enciphered.length);
+            byte[] output = new byte[32 + enciphered.length];
+            System.arraycopy(salt, 0, output, 0, 32);
+            System.arraycopy(enciphered, 0, output, 32, enciphered.length);
             return output;
         } catch (NoSuchAlgorithmException e) {
             throw new AssertionError(e);
@@ -86,9 +86,9 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
     }
 
     private byte[] decipherStorage(byte[] cipherText, String password){
-        byte[] salt = Arrays.copyOfRange(cipherText, 0, 128);
+        byte[] salt = Arrays.copyOfRange(cipherText, 0, 32);
         SecretKeySpec key = deriveKey(password, salt);
-        return decompress(aesDecipher(Arrays.copyOfRange(cipherText, 128, cipherText.length), key));
+        return decompress(aesDecipher(Arrays.copyOfRange(cipherText, 32, cipherText.length), key));
     }
 
     private SecretKeySpec deriveKey(String password, byte[] salt){

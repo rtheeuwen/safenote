@@ -67,11 +67,11 @@ public class Note{
 
     }
 
-    public Note(String id, String header, ContentType contentType){
-        if(id==null||header==null||contentType==null)
+    public Note(String id, ContentType contentType){
+        if(id==null||contentType==null)
             throw new IllegalArgumentException("Constructor parameter cannot be null");
         this.id = id;
-        this.header = header;
+        this.header = "";
         this.content = "";
         this.contentType = contentType;
     }

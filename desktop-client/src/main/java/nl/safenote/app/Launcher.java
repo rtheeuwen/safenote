@@ -25,7 +25,6 @@ class Launcher {
         LoadingScreen loadingScreen = new LoadingScreen();
 
         ApplicationContext applicationContext = new AnnotationConfigApplicationContext(Config.class);
-
         loadingScreen.done();
         System.out.println("time elapsed: " + (System.currentTimeMillis() - time));
                 Properties properties = new Properties();

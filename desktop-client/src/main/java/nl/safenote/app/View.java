@@ -2,26 +2,18 @@ package nl.safenote.app;
 
 import nl.safenote.api.AuthenticationController;
 import nl.safenote.api.NoteController;
+import nl.safenote.model.Header;
+import nl.safenote.model.Note;
 import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +21,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @Component
 public class View {
@@ -36,13 +29,16 @@ public class View {
     private Shell shell;
     private Font font;
     private Font tableFont;
-    private Table table;
+    private static Table table;
+    private StyledText styledText;
     private Text searchText;
     private Color backGroundColor;
     private static boolean searching;
 
     private static AuthenticationController authenticationController;
     private static NoteController noteController;
+
+    private static Note activeNote;
 
     @Autowired
     public View(AuthenticationController authenticationController, NoteController noteController) {
@@ -65,7 +61,7 @@ public class View {
 
     private void createContents(final Display display, final boolean generate){
         shell = new Shell();
-        shell.setSize(1200, 800);
+        shell.setSize(1080, 700);
         shell.setText("SafeNote");
         shell.setImage(getImage("/logo.png"));
 
@@ -138,9 +134,10 @@ public class View {
                     String passphrase = passphraseText.getText();
                     String confirm = gen_confirmText.getText();
                     if(passphrase!=""&&passphrase.equals(confirm)&&View.authenticationController.authenticate(passphrase)){
-                            layout.topControl = workbench;
+                        layout.topControl = workbench;
                             login.dispose();
                             shell.layout();
+                            getHeaders();
                         //TODO authenticantioncontroller generate
                     }
                     else
@@ -150,6 +147,7 @@ public class View {
                         layout.topControl = workbench;
                         login.dispose();
                         shell.layout();
+                        getHeaders();
                         //TODO authenticantioncontroller authenticate
                     } else {
                         wrongPassLabel.setVisible(true);
@@ -168,6 +166,7 @@ public class View {
                             layout.topControl = workbench;
                             login.dispose();
                             shell.layout();
+                            getHeaders();
                         }
                         else
                             wrongPassLabel.setVisible(true);
@@ -176,6 +175,7 @@ public class View {
                             layout.topControl = workbench;
                             login.dispose();
                             shell.layout();
+                            getHeaders();
                             //TODO authenticantioncontroller authenticate
                         } else {
                             wrongPassLabel.setVisible(true);
@@ -195,6 +195,7 @@ public class View {
                         View.authenticationController.authenticate(passphrase);
                         layout.topControl = workbench;
                         login.dispose();
+                        getHeaders();
                         //TODO authenticantioncontroller generate
                     }
                     else
@@ -224,6 +225,7 @@ public class View {
         workbench.setLayout(new GridLayout(9, false));
 
         backGroundColor = display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
+//        backGroundColor = display.getSystemColor(SWT.BACKGROUND);
 
         Composite topLeftFiller = new Composite(workbench, SWT.NONE);
         GridData gd_topLeftFiller = new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1);
@@ -291,18 +293,13 @@ public class View {
         table.setBackground(backGroundColor);
         TableColumn column = new TableColumn(table, SWT.NONE);
 
-        //populate table initially
-        noteController.getHeaders().stream().forEachOrdered(header -> {TableItem item = new TableItem(table, SWT.NONE);
-            item.setText(header.getHeader()); item.setData(header.getId());});
-        table.getColumn(0).pack();
 
-
-        StyledText styledText = new StyledText(workbench, SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
+        styledText = new StyledText(workbench, SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
         GridData gd_styledText = new GridData(SWT.FILL, SWT.FILL, true, true, 4, 1);
         gd_styledText.widthHint = 600;
         gd_styledText.minimumWidth=600;
         styledText.setLayoutData(gd_styledText);
-        int margin = 90;
+        int margin = 50;
         styledText.setMargins(margin, margin, margin, margin);
         styledText.setWordWrap(true);
         styledText.setFont(font);
@@ -311,7 +308,6 @@ public class View {
         styledText.forceFocus();
 
         //POPULATE VIEWER
-        styledText.setText("test");
         styledText.setSelection(styledText.getText().length());
         new Label(workbench, SWT.NONE);
 
@@ -337,9 +333,18 @@ public class View {
                         View.searching = true;
                         searchLabel.setImage(clearIcon);
                         table.clearAll();
-                        noteController.search(query).stream().forEachOrdered(header -> {TableItem item = new TableItem(table, SWT.NONE);
-                        item.setText(header.getHeader()); item.setData(header.getId());});
+                        java.util.List<Header> headers = noteController.search(query);
+                        for(int i=0; i<headers.size(); i++){
+                            Header header = headers.get(i);
+                            TableItem item = new TableItem(table, SWT.NONE);
+                            item.setText(header.getHeader());
+                            item.setData(header.getId());
+                            if((i&1)==1)
+                                item.setBackground(backGroundColor);
+                        }
+
                         table.getColumn(0).pack();
+
                     }
                 }
             }
@@ -354,10 +359,10 @@ public class View {
                     searchText.setText("");
                 } else {
                     String query = searchText.getText();
-                    if(query!=""){
+                    if(query.length()!=0&&query!=null){
                         View.searching = true;
                         searchLabel.setImage(clearIcon);
-                        table.clearAll();
+                        table.removeAll();
                         noteController.search(query).stream().forEachOrdered(header -> {TableItem item = new TableItem(table, SWT.NONE);
                             item.setText(header.getHeader()); item.setData(header.getId());});
                         table.getColumn(0).pack();
@@ -370,17 +375,22 @@ public class View {
         newButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseUp(MouseEvent e) {
-                //click new note
-                throw new UnsupportedOperationException();
-
+            String id = noteController.createNote();
+                openNote(id);
+                getHeaders();
+                table.select(0);
             }
         });
 
         deleteButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseUp(MouseEvent e) {
-                //click delete
-                throw new UnsupportedOperationException();
+                if(activeNote!=null) {
+                    noteController.deleteNote(activeNote.getId());
+                    activeNote = null;
+                    styledText.setText("");
+                    getHeaders();
+                }
             }
         });
 
@@ -403,12 +413,38 @@ public class View {
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseUp(MouseEvent e) {
-                //click table row
-                System.out.println(table.getSelection()[0].getData());
-                throw new UnsupportedOperationException();
+                TableItem[] active = table.getSelection();
+                if(active.length!=0){
+                    openNote(active[0].getData().toString());
+                }
             }
         });
 
+        styledText.addListener(SWT.Modify, e -> {
+//            int i = styledText.getLineCount() - 1;
+//            if(styledText.getTopIndex()!=i)
+//                styledText.setTopIndex(styledText.getLineCount() - 1);
+            styledText.setTopIndex(styledText.getLineCount()-2);
+        });
+
+    }
+
+    private static void getHeaders(){
+        table.removeAll();
+        noteController.getHeaders().stream().forEachOrdered(header -> {TableItem item = new TableItem(table, SWT.NONE);
+            item.setText("\n"+header.getHeader()+"\n"); item.setData(header.getId());});
+        table.getColumn(0).pack();
+    }
+
+    private void openNote(String id){
+        System.out.println("Opening: " + id);
+        if(activeNote!=null&&!Objects.equals(activeNote.getContent(), styledText.getText())){
+            activeNote.setContent(styledText.getText());
+            noteController.updateNote(activeNote);
+            System.out.println("Updating old note: " + activeNote.getId());
+        }
+        activeNote = noteController.getNote(id);
+        styledText.setText(activeNote.getContent());
     }
 
     private static Image getImage(String path) {

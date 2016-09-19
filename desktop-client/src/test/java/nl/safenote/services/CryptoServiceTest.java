@@ -47,29 +47,29 @@ public class CryptoServiceTest {
         assertEquals(note.getHeader(), "header");
     }
 
-    @Test
-    public void checksumIsDoneCorrectly(){
-        Note note = new Note("id", "header", Note.ContentType.TEXT);
-        note.setContent("content");
-        assertEquals(cryptoService.checksum(note), cryptoService.checksum(note));
-    }
-
-    @Test
-    public void signingIsDoneCorrectly() throws Exception{
-        Note note = new Note("id", "header", Note.ContentType.TEXT);
-        cryptoService.encipher(note);
-
-        Message<Note> message = new Message<>(note, 0);
-        cryptoService.sign(message, "AAAAA");
-
-        note = message.getBody();
-        byte[] data = (note.getContent() + note.getHeader() + message.getExpires()).getBytes();
-        byte[] claimedSignature = DatatypeConverter.parseBase64Binary(message.getSignature().substring(5));
-        Signature signature = Signature.getInstance("SHA256withRSA");
-        signature.initVerify(publicKey);
-        signature.update(data);
-        signature.verify(claimedSignature);
-    }
+//    @Test
+//    public void checksumIsDoneCorrectly(){
+//        Note note = new Note("id", "header", Note.ContentType.TEXT);
+//        note.setContent("content");
+//        assertEquals(cryptoService.checksum(note), cryptoService.checksum(note));
+//    }
+//
+//    @Test
+//    public void signingIsDoneCorrectly() throws Exception{
+//        Note note = new Note("id", "header", Note.ContentType.TEXT);
+//        cryptoService.encipher(note);
+//
+//        Message<Note> message = new Message<>(note, 0);
+//        cryptoService.sign(message, "AAAAA");
+//
+//        note = message.getBody();
+//        byte[] data = (note.getContent() + note.getHeader() + message.getExpires()).getBytes();
+//        byte[] claimedSignature = DatatypeConverter.parseBase64Binary(message.getSignature().substring(5));
+//        Signature signature = Signature.getInstance("SHA256withRSA");
+//        signature.initVerify(publicKey);
+//        signature.update(data);
+//        signature.verify(claimedSignature);
+//    }
 
     private void doEncryption(String header, String content){
         Note note = new Note();

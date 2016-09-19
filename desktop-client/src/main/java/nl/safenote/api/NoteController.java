@@ -49,20 +49,27 @@ public class NoteController {
         return cryptoService.decipher(noteRepository.findOne(id));
     }
 
-    public void updateNote(String id, Note note){
+    public void updateNote(Note note){
         if(!noteRepository.isUpdateable(note))
             throw new IllegalArgumentException("This type of content cannot be updated");
+        String header = note.getHeader();
+        if(header.equals("New note...")){
+            String content = note.getContent();
+            int index = content.indexOf("\n");
+            index = index!=-1?index:content.indexOf(" ");
+            index = index!=-1?index:content.length()<=10?content.length():10;
+            note.setHeader(content.substring(0, index));
+        }
         cryptoService.encipher(note);
         noteRepository.update(note);
         synchronizationService.send(note);
     }
 
-    public String createNote(String header){
-        if(header.isEmpty())
-            header = "nameless note";
+    public String createNote(){
         String id = noteRepository.nextId();
-        if(header.length()>50) header = header.substring(0, 50);
-        Note note = new Note(id, header, Note.ContentType.TEXT);
+        Note note = new Note(id, Note.ContentType.TEXT);
+        note.setHeader("New note...");
+        note.setContent("");
         cryptoService.encipher(note);
         noteRepository.create(note);
         synchronizationService.send(note);
