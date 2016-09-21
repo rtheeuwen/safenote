@@ -61,7 +61,7 @@ public class View {
 
     private void createContents(final Display display, final boolean generate){
         shell = new Shell();
-        shell.setSize(1080, 700);
+        shell.setSize(1080, 695);
         shell.setText("SafeNote");
         shell.setImage(getImage("/logo.png"));
 
@@ -305,12 +305,13 @@ public class View {
         gd_styledText.minimumWidth=600;
         styledText.setLayoutData(gd_styledText);
         int margin = 50;
-        styledText.setMargins(margin, 0, margin, 0);
+        styledText.setMargins(margin, margin, margin, 10);
         styledText.setWordWrap(true);
         styledText.setFont(font);
         styledText.setLineSpacing(12);
 
         //POPULATE VIEWER
+        styledText.setText("Welcome to SafeNote!");
         styledText.setSelection(styledText.getText().length());
 
         Menu menu = new Menu(shell, SWT.BAR);
@@ -430,7 +431,9 @@ public class View {
         });
 
         styledText.addListener(SWT.Modify, e -> {
-            styledText.setTopIndex(styledText.getLineCount()+2);
+            int currentIndex = styledText.getLineAtOffset(styledText.getCaretOffset());
+            if(!(styledText.getTopIndex()-20<currentIndex))
+                styledText.setTopIndex(styledText.getLineAtOffset(styledText.getCaretOffset()) - 1);
         });
 
     }
