@@ -222,7 +222,7 @@ public class View {
 
         font = new Font(display, "monospaced", 12, SWT.NONE);
         tableFont = new Font(display, "monospaced", 11, SWT.NONE);
-        workbench.setLayout(new GridLayout(9, false));
+        workbench.setLayout(new GridLayout(10, false));
 
         backGroundColor = display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
 //        backGroundColor = display.getSystemColor(SWT.BACKGROUND);
@@ -252,33 +252,38 @@ public class View {
         Button newButton = new Button(workbench, SWT.PUSH);
         newButton.setBackground(backGroundColor);
         newButton.setImage(newIcon);
-        newButton.setText("  new note   ");
+        newButton.setText("   new note    ");
 
         Image deleteIcon = getImage("/delete.gif");
         Button deleteButton = new Button(workbench, SWT.PUSH);
         deleteButton.setBackground(backGroundColor);
         deleteButton.setImage(deleteIcon);
-        deleteButton.setText(" delete note ");
+        deleteButton.setText("  delete note  ");
+
+        Image infoIcon = getImage("/info.gif");
+        Button infoButton = new Button(workbench, SWT.PUSH);
+        infoButton.setBackground(backGroundColor);
+        infoButton.setImage(infoIcon);
+        infoButton.setText("   note info   ");
 
         Image syncIcon = getImage("/sync.gif");
         Button syncButton = new Button(workbench, SWT.PUSH);
         syncButton.setBackground(backGroundColor);
         syncButton.setImage(syncIcon);
-        syncButton.setText(" synchronize ");
+        syncButton.setText("  synchronize  ");
 
         Image exportIcon = getImage("/lock.gif");
 
         Button exportButton = new Button(workbench, SWT.PUSH);
         exportButton.setBackground(backGroundColor);
         exportButton.setImage(exportIcon);
-        exportButton.setText(" export key  ");
+        exportButton.setText("  export key   ");
 
         Composite topRightFiller = new Composite(workbench, SWT.NONE);
         GridData gd_topRightFiller = new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1);
         gd_topRightFiller.minimumWidth = 120;
         gd_topRightFiller.widthHint = 120;
         topRightFiller.setLayoutData(gd_topRightFiller);
-        new Label(workbench, SWT.NONE);
 
         table = new Table(workbench, SWT.FULL_SELECTION);
 
@@ -295,22 +300,18 @@ public class View {
 
 
         styledText = new StyledText(workbench, SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
-        GridData gd_styledText = new GridData(SWT.FILL, SWT.FILL, true, true, 4, 1);
+        GridData gd_styledText = new GridData(SWT.FILL, SWT.FILL, true, true, 5, 1);
         gd_styledText.widthHint = 600;
         gd_styledText.minimumWidth=600;
         styledText.setLayoutData(gd_styledText);
         int margin = 50;
-        styledText.setMargins(margin, margin, margin, margin);
+        styledText.setMargins(margin, 0, margin, 0);
         styledText.setWordWrap(true);
         styledText.setFont(font);
         styledText.setLineSpacing(12);
-        new Label(workbench, SWT.NONE);
-        styledText.forceFocus();
 
         //POPULATE VIEWER
         styledText.setSelection(styledText.getText().length());
-        new Label(workbench, SWT.NONE);
-
 
         Menu menu = new Menu(shell, SWT.BAR);
         shell.setMenuBar(menu);
@@ -394,6 +395,14 @@ public class View {
             }
         });
 
+        infoButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseUp(MouseEvent e) {
+                //click info
+                throw new UnsupportedOperationException();
+            }
+        });
+
         syncButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseUp(MouseEvent e) {
@@ -421,10 +430,7 @@ public class View {
         });
 
         styledText.addListener(SWT.Modify, e -> {
-//            int i = styledText.getLineCount() - 1;
-//            if(styledText.getTopIndex()!=i)
-//                styledText.setTopIndex(styledText.getLineCount() - 1);
-            styledText.setTopIndex(styledText.getLineCount()-2);
+            styledText.setTopIndex(styledText.getLineCount()+2);
         });
 
     }

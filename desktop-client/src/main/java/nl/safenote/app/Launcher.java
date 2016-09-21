@@ -21,19 +21,10 @@ class Launcher {
     public static void main(String[] args) throws Exception {
             enableCrypto();
 
-        long time = System.currentTimeMillis();
         LoadingScreen loadingScreen = new LoadingScreen();
-
         ApplicationContext applicationContext = new AnnotationConfigApplicationContext(Config.class);
         loadingScreen.done();
-        System.out.println("time elapsed: " + (System.currentTimeMillis() - time));
-                Properties properties = new Properties();
-            System.out.println("Crypto: " + applicationContext.getBean(CryptoService.class));
-        System.out.println("Controller: " + applicationContext.getBean(NoteController.class));
-        System.out.println("AuthContr: " + applicationContext.getBean(AuthenticationController.class));
-                new View(applicationContext.getBean(AuthenticationController.class),
-                        applicationContext.getBean(NoteController.class)).open(!FileIO.dataExists());
-
+        applicationContext.getBean(View.class).open(!FileIO.dataExists());
     }
 
     private static void enableCrypto(){

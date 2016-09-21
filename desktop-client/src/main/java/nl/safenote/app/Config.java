@@ -31,18 +31,8 @@ import java.util.Properties;
 @EnableAsync
 @EnableTransactionManagement
 @PropertySource(value = {"classpath:application.properties"})
-@ComponentScan(basePackageClasses = {NoteController.class, AuthenticationController.class, NoteRepository.class, SynchronizationService.class, CryptoService.class, SearchService.class})
+@ComponentScan(basePackageClasses = {View.class, NoteController.class, AuthenticationController.class, NoteRepository.class, SynchronizationService.class, CryptoService.class, SearchService.class})
 public class Config {
-
-
-    private static boolean inDev;
-
-//    @Autowired
-//    public Config(Environment environment) {
-//        if(environment!=null){
-//            inDev = environment.getActiveProfiles()[0].equals("dev");
-//        }
-//    }
 
     @Bean
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
@@ -54,7 +44,6 @@ public class Config {
         Properties properties = new Properties();
         properties.setProperty("hibernate.hbm2ddl.auto", "update");
         properties.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-        if(inDev) properties.setProperty("hibernate.show_sql", "false");
         factoryBean.setJpaProperties(properties);
         return factoryBean;
     }
@@ -67,12 +56,6 @@ public class Config {
         dataSource.setUsername( "safenote" );
         dataSource.setPassword( "safenote" );
         return dataSource;
-    }
-
-    @Bean(initMethod="start",destroyMethod="stop")
-    @Profile("dev")
-    public Server h2WebConsoleServer () throws SQLException {
-        return Server.createWebServer("-web","-webAllowOthers","-webDaemon","-webPort", "8082");
     }
 
     @Bean

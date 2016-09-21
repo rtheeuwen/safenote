@@ -1,18 +1,13 @@
 package nl.safenote.services;
 
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
+import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidParameterSpecException;
-import java.util.Arrays;
 
 /**
  * Convenience class, provides a simple abstraction layer for AES encryption in CBC mode. CBC mode uses a pseudo random
@@ -35,27 +30,23 @@ public abstract class AbstractAesService {
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, key);
-            AlgorithmParameters algorithmParameters = cipher.getParameters();
-            byte[] initializationVector = algorithmParameters.getParameterSpec(IvParameterSpec.class).getIV();
-            byte[] cipherText = cipher.doFinal(plainText);
-            byte[] out = new byte[initializationVector.length + cipherText.length];
-            System.arraycopy(initializationVector, 0, out, 0, 16);
-            System.arraycopy(cipherText, 0, out, 16, cipherText.length);
-            return out;
+            byte[] cipherText = new byte[32 + plainText.length >> 4 << 4];
+            byte[] initializationVector = cipher.getParameters().getParameterSpec(IvParameterSpec.class).getIV();
+            System.arraycopy(initializationVector, 0, cipherText, 0, 16);
+            cipher.doFinal(plainText, 0, plainText.length, cipherText, 16);
+            return cipherText;
         } catch (NoSuchAlgorithmException | NoSuchPaddingException |
                 InvalidKeyException | InvalidParameterSpecException |
-                IllegalBlockSizeException | BadPaddingException e) {
+                IllegalBlockSizeException | BadPaddingException | ShortBufferException e) {
             throw new SecurityException(e);
         }
     }
 
     public final byte[] aesDecipher(byte[] cipherText, SecretKeySpec key){
         try {
-            byte[] initializationVector = Arrays.copyOfRange(cipherText, 0, 16);
-            byte[] enciphered = Arrays.copyOfRange(cipherText, 16, cipherText.length);
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(initializationVector));
-            return cipher.doFinal(enciphered);
+            cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(cipherText, 0, 16));
+            return cipher.doFinal(cipherText, 16, cipherText.length - 16);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException |
                 InvalidAlgorithmParameterException |
                 InvalidKeyException | IllegalBlockSizeException | BadPaddingException e) {
@@ -63,3 +54,4 @@ public abstract class AbstractAesService {
         }
     }
 }
+

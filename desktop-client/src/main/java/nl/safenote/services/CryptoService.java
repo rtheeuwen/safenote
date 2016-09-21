@@ -8,6 +8,7 @@ import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Objects;
 
@@ -52,10 +53,10 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
 
     @Override
     public Note encipher(Note note) {
-        note.setHeader(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getHeader().getBytes(), this.AESKey)));
+        note.setHeader(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getHeader().getBytes(StandardCharsets.UTF_8), this.AESKey)));
         String content = note.getContent();
         if(!Objects.equals(content, "")&&content!=null) {
-            note.setContent(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getContent().getBytes(), this.AESKey)));
+            note.setContent(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getContent().getBytes(StandardCharsets.UTF_8), this.AESKey)));
         }
         note.setHash(checksum(note));
         note.setEncrypted(true);
@@ -64,17 +65,17 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
 
     @Override
     public Note decipher(Note note) {
-        note.setHeader(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getHeader()), this.AESKey)));
+        note.setHeader(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getHeader()), this.AESKey), StandardCharsets.UTF_8));
         String content = note.getContent();
         if(!Objects.equals(content, "") &&content!=null) {
-            note.setContent(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getContent()), this.AESKey)));
+            note.setContent(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getContent()), this.AESKey), StandardCharsets.UTF_8));
         }
         return note;
     }
 
     @Override
     public String decipher(String header) {
-        return new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(header), this.AESKey));
+        return new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(header), this.AESKey), StandardCharsets.UTF_8);
     }
 
     @Override
@@ -82,8 +83,12 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(this.HMACSecret);
-            return DatatypeConverter.printBase64Binary(mac.doFinal((note.getContent()+ note.getHeader()+ note.getId()).getBytes("ASCII")));
-        } catch(NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e){
+            return DatatypeConverter.printBase64Binary(mac.doFinal(new StringBuilder()
+                    .append(note.getContent())
+                    .append(note.getHeader())
+                    .append(note.getId())
+                            .toString().getBytes(StandardCharsets.UTF_8)));
+        } catch(NoSuchAlgorithmException | InvalidKeyException e){
             throw new RuntimeException(e);
         }
     }
@@ -97,9 +102,13 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
             Object object = message.getBody();
             if(object instanceof Note) {
                 Note note = (Note) object;
-                signature.update((note.getContent() + note.getHeader() + message.getExpires()).getBytes());
+                signature.update(new StringBuilder()
+                        .append(note.getContent())
+                        .append(note.getHeader())
+                        .append(message.getExpires())
+                        .toString().getBytes(StandardCharsets.UTF_8));
             } else {
-                signature.update(Long.valueOf(message.getExpires()).toString().getBytes());
+                signature.update(Long.valueOf(message.getExpires()).toString().getBytes(StandardCharsets.UTF_8));
             }
             message.setSignature(userId + DatatypeConverter.printBase64Binary(signature.sign()));
             return message;
