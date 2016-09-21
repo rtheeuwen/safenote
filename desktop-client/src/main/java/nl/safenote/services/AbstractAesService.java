@@ -30,7 +30,7 @@ public abstract class AbstractAesService {
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, key);
-            byte[] cipherText = new byte[32 + plainText.length >> 4 << 4];
+            byte[] cipherText = new byte[32 + plainText.length >> 4 << 4]; //the input byte[] is padded until the length is a multiple of 16
             byte[] initializationVector = cipher.getParameters().getParameterSpec(IvParameterSpec.class).getIV();
             System.arraycopy(initializationVector, 0, cipherText, 0, 16);
             cipher.doFinal(plainText, 0, plainText.length, cipherText, 16);

@@ -7,7 +7,6 @@ import nl.safenote.model.Note;
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Objects;
@@ -44,7 +43,7 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
     @Override
     public void init(SecretKeySpec aesKey, SecretKeySpec hmacSecret, PrivateKey privateKey) {
         assert aesKey!=null&&hmacSecret!=null&&privateKey!=null;
-        if(!Objects.equals(aesKey.getAlgorithm(), "AES")||!Objects.equals(hmacSecret.getAlgorithm(), "HmacSHA256"))
+        if(!Objects.equals(aesKey.getAlgorithm(), "AES")||!Objects.equals(hmacSecret.getAlgorithm(), "HmacSHA512"))
             throw new IllegalArgumentException("Invalid keys");
         this.AESKey = aesKey;
         this.HMACSecret = hmacSecret;
@@ -81,7 +80,7 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
     @Override
     public String checksum(Note note) {
         try {
-            Mac mac = Mac.getInstance("HmacSHA256");
+            Mac mac = Mac.getInstance("HmacSHA512");
             mac.init(this.HMACSecret);
             return DatatypeConverter.printBase64Binary(mac.doFinal(new StringBuilder()
                     .append(note.getContent())
@@ -97,7 +96,7 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
     public Message sign(Message message, String userId) {
         if(userId==null)throw new SecurityException("No user ID yet");
         try {
-            Signature signature = Signature.getInstance("SHA256withRSA");
+            Signature signature = Signature.getInstance("SHA512withRSA");
             signature.initSign(this.privateKey);
             Object object = message.getBody();
             if(object instanceof Note) {

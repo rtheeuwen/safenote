@@ -63,7 +63,7 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
     }
 
     private void initializeServices(Quadruple<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> keyStore){
-        if(!Objects.equals(keyStore.getA().getAlgorithm(), "AES") || !Objects.equals(keyStore.getB().getAlgorithm(), "HmacSHA256")) {
+        if(!Objects.equals(keyStore.getA().getAlgorithm(), "AES") || !Objects.equals(keyStore.getB().getAlgorithm(), "HmacSHA512")) {
             throw new IllegalArgumentException("Invalid keys");
         }
             this.cryptoService.init(keyStore.getA(), keyStore.getB(), keyStore.getC());
@@ -89,7 +89,7 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
 
     private SecretKeySpec deriveKey(String password, byte[] salt){
         try {
-            return new SecretKeySpec(SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")
+            return new SecretKeySpec(SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512")
                     .generateSecret(new PBEKeySpec(password.toCharArray(), salt, 800000, 256)).getEncoded(), "AES");
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             throw new AssertionError(e);

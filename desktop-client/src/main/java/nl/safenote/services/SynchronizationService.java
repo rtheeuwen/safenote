@@ -117,7 +117,7 @@ class SynchronizationServiceImpl implements SynchronizationService {
                         Thread.sleep(10L);
                     }
 
-                    newNotes.get().stream().filter(n -> n.getHash().equals(cryptoService.checksum(n))).map(n -> {n.setEncrypted(true); return n;}).forEachOrdered(noteRepository::create);
+                    newNotes.get().stream().filter(n -> n.getHash().equals(cryptoService.checksum(n))).sorted((a, b) -> (int)(b.getCreated() - a.getCreated())).map(n -> {n.setEncrypted(true); return n;}).forEachOrdered(noteRepository::create);
                     deletedNotes.stream().filter(notes::containsKey).forEachOrdered(noteRepository::delete);
                     return true;
 
