@@ -12,7 +12,10 @@ import javax.persistence.*;
         @NamedQuery(name = "getContentType", query = "SELECT n.contentType FROM Note n WHERE n.id=:id"),
         @NamedQuery(name = "getHeaders", query = "SELECT n.id, n.header FROM Note n ORDER BY n.created DESC")
 })
-@Table(indexes = {@Index(columnList = "created")})
+@Table(indexes = {
+    @Index(columnList = "created"),
+    @Index(columnList = "contentType")
+})
 public class Note{
 
     public final static String FINDALL = "findAll";
@@ -54,6 +57,7 @@ public class Note{
 
     @PrePersist
     private void setCreated(){
+        if(this.created==0L)
             this.created = this.modified = System.currentTimeMillis();
     }
 
