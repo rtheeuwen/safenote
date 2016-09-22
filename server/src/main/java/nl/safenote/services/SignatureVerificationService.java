@@ -48,11 +48,13 @@ class SignatureVerificationServiceImpl implements SignatureVerificationService {
             byte[] data;
             if(messageBody!=null&&messageBody instanceof SafeNote){
                 SafeNote safeNote = (SafeNote) messageBody;
-                data = (safeNote.getContent() + safeNote.getHeader() + message.getExpires()).getBytes();
+                data = (safeNote.getContent() +
+                        safeNote.getHeader() +
+                        message.getExpires()).getBytes();
             } else {
                 data = Long.valueOf(message.getExpires()).toString().getBytes();
             }
-            Signature signature = Signature.getInstance("SHA256withRSA");
+            Signature signature = Signature.getInstance("SHA512withRSA");
             signature.initVerify(publicKey);
             signature.update(data);
             signature.verify(claimedSignature);

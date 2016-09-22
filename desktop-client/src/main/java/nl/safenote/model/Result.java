@@ -24,7 +24,4 @@ public final class Result<T> {
         return score;
     }
 
-    public void setScore(int score) {
-        this.score = score;
-    }
 }

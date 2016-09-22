@@ -5,12 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import nl.safenote.services.AuthenticationService;
 import org.springframework.stereotype.Service;
 
-/**
- * This class serves as an endpoint for authentication
- * @Author Roel Theeuwen
- * @Verion 1.0
- * @Since 2016-09-04
- */
+
 @Service
 public class AuthenticationController {
 

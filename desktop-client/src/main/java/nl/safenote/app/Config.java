@@ -4,10 +4,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 import nl.safenote.api.AuthenticationController;
-import org.h2.tools.Server;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
-import org.springframework.core.env.Environment;
 import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -24,7 +21,7 @@ import nl.safenote.services.SynchronizationService;
 import nl.safenote.services.SearchService;
 
 
-import java.sql.SQLException;
+import java.security.SecureRandom;
 import java.util.Properties;
 
 @Configuration
@@ -68,6 +65,11 @@ public class Config {
     @Bean
     public PersistenceExceptionTranslationPostProcessor exceptionTranslation(){
         return new PersistenceExceptionTranslationPostProcessor();
+    }
+
+    @Bean
+    public SecureRandom secureRandom(){
+        return new SecureRandom();
     }
 
 }

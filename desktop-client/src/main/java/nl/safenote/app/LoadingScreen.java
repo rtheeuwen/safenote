@@ -10,7 +10,7 @@ class LoadingScreen {
 
     private final JFrame frame;
 
-    public LoadingScreen() throws IOException{
+    LoadingScreen() throws IOException{
         frame = new JFrame();
         frame.setUndecorated(true);
         frame.setBackground(new Color(0,0,0,0));
@@ -26,7 +26,7 @@ class LoadingScreen {
         frame.pack();
     }
 
-    public void done(){
+    void done(){
         frame.dispose();
     }
 }

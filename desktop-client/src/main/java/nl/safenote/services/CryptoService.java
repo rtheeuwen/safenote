@@ -21,24 +21,16 @@ public interface CryptoService{
     Message sign(Message message, String userId);
 }
 
-/**
- * Most important nl.safenote.service class
- * Provides full client side encryption for notes:
- * - AES encryption Purpose: ensures only authorized people can read notes
- * - HMAC generation, locally generated checksum which is stored on the server. Recalculated whenever a remote note is
- *   received and compared to remotely stored checksum. Purpose: ensure integrity of data received from remote
- *   (untrusted) server
- * - RSA signing Purpose: make it harder to do a MITM attack. Server verifies signature with user's public key.
- * @Author Roel Theeuwen
- * @Verion 1.0
- * @Since 2016-09-04
- */
 @Service
 class CryptoServiceImpl extends AbstractAesService implements CryptoService {
 
     private SecretKeySpec AESKey;
     private SecretKeySpec HMACSecret;
     private PrivateKey privateKey;
+
+    public CryptoServiceImpl(SecureRandom secureRandom){
+        super(secureRandom);
+    }
 
     @Override
     public void init(SecretKeySpec aesKey, SecretKeySpec hmacSecret, PrivateKey privateKey) {
@@ -82,11 +74,15 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
         try {
             Mac mac = Mac.getInstance("HmacSHA512");
             mac.init(this.HMACSecret);
-            return DatatypeConverter.printBase64Binary(mac.doFinal(new StringBuilder()
-                    .append(note.getContent())
-                    .append(note.getHeader())
-                    .append(note.getId())
-                            .toString().getBytes(StandardCharsets.UTF_8)));
+            return DatatypeConverter.printBase64Binary(mac.doFinal((
+                    note.getContent() +
+                    note.getHeader() +
+                    note.getId() +
+                    note.getCreated() +
+                    note.getModified() +
+                    note.getVersion() +
+                    note.getContentType())
+                    .getBytes(StandardCharsets.UTF_8)));
         } catch(NoSuchAlgorithmException | InvalidKeyException e){
             throw new RuntimeException(e);
         }
@@ -101,11 +97,10 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
             Object object = message.getBody();
             if(object instanceof Note) {
                 Note note = (Note) object;
-                signature.update(new StringBuilder()
-                        .append(note.getContent())
-                        .append(note.getHeader())
-                        .append(message.getExpires())
-                        .toString().getBytes(StandardCharsets.UTF_8));
+                signature.update((
+                        note.getContent() +
+                        note.getHeader() +
+                        message.getExpires()).getBytes(StandardCharsets.UTF_8));
             } else {
                 signature.update(Long.valueOf(message.getExpires()).toString().getBytes(StandardCharsets.UTF_8));
             }

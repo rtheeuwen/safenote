@@ -3,12 +3,7 @@ package nl.safenote.app;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.security.NoSuchAlgorithmException;
-import java.util.Properties;
 
-import nl.safenote.api.AuthenticationController;
-import nl.safenote.api.NoteController;
-import nl.safenote.model.Note;
-import nl.safenote.services.CryptoService;
 import nl.safenote.utils.FileIO;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;

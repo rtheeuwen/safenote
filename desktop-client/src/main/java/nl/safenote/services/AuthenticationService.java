@@ -25,12 +25,7 @@ public interface AuthenticationService{
     void authenticate(String passphrase);
 }
 
-/**
- * Loads the local keystore, or in its absence generates a new one
- * @Author Roel Theeuwen
- * @Verion 1.0
- * @Since 2016-09-04
- */
+
 @Service
 class AuthenticationServiceImpl extends AbstractAesService implements AuthenticationService{
 
@@ -38,7 +33,8 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
     private final SynchronizationService synchronizationService;
 
     @Autowired
-    AuthenticationServiceImpl(CryptoService cryptoService, SynchronizationService synchronizationService) {
+    AuthenticationServiceImpl(CryptoService cryptoService, SynchronizationService synchronizationService, SecureRandom secureRandom) {
+        super(secureRandom);
         assert cryptoService!= null&&synchronizationService!=null;
         this.cryptoService = cryptoService;
         this.synchronizationService = synchronizationService;
@@ -52,9 +48,8 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
     }
 
     private void generate(String passphrase){
-            SecureRandom secureRandom = new SecureRandom();
-            byte[] keyStore = KeyUtils.generateKeyStore(secureRandom);
-            FileIO.write(encipherStorage(keyStore, passphrase, secureRandom));
+            byte[] keyStore = KeyUtils.generateKeyStore(super.secureRandom);
+            FileIO.write(encipherStorage(keyStore, passphrase, super.secureRandom));
             initializeServices(keyStoreFromByteArray(keyStore));
     }
 

@@ -17,12 +17,6 @@ import java.util.EnumMap;
 import java.util.Map;
 
 
-/**
- * Provides file operations
- * @Author Roel Theeuwen
- * @Verion 1.0
- * @Since 2016-09-04
- */
 public final class FileIO {
 
     private FileIO(){
@@ -154,6 +148,6 @@ public final class FileIO {
 
     public static void delete(){
         File file = new File(System.getProperty("user.home") + "/.safenote/key");
-        file.delete();
+        assert file.delete();
     }
 }
