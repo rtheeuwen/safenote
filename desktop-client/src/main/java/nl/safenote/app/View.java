@@ -326,108 +326,83 @@ public class View {
         MenuItem help = new MenuItem(menu, SWT.NONE);
         help.setText("help");
 
-        searchText.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if(e.keyCode==13){
-                    String query = searchText.getText();
-                    if(query!=""){
-                        View.searching = true;
-                        searchLabel.setImage(clearIcon);
-                        table.clearAll();
-                        java.util.List<Header> headers = noteController.search(query);
-                        for(int i=0; i<headers.size(); i++){
-                            Header header = headers.get(i);
-                            TableItem item = new TableItem(table, SWT.NONE);
-                            item.setText(header.getHeader());
-                            item.setData(header.getId());
-                            if((i&1)==1)
-                                item.setBackground(backGroundColor);
-                        }
-
-                        table.getColumn(0).pack();
-
+        searchText.addListener( SWT.KeyDown, event -> {
+            if(event.keyCode==13){
+                String query = searchText.getText();
+                if(query!=""){
+                    View.searching = true;
+                    searchLabel.setImage(clearIcon);
+                    table.clearAll();
+                    java.util.List<Header> headers = noteController.search(query);
+                    for(int i=0; i<headers.size(); i++){
+                        Header header = headers.get(i);
+                        TableItem item = new TableItem(table, SWT.NONE);
+                        item.setText(header.getHeader());
+                        item.setData(header.getId());
+                        if((i&1)==1)
+                            item.setBackground(backGroundColor);
                     }
+
+                    table.getColumn(0).pack();
+
                 }
             }
         });
 
-        searchLabel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseUp(MouseEvent e) {
-                if(View.searching){
-                    View.searching = false;
-                    searchLabel.setImage(searchIcon);
-                    searchText.setText("");
-                } else {
-                    String query = searchText.getText();
-                    if(query.length()!=0&&query!=null){
-                        View.searching = true;
-                        searchLabel.setImage(clearIcon);
-                        table.removeAll();
-                        noteController.search(query).stream().forEachOrdered(header -> {TableItem item = new TableItem(table, SWT.NONE);
-                            item.setText(header.getHeader()); item.setData(header.getId());});
-                        table.getColumn(0).pack();
-                    }
+        searchLabel.addListener( SWT.MouseUp, event -> {
+            if(View.searching){
+                View.searching = false;
+                searchLabel.setImage(searchIcon);
+                searchText.setText("");
+            } else {
+                String query = searchText.getText();
+                if(query.length()!=0&&query!=null){
+                    View.searching = true;
+                    searchLabel.setImage(clearIcon);
+                    table.removeAll();
+                    noteController.search(query).stream().forEachOrdered(header -> {TableItem item = new TableItem(table, SWT.NONE);
+                        item.setText(header.getHeader()); item.setData(header.getId());});
+                    table.getColumn(0).pack();
                 }
-
             }
         });
 
-        newButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseUp(MouseEvent e) {
+        newButton.addListener( SWT.MouseUp, event -> {
             String id = noteController.createNote();
-                openNote(id);
+            openNote(id);
+            getHeaders();
+            table.select(0);
+        });
+
+        deleteButton.addListener( SWT.MouseUp, event -> {
+            if(activeNote!=null) {
+                noteController.deleteNote(activeNote.getId());
+                activeNote = null;
+                styledText.setText("");
                 getHeaders();
-                table.select(0);
             }
         });
 
-        deleteButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseUp(MouseEvent e) {
-                if(activeNote!=null) {
-                    noteController.deleteNote(activeNote.getId());
-                    activeNote = null;
-                    styledText.setText("");
-                    getHeaders();
-                }
-            }
+        infoButton.addListener( SWT.MouseUp, event -> {
+            //click info button
+            throw new UnsupportedOperationException();
         });
 
-        infoButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseUp(MouseEvent e) {
-                //click info
-                throw new UnsupportedOperationException();
-            }
+        syncButton.addListener( SWT.MouseUp, event -> {
+            //click sync button
+            throw new UnsupportedOperationException();
         });
 
-        syncButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseUp(MouseEvent e) {
-                //click sync
-                throw new UnsupportedOperationException();
-            }
+        exportButton.addListener( SWT.MouseUp, event -> {
+            //click export button
+            throw new UnsupportedOperationException();
         });
 
-        exportButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseUp(MouseEvent e) {
-                //click export
-                throw new UnsupportedOperationException();
-            }
-        });
 
-        table.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseUp(MouseEvent e) {
-                TableItem[] active = table.getSelection();
-                if(active.length!=0){
-                    openNote(active[0].getData().toString());
-                }
-            }
+        table.addListener( SWT.MouseUp, event -> {
+            TableItem[] active = table.getSelection();
+            if(active.length!=0){
+            openNote(active[0].getData().toString());}
         });
 
         styledText.addListener(SWT.Modify, e -> {
