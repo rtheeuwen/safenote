@@ -58,6 +58,10 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
         if(!note.getHash().equals(checksum(note)))
             throw new SecurityException("Checksum does not match");
 
+        String header = note.getHeader();
+        if(!Objects.equals(header, "") &&header!=null)
+            note.setHeader(super.aesDecipher(header, this.AESKey));
+
         String content = note.getContent();
         if(!Objects.equals(content, "") &&content!=null)
             note.setContent(super.aesDecipher(content, this.AESKey));

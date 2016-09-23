@@ -387,7 +387,7 @@ public class View {
         });
 
         deleteButton.addListener( SWT.MouseUp, event -> {
-            if(activeNote!=null&&MessageDialog.openConfirm(shell, "confirm", "Delete note?")) {
+            if(activeNote!=null&&MessageDialog.openConfirm(shell, "confirm", "Delete "+ activeNote.getHeader()+"?")) {
                 noteController.deleteNote(activeNote.getId());
                 activeNote = null;
                 styledText.setText("");
@@ -443,6 +443,7 @@ public class View {
                 if(activeNote!=null&&!Objects.equals(activeNote.getContent(), styledText.getText())){
                     activeNote.setContent(styledText.getText());
                     noteController.updateNote(activeNote);
+                    activeNote.setHeader(noteController.getNote(activeNote.getId()).getHeader());
                     TableItem[] active = table.getSelection();
                     int index = table.getSelectionIndex();
                     if(active.length!=0){
