@@ -5,10 +5,13 @@ import nl.safenote.model.Message;
 import nl.safenote.model.Note;
 
 import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.security.spec.InvalidParameterSpecException;
+import java.util.Arrays;
 import java.util.Objects;
 
 
@@ -44,10 +47,10 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
 
     @Override
     public Note encipher(Note note) {
-        note.setHeader(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getHeader().getBytes(StandardCharsets.UTF_8), this.AESKey)));
+        note.setHeader(super.aesEncipher(note.getHeader(), this.AESKey));
         String content = note.getContent();
         if(!Objects.equals(content, "")&&content!=null) {
-            note.setContent(DatatypeConverter.printBase64Binary(super.aesEncipher(note.getContent().getBytes(StandardCharsets.UTF_8), this.AESKey)));
+            note.setContent(super.aesEncipher(note.getContent(), this.AESKey));
         }
         note.setHash(checksum(note));
         note.setEncrypted(true);
@@ -56,17 +59,19 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
 
     @Override
     public Note decipher(Note note) {
-        note.setHeader(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getHeader()), this.AESKey), StandardCharsets.UTF_8));
+        if(!note.getHash().equals(checksum(note)))
+            throw new SecurityException("Checksum does not match");
+        note.setHeader(super.aesDecipher(note.getHeader(), this.AESKey));
         String content = note.getContent();
         if(!Objects.equals(content, "") &&content!=null) {
-            note.setContent(new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(note.getContent()), this.AESKey), StandardCharsets.UTF_8));
+            note.setContent(super.aesDecipher(note.getContent(), this.AESKey));
         }
         return note;
     }
 
     @Override
     public String decipher(String header) {
-        return new String(super.aesDecipher(DatatypeConverter.parseBase64Binary(header), this.AESKey), StandardCharsets.UTF_8);
+        return super.aesDecipher(header, this.AESKey);
     }
 
     @Override
@@ -78,9 +83,6 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
                     note.getContent() +
                     note.getHeader() +
                     note.getId() +
-                    note.getCreated() +
-                    note.getModified() +
-                    note.getVersion() +
                     note.getContentType())
                     .getBytes(StandardCharsets.UTF_8)));
         } catch(NoSuchAlgorithmException | InvalidKeyException e){

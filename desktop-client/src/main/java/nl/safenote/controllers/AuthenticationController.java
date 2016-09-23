@@ -1,4 +1,4 @@
-package nl.safenote.api;
+package nl.safenote.controllers;
 
 import nl.safenote.utils.FileIO;
 import org.springframework.beans.factory.annotation.Autowired;

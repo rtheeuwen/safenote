@@ -4,6 +4,8 @@ package nl.safenote.services;
 import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -50,6 +52,14 @@ public abstract class AbstractAesService {
                 InvalidAlgorithmParameterException e){
             throw new AssertionError(e);
         }
+    }
+
+    public final String aesEncipher(String plainText, SecretKeySpec key){
+        return(DatatypeConverter.printBase64Binary(this.aesEncipher(plainText.getBytes(StandardCharsets.UTF_8), key)));
+    }
+
+    public final String aesDecipher(String cipherText, SecretKeySpec key){
+        return new String(this.aesDecipher(DatatypeConverter.parseBase64Binary(cipherText), key), StandardCharsets.UTF_8);
     }
 }
 

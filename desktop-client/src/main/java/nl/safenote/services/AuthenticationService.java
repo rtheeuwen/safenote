@@ -6,7 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import nl.safenote.utils.FileIO;
 
-import javax.crypto.SecretKeyFactory;
+import javax.crypto.*;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
@@ -48,8 +49,8 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
     }
 
     private void generate(String passphrase){
-            byte[] keyStore = KeyUtils.generateKeyStore(super.secureRandom);
-            FileIO.write(encipherStorage(keyStore, passphrase, super.secureRandom));
+            byte[] keyStore = KeyUtils.generateKeyStore(secureRandom);
+            FileIO.write(encipherStorage(keyStore, passphrase, secureRandom));
             initializeServices(keyStoreFromByteArray(keyStore));
     }
 
@@ -69,7 +70,7 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
             byte[] salt = new byte[32];
             secureRandom.nextBytes(salt);
             SecretKeySpec key = deriveKey(password, salt);
-            byte[] enciphered = aesEncipher(compress(keyStore), key);
+            byte[] enciphered = super.aesEncipher(compress(keyStore), key);
             byte[] output = new byte[32 + enciphered.length];
             System.arraycopy(salt, 0, output, 0, 32);
             System.arraycopy(enciphered, 0, output, 32, enciphered.length);
@@ -79,7 +80,7 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
     private byte[] decipherStorage(byte[] cipherText, String password){
         byte[] salt = Arrays.copyOfRange(cipherText, 0, 32);
         SecretKeySpec key = deriveKey(password, salt);
-        return decompress(aesDecipher(Arrays.copyOfRange(cipherText, 32, cipherText.length), key));
+        return decompress(super.aesDecipher(Arrays.copyOfRange(cipherText, 32, cipherText.length), key));
     }
 
     private SecretKeySpec deriveKey(String password, byte[] salt){

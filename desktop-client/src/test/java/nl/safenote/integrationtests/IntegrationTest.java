@@ -1,6 +1,6 @@
 package nl.safenote.integrationtests;
 
-import nl.safenote.api.AuthenticationController;
+import nl.safenote.controllers.AuthenticationController;
 import nl.safenote.app.Config;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
-import nl.safenote.api.NoteController;
+import nl.safenote.controllers.NoteController;
 import nl.safenote.model.Header;
 import nl.safenote.model.Note;
 import nl.safenote.testutils.TestHelper;

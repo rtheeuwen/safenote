@@ -3,7 +3,7 @@ package nl.safenote.app;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
-import nl.safenote.api.AuthenticationController;
+import nl.safenote.controllers.AuthenticationController;
 import org.springframework.context.annotation.*;
 import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -14,13 +14,14 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import nl.safenote.api.NoteController;
+import nl.safenote.controllers.NoteController;
 import nl.safenote.services.CryptoService;
 import nl.safenote.services.NoteRepository;
 import nl.safenote.services.SynchronizationService;
 import nl.safenote.services.SearchService;
 
 
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Properties;
 
@@ -69,7 +70,11 @@ public class Config {
 
     @Bean
     public SecureRandom secureRandom(){
-        return new SecureRandom();
+        try {
+            return SecureRandom.getInstance("NativePRNGNonBlocking");
+        } catch (NoSuchAlgorithmException e) {
+            throw new AssertionError(e);
+        }
     }
 
 }

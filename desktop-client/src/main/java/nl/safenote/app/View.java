@@ -1,7 +1,7 @@
 package nl.safenote.app;
 
-import nl.safenote.api.AuthenticationController;
-import nl.safenote.api.NoteController;
+import nl.safenote.controllers.AuthenticationController;
+import nl.safenote.controllers.NoteController;
 import nl.safenote.model.Header;
 import nl.safenote.model.Note;
 import org.eclipse.swt.graphics.*;

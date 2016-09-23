@@ -1,4 +1,4 @@
-package nl.safenote.api;
+package nl.safenote.controllers;
 
 import nl.safenote.model.Header;
 import nl.safenote.model.Note;
