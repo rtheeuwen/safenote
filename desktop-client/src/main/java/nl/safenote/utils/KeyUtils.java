@@ -58,10 +58,10 @@ public final class KeyUtils {
     }
 
     public static Quadruple<SecretKeySpec, SecretKeySpec, PublicKey, PrivateKey> keyStoreFromByteArray(byte[] total){
-        return new Quadruple<>(new SecretKeySpec(Arrays.copyOfRange(total, 0, 32), "AES"),
-                new SecretKeySpec(Arrays.copyOfRange(total, 32, 96), "HmacSHA512"),
-                decodePublicKey(Arrays.copyOfRange(total, 96, 390)),
-                decodePrivateKey(Arrays.copyOfRange(total, 390, total.length))
+        return new Quadruple<>(new SecretKeySpec(Arrays.copyOfRange(total, 0, 32), "AES"), //32 bytes
+                new SecretKeySpec(Arrays.copyOfRange(total, 32, 96), "HmacSHA512"), //64 bytes
+                decodePublicKey(Arrays.copyOfRange(total, 96, 390)), //294 bytes
+                decodePrivateKey(Arrays.copyOfRange(total, 390, total.length))  //1218 or 1217 bytes
         );
     }
 
