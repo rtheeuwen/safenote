@@ -47,10 +47,10 @@ public final class KeyUtils {
     private static byte[] keyStoreToByteArray(SecretKeySpec aes, SecretKeySpec hmac, PrivateKey privateKey, PublicKey publicKey) {
         byte[] privateBytes = privateKey.getEncoded();
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(32 + 64 + 294 + privateBytes.length)) {
-            byteArrayOutputStream.write(aes.getEncoded()); //32 source
-            byteArrayOutputStream.write(hmac.getEncoded()); //64 source
-            byteArrayOutputStream.write(publicKey.getEncoded()); //294 source
-            byteArrayOutputStream.write(privateBytes); //variable length 1218 or 1217 source
+            byteArrayOutputStream.write(aes.getEncoded()); //32 bytes
+            byteArrayOutputStream.write(hmac.getEncoded()); //64 bytes
+            byteArrayOutputStream.write(publicKey.getEncoded()); //294 bytes
+            byteArrayOutputStream.write(privateBytes); //variable length 1218 or 1217 bytes
             return byteArrayOutputStream.toByteArray();
         } catch (IOException e) {
             throw new AssertionError(e);
