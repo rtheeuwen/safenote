@@ -470,7 +470,7 @@ public class View {
         } else {
             headers.stream().forEachOrdered(header -> {
                 TableItem item = new TableItem(table, SWT.NONE);
-                item.setText("\n" + header.getHeader() + "\n");
+                item.setText("\n      " + header.getHeader() + "\n");
                 item.setData(header.getId());
             });
 
