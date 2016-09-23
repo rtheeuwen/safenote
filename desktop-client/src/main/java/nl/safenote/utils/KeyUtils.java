@@ -59,10 +59,11 @@ public final class KeyUtils {
 
     public static Quadruple<SecretKeySpec, SecretKeySpec, PublicKey, PrivateKey> keyStoreFromByteArray(byte[] total) {
         ByteSequence byteSequence = new ByteSequence(total);
-        return new Quadruple<>(new SecretKeySpec(byteSequence.read(32), "AES"),
-                new SecretKeySpec(byteSequence.read(64), "HmacSHA512"),
-                decodePublicKey(byteSequence.read(294)),
-                decodePrivateKey(byteSequence.readRemaining())
+        return new Quadruple<>(
+                new SecretKeySpec(byteSequence.take(32), "AES"),
+                new SecretKeySpec(byteSequence.take(64), "HmacSHA512"),
+                decodePublicKey(byteSequence.take(294)),
+                decodePrivateKey(byteSequence.takeRemaining())
         );
     }
 
@@ -98,7 +99,7 @@ public final class KeyUtils {
     }
 
     //helper class for accessing fragments of a byte array sequentially
-    //saves a lot of double checking time
+    //saves a lot of double checking time and mistakes
     private static class ByteSequence {
 
         private final byte[] bytes;
@@ -110,7 +111,7 @@ public final class KeyUtils {
             this.bytes = bytes;
         }
 
-        byte[] read(int len) {
+        byte[] take(int len) {
             if (index == bytes.length)
                 throw new IllegalArgumentException("Source is depleted.");
             if (len < 0 || (len + index > bytes.length))
@@ -120,10 +121,10 @@ public final class KeyUtils {
             return out;
         }
 
-        byte[] readRemaining() {
+        byte[] takeRemaining() {
             if (bytes.length == index)
                 throw new IllegalArgumentException("Source is depleted");
-            return read(bytes.length - index);
+            return take(bytes.length - index);
         }
     }
 }
