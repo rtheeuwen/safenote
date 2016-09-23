@@ -392,6 +392,8 @@ public class View {
                 activeNote = null;
                 styledText.setText("");
                 getHeaders();
+                openNote(table.getItem(0).getData().toString());
+                table.select(0);
             }
         });
 
@@ -456,11 +458,24 @@ public class View {
 
     }
 
-    private static void getHeaders(){
+    private void getHeaders(){
         table.removeAll();
-        noteController.getHeaders().stream().forEachOrdered(header -> {TableItem item = new TableItem(table, SWT.NONE);
-            item.setText("\n"+header.getHeader()+"\n"); item.setData(header.getId());});
-        table.getColumn(0).pack();
+        java.util.List<Header> headers = noteController.getHeaders();
+        if(headers.size()==0){
+            String id = noteController.createNote();
+            openNote(id);
+            getHeaders();
+            table.select(0);
+            styledText.forceFocus();
+        } else {
+            headers.stream().forEachOrdered(header -> {
+                TableItem item = new TableItem(table, SWT.NONE);
+                item.setText("\n" + header.getHeader() + "\n");
+                item.setData(header.getId());
+            });
+
+            table.getColumn(0).pack();
+        }
     }
 
     private void openNote(String id){
