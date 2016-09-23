@@ -60,6 +60,7 @@ public class NoteController {
         int index = content.indexOf("\n");
         index = index!=-1?index:content.indexOf(" ");
         index = index!=-1?index:content.length()<=10?content.length():10;
+        index = index>35?35:index;
         note.setHeader(content.substring(0, index));
 
         cryptoService.encipher(note);
