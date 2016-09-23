@@ -15,11 +15,11 @@ import java.util.Arrays;
 
 public final class KeyUtils {
 
-    private KeyUtils(){
+    private KeyUtils() {
         throw new AssertionError();
     }
 
-    private static PrivateKey decodePrivateKey(byte[] encoded){
+    private static PrivateKey decodePrivateKey(byte[] encoded) {
         try {
             PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
             KeyFactory kf = KeyFactory.getInstance("RSA");
@@ -29,7 +29,7 @@ public final class KeyUtils {
         }
     }
 
-    private static PublicKey decodePublicKey(byte[] encoded){
+    private static PublicKey decodePublicKey(byte[] encoded) {
         try {
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encoded);
             KeyFactory kf = KeyFactory.getInstance("RSA");
@@ -39,43 +39,44 @@ public final class KeyUtils {
         }
     }
 
-    public static byte[] generateKeyStore(SecureRandom secureRandom){
+    public static byte[] generateKeyStore(SecureRandom secureRandom) {
         KeyPair keyPair = generateRsaKeyPair(secureRandom);
         return keyStoreToByteArray(generateAesKey(), generateHmacKey(), keyPair.getPrivate(), keyPair.getPublic());
     }
 
-    private static byte[] keyStoreToByteArray(SecretKeySpec aes, SecretKeySpec hmac, PrivateKey privateKey, PublicKey publicKey){
+    private static byte[] keyStoreToByteArray(SecretKeySpec aes, SecretKeySpec hmac, PrivateKey privateKey, PublicKey publicKey) {
         byte[] privateBytes = privateKey.getEncoded();
-        try(ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(32+64+294+privateBytes.length)) {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(32 + 64 + 294 + privateBytes.length)) {
             byteArrayOutputStream.write(aes.getEncoded()); //32 bytes
             byteArrayOutputStream.write(hmac.getEncoded()); //64 bytes
             byteArrayOutputStream.write(publicKey.getEncoded()); //294 bytes
             byteArrayOutputStream.write(privateBytes); //variable length 1218 or 1217 bytes
             return byteArrayOutputStream.toByteArray();
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new AssertionError(e);
         }
     }
 
-    public static Quadruple<SecretKeySpec, SecretKeySpec, PublicKey, PrivateKey> keyStoreFromByteArray(byte[] total){
-        return new Quadruple<>(new SecretKeySpec(Arrays.copyOfRange(total, 0, 32), "AES"), //32 bytes
-                new SecretKeySpec(Arrays.copyOfRange(total, 32, 96), "HmacSHA512"), //64 bytes
-                decodePublicKey(Arrays.copyOfRange(total, 96, 390)), //294 bytes
-                decodePrivateKey(Arrays.copyOfRange(total, 390, total.length))  //1218 or 1217 bytes
+    public static Quadruple<SecretKeySpec, SecretKeySpec, PublicKey, PrivateKey> keyStoreFromByteArray(byte[] total) {
+        ByteSequence byteSequence = new ByteSequence(total);
+        return new Quadruple<>(new SecretKeySpec(byteSequence.read(32), "AES"),
+                new SecretKeySpec(byteSequence.read(64), "HmacSHA512"),
+                decodePublicKey(byteSequence.read(294)),
+                decodePrivateKey(byteSequence.read())
         );
     }
 
-    private static SecretKeySpec generateAesKey(){
+    private static SecretKeySpec generateAesKey() {
         try {
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
             keyGenerator.init(256);
-            return new SecretKeySpec(keyGenerator.generateKey().getEncoded(),"AES");
+            return new SecretKeySpec(keyGenerator.generateKey().getEncoded(), "AES");
         } catch (NoSuchAlgorithmException e) {
             throw new AssertionError(e);
         }
     }
 
-    private static SecretKeySpec generateHmacKey(){
+    private static SecretKeySpec generateHmacKey() {
         try {
             KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA512");
             keyGenerator.init(512);
@@ -85,14 +86,44 @@ public final class KeyUtils {
         }
     }
 
-    private static KeyPair generateRsaKeyPair(SecureRandom secureRandom){
+    private static KeyPair generateRsaKeyPair(SecureRandom secureRandom) {
         try {
-            RSAKeyGenParameterSpec rsaKGenSpec = new   RSAKeyGenParameterSpec(2048, RSAKeyGenParameterSpec.F4);
+            RSAKeyGenParameterSpec rsaKGenSpec = new RSAKeyGenParameterSpec(2048, RSAKeyGenParameterSpec.F4);
             KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
             kpg.initialize(rsaKGenSpec, secureRandom);
             return kpg.generateKeyPair();
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
             throw new AssertionError(e);
+        }
+    }
+
+    //helper class for accessing fragments of a byte array sequentially
+    //saves a lot of double checking time
+    private static class ByteSequence {
+
+        private final byte[] bytes;
+        int index;
+
+        ByteSequence(byte[] bytes) {
+            if (bytes == null)
+                throw new NullPointerException();
+            this.bytes = bytes;
+        }
+
+        byte[] read(int len) {
+            if (index == bytes.length)
+                throw new IllegalArgumentException("Source is depleted.");
+            if (len < 0 || (len + index > bytes.length))
+                throw new IllegalArgumentException(bytes.length - index + " bytes remaining in source");
+            byte[] out = Arrays.copyOfRange(bytes, index, index + len);
+            index += len;
+            return out;
+        }
+
+        byte[] read() {
+            if (bytes.length == index)
+                throw new IllegalArgumentException("Source is depleted");
+            return read(bytes.length - index);
         }
     }
 }
