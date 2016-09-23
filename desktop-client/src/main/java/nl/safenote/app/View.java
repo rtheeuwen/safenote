@@ -336,6 +336,8 @@ public class View {
         MenuItem help = new MenuItem(menu, SWT.NONE);
         help.setText("help");
 
+        /******************************************WORKBENCH METHODS***************************************************/
+
         searchText.addListener( SWT.KeyDown, event -> {
             if(event.keyCode==13){
                 String query = searchText.getText();
@@ -486,6 +488,9 @@ public class View {
                 .getDefault().toZoneId()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
 
     }
+
+    /****************************************** KEY EXPORT DIALOG ***************************************************/
+
 
     static class KeyDisplay extends Dialog {
 
