@@ -29,6 +29,10 @@ public final class FileIO {
         return new File(homedir + "/key.png").exists();
     }
 
+    public static String getKeyDir(){
+        return homedir+"/key.png";
+    }
+
     public static byte[] getKeyAsImage(){
         try {
             InputStream inputStream = new FileInputStream(new File(homedir+"/key.png"));

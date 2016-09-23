@@ -40,11 +40,14 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
 
     @Override
     public Note encipher(Note note) {
-        note.setHeader(super.aesEncipher(note.getHeader(), this.AESKey));
+        String header = note.getHeader();
+        if(!Objects.equals(header, "")&&header!=null)
+            note.setHeader(super.aesEncipher(header, this.AESKey));
+
         String content = note.getContent();
-        if(!Objects.equals(content, "")&&content!=null) {
-            note.setContent(super.aesEncipher(note.getContent(), this.AESKey));
-        }
+        if(!Objects.equals(content, "")&&content!=null)
+            note.setContent(super.aesEncipher(content, this.AESKey));
+
         note.setHash(checksum(note));
         note.setEncrypted(true);
         return note;
@@ -54,17 +57,19 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
     public Note decipher(Note note) {
         if(!note.getHash().equals(checksum(note)))
             throw new SecurityException("Checksum does not match");
-        note.setHeader(super.aesDecipher(note.getHeader(), this.AESKey));
+
         String content = note.getContent();
-        if(!Objects.equals(content, "") &&content!=null) {
-            note.setContent(super.aesDecipher(note.getContent(), this.AESKey));
-        }
+        if(!Objects.equals(content, "") &&content!=null)
+            note.setContent(super.aesDecipher(content, this.AESKey));
         return note;
     }
 
     @Override
     public String decipher(String header) {
-        return super.aesDecipher(header, this.AESKey);
+        if(!Objects.equals(header, "")&&header!=null)
+            return super.aesDecipher(header, this.AESKey);
+        else
+            return header;
     }
 
     @Override

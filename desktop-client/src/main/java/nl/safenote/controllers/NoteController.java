@@ -36,7 +36,11 @@ public class NoteController {
 
     public List<Header> getHeaders(){
         return noteRepository.findHeaders().stream()
-                .map(h -> h.setHeader(cryptoService.decipher(h.getHeader())))
+                .map(h -> {
+                    String header = cryptoService.decipher(h.getHeader());
+                    h.setHeader("".equals(header)?"New note...":header);
+                    return h;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -45,21 +49,19 @@ public class NoteController {
     }
 
     public Note getNote(String id){
-
         return cryptoService.decipher(noteRepository.findOne(id));
     }
 
     public void updateNote(Note note){
         if(!noteRepository.isUpdateable(note))
             throw new IllegalArgumentException("This type of content cannot be updated");
-        String header = note.getHeader();
-        if(header.equals("New note...")){
-            String content = note.getContent();
-            int index = content.indexOf("\n");
-            index = index!=-1?index:content.indexOf(" ");
-            index = index!=-1?index:content.length()<=10?content.length():10;
-            note.setHeader(content.substring(0, index));
-        }
+
+        String content = note.getContent();
+        int index = content.indexOf("\n");
+        index = index!=-1?index:content.indexOf(" ");
+        index = index!=-1?index:content.length()<=10?content.length():10;
+        note.setHeader(content.substring(0, index));
+
         cryptoService.encipher(note);
         noteRepository.update(note);
         synchronizationService.send(note);
@@ -68,11 +70,8 @@ public class NoteController {
     public String createNote(){
         String id = noteRepository.nextId();
         Note note = new Note(id, Note.ContentType.TEXT);
-        note.setHeader("New note...");
-        note.setContent("");
         cryptoService.encipher(note);
         noteRepository.create(note);
-        synchronizationService.send(note);
         return id;
     }
 
@@ -84,8 +83,8 @@ public class NoteController {
         synchronizationService.delete(note);
     }
 
-    public void synchronize(){
-        synchronizationService.synchronize();
+    public boolean synchronize(){
+        return synchronizationService.synchronize();
     }
 
     public String info(){

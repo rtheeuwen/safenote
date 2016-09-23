@@ -38,7 +38,7 @@ class SearchServiceImpl implements SearchService {
                 .map(note -> this.getResult(note, (args.split(" "))))
                 .filter(result -> result!=null)
                 .sorted((a, b) -> b.getScore() - a.getScore())
-                .map(result -> new Header(result.getItem().getId(), result.getItem().getHeader()))
+                .map(result -> new Header(result.getItem().getId(), cryptoService.decipher(result.getItem().getHeader())))
                 .collect(Collectors.toList());
     }
 

@@ -4,7 +4,10 @@ import nl.safenote.controllers.AuthenticationController;
 import nl.safenote.controllers.NoteController;
 import nl.safenote.model.Header;
 import nl.safenote.model.Note;
+import nl.safenote.utils.FileIO;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.*;
 
 import org.eclipse.swt.SWT;
@@ -21,7 +24,11 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
+import java.util.TimeZone;
 
 @Component
 public class View {
@@ -34,6 +41,7 @@ public class View {
     private Text searchText;
     private Color backGroundColor;
     private static boolean searching;
+    private static String text;
 
     private static AuthenticationController authenticationController;
     private static NoteController noteController;
@@ -56,6 +64,10 @@ public class View {
             if (!display.readAndDispatch()) {
                 display.sleep();
             }
+        }
+        if(activeNote!=null&&!Objects.equals(activeNote.getContent(), text)){
+            activeNote.setContent(text);
+            noteController.updateNote(activeNote);
         }
     }
 
@@ -138,7 +150,6 @@ public class View {
                             login.dispose();
                             shell.layout();
                             getHeaders();
-                        //TODO authenticantioncontroller generate
                     }
                     else
                         wrongPassLabel.setVisible(true);
@@ -148,7 +159,6 @@ public class View {
                         login.dispose();
                         shell.layout();
                         getHeaders();
-                        //TODO authenticantioncontroller authenticate
                     } else {
                         wrongPassLabel.setVisible(true);
                     }
@@ -375,7 +385,7 @@ public class View {
         });
 
         deleteButton.addListener( SWT.MouseUp, event -> {
-            if(activeNote!=null) {
+            if(activeNote!=null&&MessageDialog.openConfirm(shell, "confirm", "Delete note?")) {
                 noteController.deleteNote(activeNote.getId());
                 activeNote = null;
                 styledText.setText("");
@@ -384,31 +394,61 @@ public class View {
         });
 
         infoButton.addListener( SWT.MouseUp, event -> {
-            //click info button
-            throw new UnsupportedOperationException();
+            if(activeNote!=null) {
+                StringBuilder message = new StringBuilder();
+                String header = activeNote.getHeader();
+                message.append(Objects.equals("", header)?"New note": header);
+                message.append("\n\nCreated on: " + formatDateTime(activeNote.getCreated()));
+                message.append("\nLast modified on: " + formatDateTime(activeNote.getModified()));
+                message.append("\nRevision: " + activeNote.getVersion());
+                MessageDialog.openInformation(shell, "note information", message.toString());
+            }
         });
 
         syncButton.addListener( SWT.MouseUp, event -> {
-            //click sync button
-            throw new UnsupportedOperationException();
+            String message;
+            if(noteController.synchronize())
+                message = "Synchronized successfully.";
+            else
+                message = "Could not contact server";
+            MessageDialog.openInformation(shell, "synchronization", message);
         });
 
         exportButton.addListener( SWT.MouseUp, event -> {
-            //click export button
-            throw new UnsupportedOperationException();
+            new KeyDisplay(shell, SWT.NONE).open();
         });
 
 
         table.addListener( SWT.MouseUp, event -> {
             TableItem[] active = table.getSelection();
+            int index = table.getSelectionIndex();
             if(active.length!=0){
-            openNote(active[0].getData().toString());}
+                openNote(active[0].getData().toString());
+                getHeaders();
+                table.select(index);
+            }
         });
 
         styledText.addListener(SWT.Modify, e -> {
+            text = styledText.getText();
             int currentIndex = styledText.getLineAtOffset(styledText.getCaretOffset());
             if(!(styledText.getTopIndex()-20<currentIndex))
                 styledText.setTopIndex(styledText.getLineAtOffset(styledText.getCaretOffset()) - 1);
+        });
+
+        styledText.addListener(SWT.KeyUp, e -> {
+            if(e.keyCode==13&&styledText.getLineAtOffset(styledText.getCaretOffset())==1){
+                if(activeNote!=null&&!Objects.equals(activeNote.getContent(), styledText.getText())){
+                    activeNote.setContent(styledText.getText());
+                    noteController.updateNote(activeNote);
+                    TableItem[] active = table.getSelection();
+                    int index = table.getSelectionIndex();
+                    if(active.length!=0){
+                        getHeaders();
+                        table.select(index);
+                    }
+                }
+            }
         });
 
     }
@@ -421,11 +461,9 @@ public class View {
     }
 
     private void openNote(String id){
-        System.out.println("Opening: " + id);
         if(activeNote!=null&&!Objects.equals(activeNote.getContent(), styledText.getText())){
             activeNote.setContent(styledText.getText());
             noteController.updateNote(activeNote);
-            System.out.println("Updating old note: " + activeNote.getId());
         }
         activeNote = noteController.getNote(id);
         styledText.setText(activeNote.getContent());
@@ -440,6 +478,85 @@ public class View {
             return new Image(display, data);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static String formatDateTime(long dateTime){
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(dateTime), TimeZone
+                .getDefault().toZoneId()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+
+    }
+
+    static class KeyDisplay extends Dialog {
+
+        protected Shell shell;
+
+        /**
+         * Create the dialog.
+         * @param parent
+         * @param style
+         */
+        public KeyDisplay(Shell parent, int style) {
+            super(parent, style);
+            setText("Key");
+        }
+
+        /**
+         * Open the dialog.
+         * @return the result
+         */
+        public void open() {
+            createContents();
+            shell.open();
+            shell.layout();
+            Display display = getParent().getDisplay();
+            while (!shell.isDisposed()) {
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
+            }
+        }
+
+        /**
+         * Create contents of the dialog.
+         */
+        private void createContents() {
+            shell = new Shell(getParent(), getStyle());
+            Display display = getParent().getDisplay();
+            Rectangle screen = display.getPrimaryMonitor().getClientArea();
+            shell.setSize(screen.width, screen.height);
+            shell.setFullScreen(true);
+            shell.setText(getText());
+            shell.setLayout(new FillLayout(SWT.HORIZONTAL));
+
+            Composite composite = new Composite(shell, SWT.NONE);
+            composite.setLayout(new GridLayout(1, false));
+            composite.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
+
+            Color white = display.getSystemColor(SWT.COLOR_WHITE);
+            Color black = display.getSystemColor(SWT.COLOR_BLACK);
+            PaletteData palette = new PaletteData(new RGB[] { white.getRGB(), black.getRGB() });
+            ImageData sourceData = new ImageData(16, 16, 1, palette);
+            sourceData.transparentPixel = 0;
+            Cursor cursor = new Cursor(display, sourceData, 0, 0);
+            composite.setCursor(cursor);
+
+            Image key = new Image(getParent().getDisplay(), FileIO.getKeyDir());
+            Label keyLabel = new Label(composite, SWT.CENTER);
+            GridData gd_keyLabel = new GridData(SWT.FILL, SWT.FILL, true, true);
+            gd_keyLabel.widthHint = 1000;
+            gd_keyLabel.heightHint = 1000;
+            keyLabel.setLayoutData(gd_keyLabel);
+            keyLabel.setImage(key);
+            keyLabel.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
+
+            keyLabel.addListener(SWT.MouseUp, e -> {
+                shell.dispose();
+            });
+
+            shell.addListener(SWT.KeyUp, e-> {
+                shell.dispose();
+            });
         }
     }
 }

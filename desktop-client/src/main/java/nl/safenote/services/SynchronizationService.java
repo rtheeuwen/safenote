@@ -112,7 +112,7 @@ class SynchronizationServiceImpl implements SynchronizationService {
                     }
 
                     Future<NoteList> newNotes = getNotes(idsOfNotesToGet);
-                    notes.entrySet().stream().filter(e -> idsOfNotesToSend.contains(e.getKey())).forEachOrdered(e -> send(e.getValue()));
+                    notes.entrySet().stream().filter(e -> idsOfNotesToSend.contains(e.getKey())).map(e -> {Note n = e.getValue(); n.setEncrypted(true); return n;}).forEachOrdered(this::send);
                     while (!newNotes.isDone()) {
                         Thread.sleep(10L);
                     }
