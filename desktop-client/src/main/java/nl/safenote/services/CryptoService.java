@@ -5,13 +5,10 @@ import nl.safenote.model.Message;
 import nl.safenote.model.Note;
 
 import javax.crypto.*;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
-import java.security.spec.InvalidParameterSpecException;
-import java.util.Arrays;
 import java.util.Objects;
 
 

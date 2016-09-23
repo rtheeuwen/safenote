@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import nl.safenote.utils.FileIO;
 
 import javax.crypto.*;
-import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
