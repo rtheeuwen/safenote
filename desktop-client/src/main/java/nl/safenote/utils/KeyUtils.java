@@ -62,7 +62,7 @@ public final class KeyUtils {
         return new Quadruple<>(new SecretKeySpec(byteSequence.read(32), "AES"),
                 new SecretKeySpec(byteSequence.read(64), "HmacSHA512"),
                 decodePublicKey(byteSequence.read(294)),
-                decodePrivateKey(byteSequence.read())
+                decodePrivateKey(byteSequence.readRemaining())
         );
     }
 
@@ -120,7 +120,7 @@ public final class KeyUtils {
             return out;
         }
 
-        byte[] read() {
+        byte[] readRemaining() {
             if (bytes.length == index)
                 throw new IllegalArgumentException("Source is depleted");
             return read(bytes.length - index);
