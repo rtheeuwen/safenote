@@ -4,6 +4,8 @@ import nl.safenote.model.Quadruple;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -43,23 +45,23 @@ public final class KeyUtils {
     }
 
     private static byte[] keyStoreToByteArray(SecretKeySpec aes, SecretKeySpec hmac, PrivateKey privateKey, PublicKey publicKey){
-        byte[] aesBytes = aes.getEncoded();
-        byte[] hmacBytes = hmac.getEncoded();
         byte[] privateBytes = privateKey.getEncoded();
-        byte[] publicBytes = publicKey.getEncoded();
-        byte[] total = new byte[32+64+294+privateBytes.length];
-        System.arraycopy(aesBytes, 0, total, 0, 32);
-        System.arraycopy(hmacBytes, 0, total, 32, 64);
-        System.arraycopy(publicBytes, 0, total, 96, 294);
-        System.arraycopy(privateBytes, 0, total, 390, privateBytes.length);
-        return total;
+        try(ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(32+64+294+privateBytes.length)) {
+            byteArrayOutputStream.write(aes.getEncoded()); //32 bytes
+            byteArrayOutputStream.write(hmac.getEncoded()); //64 bytes
+            byteArrayOutputStream.write(publicKey.getEncoded()); //294 bytes
+            byteArrayOutputStream.write(privateBytes); //variable length 1218 or 1217 bytes
+            return byteArrayOutputStream.toByteArray();
+        } catch (IOException e){
+            throw new AssertionError(e);
+        }
     }
 
-    public static Quadruple<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> keyStoreFromByteArray(byte[] total){
+    public static Quadruple<SecretKeySpec, SecretKeySpec, PublicKey, PrivateKey> keyStoreFromByteArray(byte[] total){
         return new Quadruple<>(new SecretKeySpec(Arrays.copyOfRange(total, 0, 32), "AES"),
-                new SecretKeySpec(Arrays.copyOfRange(total, 32, 64), "HmacSHA512"),
-                decodePrivateKey(Arrays.copyOfRange(total, 390, total.length)),
-                decodePublicKey(Arrays.copyOfRange(total, 96, 390))
+                new SecretKeySpec(Arrays.copyOfRange(total, 32, 96), "HmacSHA512"),
+                decodePublicKey(Arrays.copyOfRange(total, 96, 390)),
+                decodePrivateKey(Arrays.copyOfRange(total, 390, total.length))
         );
     }
 

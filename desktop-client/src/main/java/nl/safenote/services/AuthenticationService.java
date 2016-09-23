@@ -62,12 +62,12 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
         initializeServices(keyStoreFromByteArray(decipherStorage(FileIO.read(), passphrase)));
     }
 
-    private void initializeServices(Quadruple<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> keyStore){
+    private void initializeServices(Quadruple<SecretKeySpec, SecretKeySpec, PublicKey, PrivateKey> keyStore){
         if(!Objects.equals(keyStore.getA().getAlgorithm(), "AES") || !Objects.equals(keyStore.getB().getAlgorithm(), "HmacSHA512")) {
             throw new IllegalArgumentException("Invalid keys");
         }
-            this.cryptoService.init(keyStore.getA(), keyStore.getB(), keyStore.getC());
-            this.synchronizationService.enlist(DatatypeConverter.printBase64Binary(( keyStore.getD()).getEncoded()));
+            this.cryptoService.init(keyStore.getA(), keyStore.getB(), keyStore.getD());
+            this.synchronizationService.enlist(keyStore.getC());
     }
 
     private byte[] encipherStorage(byte[] keyStore, String password, SecureRandom secureRandom){

@@ -118,9 +118,9 @@ public class AuthenticationServiceTest {
         Method decipherStorage = AuthenticationServiceImpl.class.getDeclaredMethod("decipherStorage", params);
         decipherStorage.setAccessible(true);
         byte[] deciphered = (byte[]) decipherStorage.invoke(authenticationService, FileIO.read(), password);
-        Quadruple<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> keyStore = KeyUtils.keyStoreFromByteArray(deciphered);
+        Quadruple<SecretKeySpec, SecretKeySpec, PublicKey, PrivateKey> keyStore = KeyUtils.keyStoreFromByteArray(deciphered);
 
-        verify(synchronizationService).enlist(DatatypeConverter.printBase64Binary(( keyStore.getD()).getEncoded()));
-        verify(cryptoService).init(keyStore.getA(), keyStore.getB(), keyStore.getC());
+        verify(synchronizationService).enlist(keyStore.getC());
+        verify(cryptoService).init(keyStore.getA(), keyStore.getB(), keyStore.getD());
     }
 }

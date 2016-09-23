@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.xml.bind.DatatypeConverter;
+import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -24,7 +26,7 @@ import java.util.stream.Collectors;
 
 public interface SynchronizationService {
 
-    boolean enlist(String publicKey);
+    boolean enlist(PublicKey publicKey);
     void send(Note note);
     void delete(Note note);
     boolean synchronize();
@@ -60,8 +62,8 @@ class SynchronizationServiceImpl implements SynchronizationService {
     }
 
     @Override
-    public boolean enlist(String publicKey) {
-        this.publicKey = publicKey;
+    public boolean enlist(PublicKey publicKey) {
+        this.publicKey = DatatypeConverter.printBase64Binary(publicKey.getEncoded());
         return synchronize();
     }
 
