@@ -47,10 +47,10 @@ public final class KeyUtils {
     private static byte[] keyStoreToByteArray(SecretKeySpec aes, SecretKeySpec hmac, PrivateKey privateKey, PublicKey publicKey) {
         byte[] privateBytes = privateKey.getEncoded();
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(32 + 64 + 294 + privateBytes.length)) {
-            byteArrayOutputStream.write(aes.getEncoded()); //32 bytes
-            byteArrayOutputStream.write(hmac.getEncoded()); //64 bytes
-            byteArrayOutputStream.write(publicKey.getEncoded()); //294 bytes
-            byteArrayOutputStream.write(privateBytes); //variable length 1218 or 1217 bytes
+            byteArrayOutputStream.write(aes.getEncoded()); //32 source
+            byteArrayOutputStream.write(hmac.getEncoded()); //64 source
+            byteArrayOutputStream.write(publicKey.getEncoded()); //294 source
+            byteArrayOutputStream.write(privateBytes); //variable length 1218 or 1217 source
             return byteArrayOutputStream.toByteArray();
         } catch (IOException e) {
             throw new AssertionError(e);
@@ -102,29 +102,29 @@ public final class KeyUtils {
     //saves a lot of double checking time and mistakes
     private static class ByteSequence {
 
-        private final byte[] bytes;
+        private final byte[] source;
         int index;
 
-        ByteSequence(byte[] bytes) {
-            if (bytes == null)
+        ByteSequence(byte[] source) {
+            if (source == null)
                 throw new NullPointerException();
-            this.bytes = bytes;
+            this.source = source;
         }
 
         byte[] take(int len) {
-            if (index == bytes.length)
+            if (index == source.length)
                 throw new IllegalArgumentException("Source is depleted.");
-            if (len < 0 || (len + index > bytes.length))
-                throw new IllegalArgumentException(bytes.length - index + " bytes remaining in source");
-            byte[] out = Arrays.copyOfRange(bytes, index, index + len);
+            if (len < 0 || (len + index > source.length))
+                throw new IllegalArgumentException(source.length - index + " source remaining in source");
+            byte[] out = Arrays.copyOfRange(source, index, index + len);
             index += len;
             return out;
         }
 
         byte[] takeRemaining() {
-            if (bytes.length == index)
+            if (source.length == index)
                 throw new IllegalArgumentException("Source is depleted");
-            return take(bytes.length - index);
+            return take(source.length - index);
         }
     }
 }
