@@ -32,7 +32,7 @@ public interface SynchronizationService {
     boolean synchronize();
 }
 
-@Service
+@Service @Deprecated //TODO PLX FIX ME!!!!!!!!!!!!!!!!!!!!!!!!!!!
 class SynchronizationServiceImpl implements SynchronizationService {
 
     private final RestTemplate restTemplate;
