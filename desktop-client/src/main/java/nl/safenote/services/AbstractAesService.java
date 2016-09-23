@@ -24,13 +24,13 @@ public abstract class AbstractAesService {
     public final byte[] aesEncipher(byte[] plainText, SecretKeySpec key) {
         try {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            byte[] nonce = new byte[12];
+            byte[] nonce = new byte[16];
             secureRandom.nextBytes(nonce);
             GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, nonce);
             cipher.init(Cipher.ENCRYPT_MODE, key, gcmParameterSpec);
-            byte[] cipherText = new byte[28 + plainText.length];
-            System.arraycopy(nonce, 0, cipherText, 0, 12);
-            cipher.doFinal(plainText, 0, plainText.length, cipherText, 12);
+            byte[] cipherText = new byte[32 + plainText.length];
+            System.arraycopy(nonce, 0, cipherText, 0, 16);
+            cipher.doFinal(plainText, 0, plainText.length, cipherText, 16);
             return cipherText;
         } catch (InvalidKeyException | IllegalBlockSizeException | BadPaddingException  e) {
             throw new SecurityException("Encryption error");
@@ -43,9 +43,9 @@ public abstract class AbstractAesService {
     public final byte[] aesDecipher(byte[] cipherText, SecretKeySpec key){
         try {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, cipherText, 0, 12);
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, cipherText, 0, 16);
             cipher.init(Cipher.DECRYPT_MODE, key,gcmParameterSpec);
-            return cipher.doFinal(cipherText, 12, cipherText.length - 12);
+            return cipher.doFinal(cipherText, 16, cipherText.length - 16);
         } catch (InvalidKeyException | IllegalBlockSizeException | BadPaddingException e) {
             throw new SecurityException("Decryption error");
         } catch (NoSuchAlgorithmException | NoSuchPaddingException |
