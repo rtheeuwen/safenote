@@ -67,14 +67,4 @@ public class Config {
     public PersistenceExceptionTranslationPostProcessor exceptionTranslation(){
         return new PersistenceExceptionTranslationPostProcessor();
     }
-
-    @Bean
-    public SecureRandom secureRandom(){
-        try {
-            return SecureRandom.getInstance("NativePRNGNonBlocking");
-        } catch (NoSuchAlgorithmException e) {
-            throw new AssertionError(e);
-        }
-    }
-
 }

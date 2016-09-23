@@ -28,10 +28,6 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
     private SecretKeySpec HMACSecret;
     private PrivateKey privateKey;
 
-    public CryptoServiceImpl(SecureRandom secureRandom){
-        super(secureRandom);
-    }
-
     @Override
     public void init(SecretKeySpec aesKey, SecretKeySpec hmacSecret, PrivateKey privateKey) {
         assert aesKey!=null&&hmacSecret!=null&&privateKey!=null;

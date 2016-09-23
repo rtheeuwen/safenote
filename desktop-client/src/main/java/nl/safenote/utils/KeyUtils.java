@@ -39,7 +39,7 @@ public final class KeyUtils {
 
     public static byte[] generateKeyStore(SecureRandom secureRandom){
         KeyPair keyPair = generateRsaKeyPair(secureRandom);
-        return keyStoreToByteArray(generateAesKey(), generateHmacKey(secureRandom), keyPair.getPrivate(), keyPair.getPublic());
+        return keyStoreToByteArray(generateAesKey(), generateHmacKey(), keyPair.getPrivate(), keyPair.getPublic());
     }
 
     private static byte[] keyStoreToByteArray(SecretKeySpec aes, SecretKeySpec hmac, PrivateKey privateKey, PublicKey publicKey){
@@ -47,19 +47,19 @@ public final class KeyUtils {
         byte[] hmacBytes = hmac.getEncoded();
         byte[] privateBytes = privateKey.getEncoded();
         byte[] publicBytes = publicKey.getEncoded();
-        byte[] total = new byte[32+512+294+privateBytes.length];
+        byte[] total = new byte[32+64+294+privateBytes.length];
         System.arraycopy(aesBytes, 0, total, 0, 32);
-        System.arraycopy(hmacBytes, 0, total, 32, 512);
-        System.arraycopy(publicBytes, 0, total, 544, 294);
-        System.arraycopy(privateBytes, 0, total, 838, privateBytes.length);
+        System.arraycopy(hmacBytes, 0, total, 32, 64);
+        System.arraycopy(publicBytes, 0, total, 96, 294);
+        System.arraycopy(privateBytes, 0, total, 390, privateBytes.length);
         return total;
     }
 
     public static Quadruple<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> keyStoreFromByteArray(byte[] total){
         return new Quadruple<>(new SecretKeySpec(Arrays.copyOfRange(total, 0, 32), "AES"),
-                new SecretKeySpec(Arrays.copyOfRange(total, 32, 512), "HmacSHA512"),
-                decodePrivateKey(Arrays.copyOfRange(total, 838, total.length)),
-                decodePublicKey(Arrays.copyOfRange(total, 544, 838))
+                new SecretKeySpec(Arrays.copyOfRange(total, 32, 64), "HmacSHA512"),
+                decodePrivateKey(Arrays.copyOfRange(total, 390, total.length)),
+                decodePublicKey(Arrays.copyOfRange(total, 96, 390))
         );
     }
 
@@ -73,10 +73,14 @@ public final class KeyUtils {
         }
     }
 
-    private static SecretKeySpec generateHmacKey(SecureRandom secureRandom){
-            byte[] bytes = new byte[512];
-            secureRandom.nextBytes(bytes);
-            return new SecretKeySpec(bytes, "HmacSHA512");
+    private static SecretKeySpec generateHmacKey(){
+        try {
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA512");
+            keyGenerator.init(512);
+            return new SecretKeySpec(keyGenerator.generateKey().getEncoded(), "HmacSHA512");
+        } catch (NoSuchAlgorithmException e) {
+            throw new AssertionError(e);
+        }
     }
 
     private static KeyPair generateRsaKeyPair(SecureRandom secureRandom){

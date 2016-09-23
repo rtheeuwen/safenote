@@ -1,5 +1,6 @@
 package nl.safenote.services;
 
+import nl.safenote.model.Pair;
 import nl.safenote.model.Quadruple;
 import nl.safenote.utils.KeyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +34,7 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
     private final SynchronizationService synchronizationService;
 
     @Autowired
-    AuthenticationServiceImpl(CryptoService cryptoService, SynchronizationService synchronizationService, SecureRandom secureRandom) {
-        super(secureRandom);
+    AuthenticationServiceImpl(CryptoService cryptoService, SynchronizationService synchronizationService) {
         assert cryptoService!= null&&synchronizationService!=null;
         this.cryptoService = cryptoService;
         this.synchronizationService = synchronizationService;
@@ -48,9 +48,14 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
     }
 
     private void generate(String passphrase){
+        try {
+            SecureRandom secureRandom = SecureRandom.getInstance("NativePRNGNonBlocking");
             byte[] keyStore = KeyUtils.generateKeyStore(secureRandom);
             FileIO.write(encipherStorage(keyStore, passphrase, secureRandom));
             initializeServices(keyStoreFromByteArray(keyStore));
+        } catch (NoSuchAlgorithmException e) {
+            throw new AssertionError(e);
+        }
     }
 
     private void load(String passphrase){
@@ -66,26 +71,46 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
     }
 
     private byte[] encipherStorage(byte[] keyStore, String password, SecureRandom secureRandom){
+        try {
             byte[] salt = new byte[32];
             secureRandom.nextBytes(salt);
-            SecretKeySpec key = deriveKey(password, salt);
-            byte[] enciphered = super.aesEncipher(compress(keyStore), key);
-            byte[] output = new byte[32 + enciphered.length];
+            Pair<SecretKeySpec, SecretKeySpec> keys = deriveKeys(password, salt);
+            byte[] enciphered = super.aesEncipher(compress(keyStore), keys.getA());
+            byte[] output = new byte[32 + enciphered.length + 32];
             System.arraycopy(salt, 0, output, 0, 32);
             System.arraycopy(enciphered, 0, output, 32, enciphered.length);
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(keys.getB());
+            mac.update(output, 0, 32 + enciphered.length);
+            mac.doFinal(output, 32 + enciphered.length);
             return output;
+        } catch (NoSuchAlgorithmException | InvalidKeyException | ShortBufferException e) {
+            throw new AssertionError(e);
+        }
     }
 
     private byte[] decipherStorage(byte[] cipherText, String password){
-        byte[] salt = Arrays.copyOfRange(cipherText, 0, 32);
-        SecretKeySpec key = deriveKey(password, salt);
-        return decompress(super.aesDecipher(Arrays.copyOfRange(cipherText, 32, cipherText.length), key));
+        try {
+            byte[] salt = Arrays.copyOfRange(cipherText, 0, 32);
+            Pair<SecretKeySpec, SecretKeySpec> keys = deriveKeys(password, salt);
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(keys.getB());
+            mac.update(cipherText, 0, cipherText.length-32);
+            byte[] claimedMac = Arrays.copyOfRange(cipherText, cipherText.length-32, cipherText.length);
+            if(!(Arrays.equals(claimedMac, mac.doFinal())))
+                throw new SecurityException("Invalid password or invalid MAC"); //mac secret derived from key differs from correct mac secret, or data is altered
+            return decompress(super.aesDecipher(Arrays.copyOfRange(cipherText, 32, cipherText.length - 32), keys.getA()));
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            throw new AssertionError(e);
+        }
     }
 
-    private SecretKeySpec deriveKey(String password, byte[] salt){
+    private Pair<SecretKeySpec, SecretKeySpec> deriveKeys(String password, byte[] salt){
         try {
-            return new SecretKeySpec(SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512")
-                    .generateSecret(new PBEKeySpec(password.toCharArray(), salt, 800000, 256)).getEncoded(), "AES");
+            byte[] k = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512")
+                    .generateSecret(new PBEKeySpec(password.toCharArray(), salt, 800000, 512)).getEncoded();
+            return new Pair<>(new SecretKeySpec(Arrays.copyOfRange(k, 0, 32), "AES"),
+                    new SecretKeySpec(Arrays.copyOfRange(k, 32, 64), "HMACSha256"));
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             throw new AssertionError(e);
         }
