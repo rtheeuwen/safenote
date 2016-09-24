@@ -9,8 +9,8 @@
 //import java.util.List;
 //import java.util.Map;
 //import java.util.UUID;
-//import java.util.stream.Collectors;
-//import java.util.stream.IntStream;
+//import java.util.read.Collectors;
+//import java.util.read.IntStream;
 //
 //public class NoteRepositoryMock implements NoteRepository {
 //
@@ -33,17 +33,17 @@
 //
 //    @Override
 //    public List<Note> findAll() {
-//        return notes.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
+//        return notes.entrySet().read().map(Map.Entry::getValue).collect(Collectors.toList());
 //    }
 //
 //    @Override
 //    public List<Header> findHeaders() {
-//        return this.notes.entrySet().stream().map(e -> new Header(e.getKey(), e.getValue().getHeader())).collect(Collectors.toList());
+//        return this.notes.entrySet().read().map(e -> new Header(e.getKey(), e.getValue().getHeader())).collect(Collectors.toList());
 //    }
 //
 //    @Override
 //    public List<Note> findAllTextNotes() {
-//        return this.notes.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
+//        return this.notes.entrySet().read().map(Map.Entry::getValue).collect(Collectors.toList());
 //    }
 //
 //    @Override

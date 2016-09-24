@@ -380,10 +380,7 @@ public class View {
         });
 
         newButton.addListener( SWT.MouseUp, event -> {
-            String id = noteController.createNote();
-            openNote(id);
-            getHeaders();
-            table.select(0);
+            create();
         });
 
         deleteButton.addListener( SWT.MouseUp, event -> {
@@ -462,11 +459,7 @@ public class View {
         table.removeAll();
         java.util.List<Header> headers = noteController.getHeaders();
         if(headers.size()==0){
-            String id = noteController.createNote();
-            openNote(id);
-            getHeaders();
-            table.select(0);
-            styledText.forceFocus();
+            create();
         } else {
             headers.stream().forEachOrdered(header -> {
                 TableItem item = new TableItem(table, SWT.NONE);
@@ -497,6 +490,14 @@ public class View {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void create(){
+        String id = noteController.createNote();
+        openNote(id);
+        getHeaders();
+        table.select(0);
+        styledText.forceFocus();
     }
 
     private static String formatDateTime(long dateTime){
