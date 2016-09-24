@@ -105,12 +105,15 @@ public final class KeyUtils {
         private int index;
 
         ByteStream(byte[]... source){
-            this.source = new byte[Arrays.stream(source).mapToInt(b -> b.length).sum()];
-            int writeIndex = 0;
-            for(byte[] bytes:source){
-                System.arraycopy(bytes, 0, this.source, writeIndex, bytes.length);
-                writeIndex += bytes.length;
-            }
+            if(source.length==1)
+                this.source = source[0];
+            else
+                this.source = new byte[Arrays.stream(source).mapToInt(b -> b.length).sum()];
+                int writeIndex = 0;
+                for(byte[] bytes:source){
+                    System.arraycopy(bytes, 0, this.source, writeIndex, bytes.length);
+                    writeIndex += bytes.length;
+                }
         }
 
         byte[] read(int len) {
