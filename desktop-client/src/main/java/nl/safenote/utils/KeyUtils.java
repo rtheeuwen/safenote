@@ -121,6 +121,8 @@ public final class KeyUtils {
                 throw new IllegalArgumentException("Source is depleted.");
             if(len < 0 || (len + index > source.length))
                 throw new IllegalArgumentException(source.length - index + " bytes remaining in source");
+            if(len==source.length)
+                return source;
             return Arrays.copyOfRange(source, index, index += len);
         }
 
