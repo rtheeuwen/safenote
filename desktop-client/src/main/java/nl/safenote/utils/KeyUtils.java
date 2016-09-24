@@ -44,12 +44,12 @@ public final class KeyUtils {
 
     private static byte[] keyStoreToByteArray(SecretKeySpec aes, SecretKeySpec hmac, PrivateKey privateKey, PublicKey publicKey) {
         byte[] privateBytes = privateKey.getEncoded();
-        return new ByteStream(32, 64, 294, privateBytes.length)
-                        .write(aes.getEncoded()) //32 bytes
-                        .write(hmac.getEncoded()) //64 bytes
-                        .write(publicKey.getEncoded()) //294 bytes
-                        .write(privateBytes) //variable length 1218 or 1217 bytes
-                        .read();
+        return new ByteStream(
+                aes.getEncoded(), //32 bytes
+                hmac.getEncoded(), //64 bytes
+                publicKey.getEncoded(), //294 bytes
+                privateBytes //variable length 1218 or 1217 bytes
+        ).assertSize(32, 64, 294, privateBytes.length).read();
     }
 
     public static Quadruple<SecretKeySpec, SecretKeySpec, PublicKey, PrivateKey> keyStoreFromByteArray(byte[] total) {
@@ -94,60 +94,44 @@ public final class KeyUtils {
     }
 
     /**
-     * Utility class for sequentially reading and writing fragments from/to an underlying byte[], called source,
-     * Provides an alternative to repeated arraycopies and and ByteArrayOutputStream.
-     * Prevents mistakes when manually 'concatenating' and 'cutting up' byte arrays.
-     *
-     * ByteStream has 2 modes (and separate constructors for both modes):
-     *
-     *     Read - allows easy sequential access to the source.
-     *
-     *     Write - works exactly like a ByteArrayOutputStream, save for the fact that the capacity (source length)
-     *     cannot be expanded. In write mode, the source cannot be retrieved without writing until full capacity is reached
+     * Provides an alternative to repeated System.arraycopies and/or ByteArrayOutputStream class.
+     * Prevents mistakes when manually concatenating and slicing byte arrays.
+     * Utility class for sequentially reading fragments from an underlying source (byte[]),
+     * Can also be used to 'concatenate' a bunch of byte[] in the constructor
      */
     private final static class ByteStream {
 
         private final byte[] source;
-        int readIndex;
-        int writeIndex;
+        private int index;
 
-        ByteStream(byte[] source) {
-            if(source == null)
-                throw new NullPointerException();
-            this.source = source;
-            this.writeIndex = source.length;
+        ByteStream(byte[]... source){
+            this.source = new byte[Arrays.stream(source).mapToInt(b -> b.length).sum()];
+            int writeIndex = 0;
+            for(byte[] bytes:source){
+                System.arraycopy(bytes, 0, this.source, writeIndex, bytes.length);
+                writeIndex += bytes.length;
+            }
         }
 
         byte[] read(int len) {
-            if(readIndex == source.length)
+            if(index == source.length)
                 throw new IllegalArgumentException("Source is depleted.");
-            if(len < 0 || (len + readIndex > source.length))
-                throw new IllegalArgumentException(source.length - readIndex + " bytes remaining in source");
-            if(writeIndex!=source.length)
-                throw new IllegalArgumentException("Source is not full yet");
-            return Arrays.copyOfRange(source, readIndex, readIndex += len);
+            if(len < 0 || (len + index > source.length))
+                throw new IllegalArgumentException(source.length - index + " bytes remaining in source");
+            return Arrays.copyOfRange(source, index, index += len);
         }
 
         byte[] read() {
-            if(source.length == readIndex)
+            if(source.length == index)
                 throw new IllegalArgumentException("Source is depleted");
-            if(writeIndex!=source.length)
-                throw new IllegalArgumentException("Source is not full yet");
-            if(readIndex==0)
+            if(index ==0)
                 return source;
             else
-                return read(source.length - readIndex);
+                return read(source.length - index);
         }
 
-        ByteStream(int... capacity){
-            this.source = new byte[Arrays.stream(capacity).sum()];
-        }
-
-        ByteStream write(byte[] bytes){
-            if(writeIndex+bytes.length>source.length)
-                throw new ArrayIndexOutOfBoundsException(source.length - writeIndex + " empty bytes remaining");
-            System.arraycopy(bytes, 0, source, writeIndex, bytes.length);
-            writeIndex += bytes.length;
+        ByteStream assertSize(int... size){
+            assert source.length==Arrays.stream(size).sum();
             return this;
         }
     }
