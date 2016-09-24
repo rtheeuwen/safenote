@@ -4,8 +4,6 @@ import nl.safenote.model.Quadruple;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -46,24 +44,21 @@ public final class KeyUtils {
 
     private static byte[] keyStoreToByteArray(SecretKeySpec aes, SecretKeySpec hmac, PrivateKey privateKey, PublicKey publicKey) {
         byte[] privateBytes = privateKey.getEncoded();
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(32 + 64 + 294 + privateBytes.length)) {
-            byteArrayOutputStream.write(aes.getEncoded()); //32 bytes
-            byteArrayOutputStream.write(hmac.getEncoded()); //64 bytes
-            byteArrayOutputStream.write(publicKey.getEncoded()); //294 bytes
-            byteArrayOutputStream.write(privateBytes); //variable length 1218 or 1217 bytes
-            return byteArrayOutputStream.toByteArray();
-        } catch (IOException e) {
-            throw new AssertionError(e);
-        }
+        return new ByteStream(32, 64, 294, privateBytes.length)
+                        .write(aes.getEncoded()) //32 bytes
+                        .write(hmac.getEncoded()) //64 bytes
+                        .write(publicKey.getEncoded()) //294 bytes
+                        .write(privateBytes) //variable length 1218 or 1217 bytes
+                        .read();
     }
 
     public static Quadruple<SecretKeySpec, SecretKeySpec, PublicKey, PrivateKey> keyStoreFromByteArray(byte[] total) {
-        ByteSequence byteSequence = new ByteSequence(total);
+        ByteStream byteStream = new ByteStream(total);
         return new Quadruple<>(
-                new SecretKeySpec(byteSequence.take(32), "AES"),
-                new SecretKeySpec(byteSequence.take(64), "HmacSHA512"),
-                decodePublicKey(byteSequence.take(294)),
-                decodePrivateKey(byteSequence.takeRemaining())
+                new SecretKeySpec(byteStream.read(32), "AES"),
+                new SecretKeySpec(byteStream.read(64), "HmacSHA512"),
+                decodePublicKey(byteStream.read(294)),
+                decodePrivateKey(byteStream.read())
         );
     }
 
@@ -95,34 +90,6 @@ public final class KeyUtils {
             return kpg.generateKeyPair();
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
             throw new AssertionError(e);
-        }
-    }
-
-    //helper class for accessing fragments of a byte array sequentially
-    //saves a lot of double checking time and mistakes
-    private static class ByteSequence {
-
-        private final byte[] source;
-        int index;
-
-        ByteSequence(byte[] source) {
-            if (source == null)
-                throw new NullPointerException();
-            this.source = source;
-        }
-
-        byte[] take(int len) {
-            if (index == source.length)
-                throw new IllegalArgumentException("Source is depleted.");
-            if (len < 0 || (len + index > source.length))
-                throw new IllegalArgumentException(source.length - index + " bytes remaining in source");
-            return Arrays.copyOfRange(source, index, index += len);
-        }
-
-        byte[] takeRemaining() {
-            if (source.length == index)
-                throw new IllegalArgumentException("Source is depleted");
-            return take(source.length - index);
         }
     }
 }
