@@ -3,9 +3,6 @@
 Desktop client:
 - Linux, Gnome / KDE
 - JRE 8
-- GTK webkit: https://pkgs.org/altlinux-sisyphus/classic-x86_64/libwebkitgtk2-2.4.11-alt1.x86_64.rpm.html
-- Firefox
-- If you are using the Oracle JRE you need the Java Cryptography extension: http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html
 
 Server:
 - JRE 8
