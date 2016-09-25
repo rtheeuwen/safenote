@@ -10,7 +10,6 @@ import nl.safenote.utils.FileIO;
 import javax.crypto.*;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;

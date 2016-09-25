@@ -21,8 +21,6 @@ import nl.safenote.services.SynchronizationService;
 import nl.safenote.services.SearchService;
 
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Properties;
 
 @Configuration
