@@ -442,13 +442,15 @@ public class View {
                 if(activeNote!=null&&!Objects.equals(activeNote.getContent(), styledText.getText())){
                     activeNote.setContent(styledText.getText());
                     noteController.updateNote(activeNote);
-                    activeNote.setHeader(noteController.getNote(activeNote.getId()).getHeader());
+                    int caretOffset = styledText.getCaretOffset();
                     TableItem[] active = table.getSelection();
                     int index = table.getSelectionIndex();
+                    openNote(activeNote.getId());
                     if(active.length!=0){
                         getHeaders();
                         table.select(index);
                     }
+                    styledText.setCaretOffset(caretOffset);
                 }
             }
         });
@@ -478,6 +480,7 @@ public class View {
         }
         activeNote = noteController.getNote(id);
         styledText.setText(activeNote.getContent());
+        styledText.forceFocus();
     }
 
     private static Image getImage(String path) {

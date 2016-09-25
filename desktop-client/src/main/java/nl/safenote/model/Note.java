@@ -16,13 +16,14 @@ import javax.persistence.*;
     @Index(columnList = "created"),
     @Index(columnList = "contentType")
 })
-public class Note{
+public class Note implements Cloneable{
 
     public final static String FINDALL = "findAll";
     public final static String FINDALLTEXTNOTES = "findAllTextNotes";
     public final static String DELETEALL = "deleteAll";
     public final static String GETCONTENTTYPE = "getContentType";
     public final static String GETHEADERS = "getHeaders";
+    public final static String NEWNOTE = "New note...";
 
     public enum ContentType {TEXT, IMAGE}
 
@@ -71,6 +72,13 @@ public class Note{
 
     }
 
+    public Object clone(){
+        try {
+            return super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError(e);
+        }
+    }
     public Note(String id, ContentType contentType){
         if(id==null||contentType==null)
             throw new IllegalArgumentException("Constructor parameter cannot be null");
@@ -95,7 +103,10 @@ public class Note{
     }
 
     public String getHeader() {
-        return header;
+        if(encrypted)
+            return header;
+        else
+            return header.equals("")?NEWNOTE:header;
     }
 
     public void setHeader(String header) {

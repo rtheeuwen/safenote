@@ -22,7 +22,11 @@ public final class Header {
     }
 
     public Header setHeader(String header) {
-        this.header = header;
+        if(header.equals(""))
+            this.header = Note.NEWNOTE;
+        else
+            this.header = header;
+
         return this;
     }
 

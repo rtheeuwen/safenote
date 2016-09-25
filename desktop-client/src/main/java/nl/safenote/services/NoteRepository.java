@@ -36,13 +36,17 @@ class NoteRepositoryImpl implements NoteRepository {
     @Transactional(readOnly = true)
     @Override
     public Note findOne(String id) {
-        return entityManager.find(Note.class, id);
+        Note note = entityManager.find(Note.class, id);
+        note.setEncrypted(true);
+        return note;
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<Note> findAll() {
-        return entityManager.createNamedQuery(Note.FINDALL, Note.class).getResultList();
+        List<Note> notes =  entityManager.createNamedQuery(Note.FINDALL, Note.class).getResultList();
+        notes.stream().forEachOrdered(note -> note.setEncrypted(true));
+        return notes;
     }
 
     @Override

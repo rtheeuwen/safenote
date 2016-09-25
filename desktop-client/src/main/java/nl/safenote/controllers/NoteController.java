@@ -37,8 +37,7 @@ public class NoteController {
     public List<Header> getHeaders(){
         return noteRepository.findHeaders().stream()
                 .map(h -> {
-                    String header = cryptoService.decipher(h.getHeader());
-                    h.setHeader("".equals(header)?"New note...":header);
+                    h.setHeader(cryptoService.decipher(h.getHeader()));
                     return h;
                 })
                 .collect(Collectors.toList());
@@ -55,10 +54,11 @@ public class NoteController {
     public void updateNote(Note note){
         if(!noteRepository.isUpdateable(note))
             throw new IllegalArgumentException("This type of content cannot be updated");
-        note.updateHeader();
-        cryptoService.encipher(note);
-        noteRepository.update(note);
-        synchronizationService.send(note);
+        Note clone = (Note) note.clone();
+        clone.updateHeader();
+        cryptoService.encipher(clone);
+        noteRepository.update(clone);
+        synchronizationService.send(clone);
     }
 
     public String createNote(){
