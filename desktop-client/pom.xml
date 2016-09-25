@@ -9,9 +9,6 @@
 	</parent>
     <artifactId>desktop-client</artifactId>
     <packaging>jar</packaging>
-    <properties>
-        <jetty.version>9.3.11.v20160721</jetty.version>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>com.google.zxing</groupId>
