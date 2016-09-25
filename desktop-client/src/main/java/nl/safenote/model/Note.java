@@ -23,7 +23,7 @@ public class Note implements Cloneable{
     public final static String DELETEALL = "deleteAll";
     public final static String GETCONTENTTYPE = "getContentType";
     public final static String GETHEADERS = "getHeaders";
-    public final static String NEWNOTE = "New note...";
+    public final static String NEWNOTEHEADER = "New note...";
 
     public enum ContentType {TEXT, IMAGE}
 
@@ -106,7 +106,7 @@ public class Note implements Cloneable{
         if(encrypted)
             return header;
         else
-            return header.equals("")?NEWNOTE:header;
+            return header.equals("")? NEWNOTEHEADER :header;
     }
 
     public void setHeader(String header) {

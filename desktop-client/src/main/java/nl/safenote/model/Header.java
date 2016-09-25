@@ -23,7 +23,7 @@ public final class Header {
 
     public Header setHeader(String header) {
         if(header.equals(""))
-            this.header = Note.NEWNOTE;
+            this.header = Note.NEWNOTEHEADER;
         else
             this.header = header;
 
