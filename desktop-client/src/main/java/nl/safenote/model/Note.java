@@ -80,6 +80,16 @@ public class Note{
         this.contentType = contentType;
     }
 
+    public void updateHeader(){
+        if(encrypted)
+            throw new IllegalArgumentException("note is encrypted");
+        int index = content.indexOf("\n");
+        index = index!=-1?index:content.indexOf(" ");
+        index = index!=-1?index:content.length()<=10?content.length():10;
+        index = index>35?35:index;
+        header = content.substring(0, index);
+    }
+
     public String getId() {
         return id;
     }

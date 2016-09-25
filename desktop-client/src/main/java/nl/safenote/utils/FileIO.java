@@ -33,21 +33,6 @@ public final class FileIO {
         return homedir+"/key.png";
     }
 
-    public static byte[] getKeyAsImage(){
-        try {
-            InputStream inputStream = new FileInputStream(new File(homedir+"/key.png"));
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1024];
-            int read;
-            while((read = inputStream.read(buffer))!=-1){
-                outputStream.write(buffer, 0, read);
-            }
-            return outputStream.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     /**
      * Generates and writes a QR code for the local keystore.
      * This QR code can be interpreted by a mobile device easily and provides a safe way to transfer cryptographic keys

@@ -32,8 +32,4 @@ public class AuthenticationController {
             return false;
         }
     }
-
-    public byte[] key(){
-        return FileIO.getKeyAsImage();
-    }
 }

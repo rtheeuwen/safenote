@@ -55,14 +55,7 @@ public class NoteController {
     public void updateNote(Note note){
         if(!noteRepository.isUpdateable(note))
             throw new IllegalArgumentException("This type of content cannot be updated");
-
-        String content = note.getContent();
-        int index = content.indexOf("\n");
-        index = index!=-1?index:content.indexOf(" ");
-        index = index!=-1?index:content.length()<=10?content.length():10;
-        index = index>35?35:index;
-        note.setHeader(content.substring(0, index));
-
+        note.updateHeader();
         cryptoService.encipher(note);
         noteRepository.update(note);
         synchronizationService.send(note);
