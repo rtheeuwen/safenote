@@ -9,7 +9,6 @@ import nl.safenote.services.SynchronizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -52,8 +51,6 @@ public class NoteController {
     }
 
     public void updateNote(Note note){
-        if(!noteRepository.isUpdateable(note))
-            throw new IllegalArgumentException("This type of content cannot be updated");
         Note clone = (Note) note.clone();
         clone.updateHeader();
         cryptoService.encipher(clone);
@@ -69,7 +66,6 @@ public class NoteController {
         return id;
     }
 
-    @Transactional
     public void deleteNote(String id){
         Note note = noteRepository.findOne(id);
         note.setEncrypted(true);
