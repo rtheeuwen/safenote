@@ -7,8 +7,7 @@ import org.sql2o.Connection;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public interface NoteRepository {
 
@@ -16,10 +15,13 @@ public interface NoteRepository {
     List<Note> findAll();
     List<Header> findHeaders();
     List<Note> findAllTextNotes();
-    void create(Note... notes);
+    void create(Note note);
+    void create(List<Note> notes);
     void update(Note note);
+    void update(List<Note> notes);
     void delete(Note note);
-    void delete(String... id);
+    void delete(String id);
+    void delete(List<String> ids);
     String nextId();
 }
 
@@ -106,39 +108,29 @@ class NoteRepositoryImpl implements NoteRepository{
     }
 
     @Override
-    public void create(Note... notes) {
+    public void create(Note note) {
 
         String sql = "INSERT INTO note(id, content, contenttype, created, hash, header, modified, version) " +
                 "VALUES(:id, :content, :contenttype, :created, :hash, :header, :modified, :version)";
 
-        if(notes.length==1){
-            Note note = notes[0];
-            isEncrypted(note);
-
-            try(Connection connection = sql2o.open()){
-                connection.createQuery(sql)
-                        .bind(note)
-                        .addParameter("contenttype", note.getContentType())
-                        .executeUpdate();
-            }
-
-        } else {
-
-            try(Connection connection = sql2o.beginTransaction()) {
-                Query query = connection.createQuery(sql);
-
-                for(Note note: notes){
-                    isEncrypted(note);
-                    query.bind(note)
-                            .addParameter("contenttype", note.getContentType())
-                            .addToBatch();
-                }
-
-                query.executeBatch();
-                connection.commit();
-            }
+        try(Connection connection = sql2o.open()){
+            connection.createQuery(sql)
+                    .bind(note)
+                    .addParameter("contenttype", note.getContentType())
+                    .executeUpdate();
         }
     }
+
+    @Override
+    public void create(List<Note> notes) {
+
+        String sql = "INSERT INTO note(id, content, contenttype, created, hash, header, modified, version) " +
+                "VALUES(:id, :content, :contenttype, :created, :hash, :header, :modified, :version)";
+
+
+        executeBulkUpdate(notes, sql);
+    }
+
 
     @Override
     public void update(Note note) {
@@ -180,34 +172,66 @@ class NoteRepositoryImpl implements NoteRepository{
     }
 
     @Override
+    public void update(List<Note> notes) {
+
+        String sql = "SELECT contenttype " +
+                "FROM NOTE " +
+                "WHERE id=:id";
+
+        for(Note note:notes){
+            try(Connection connection=sql2o.open()) {
+                if(Note.ContentType.valueOf(connection.createQuery(sql)
+                        .addParameter("id", note.getId())
+                        .executeAndFetchFirst(String.class)).equals(Note.ContentType.TEXT))
+                    notes.remove(note);
+            }
+        }
+
+        sql = "UPDATE note " +
+                "SET content=:content, " +
+                "hash=:hash, " +
+                "header=:header, " +
+                "modified=:modified, " +
+                "version=:version " +
+                "WHERE id=:id";
+
+        executeBulkUpdate(notes, sql);
+    }
+
+    @Override
     public void delete(Note note) {
         delete(note.getId());
     }
 
     @Override
-    public void delete(String... ids) {
+    public void delete(String id) {
 
         String sql = "DELETE FROM note " +
-                    "WHERE id=:id";
+                "WHERE id=:id";
 
-        if(ids.length==1) {
-            try (Connection connection = sql2o.open()) {
-                connection.createQuery(sql)
-                        .addParameter("id", ids)
-                        .executeUpdate();
+        try (Connection connection = sql2o.open()) {
+            connection.createQuery(sql)
+                    .addParameter("id", id)
+                    .executeUpdate();
+        }
+    }
+
+    @Override
+    public void delete(List<String> ids) {
+
+        String sql = "DELETE FROM note " +
+                "WHERE id=:id";
+
+        try (Connection connection = sql2o.beginTransaction()){
+            Query query = connection.createQuery(sql);
+
+            for(String id: ids){
+                query.addParameter("id", id)
+                        .addToBatch();
             }
-        } else {
-            try (Connection connection = sql2o.beginTransaction()){
-                Query query = connection.createQuery(sql);
 
-                for(String id: ids){
-                    query.addParameter("id", id)
-                            .addToBatch();
-                }
-
-                query.executeBatch();
-                connection.commit();
-            }
+            query.executeBatch();
+            connection.commit();
         }
     }
 
@@ -219,5 +243,22 @@ class NoteRepositoryImpl implements NoteRepository{
     private void isEncrypted(Note note){
         if(!note.isEncrypted())
             throw new IllegalStateException("note must be encrypted");
+    }
+
+    private void executeBulkUpdate(List<Note> notes, String sql){
+        try(Connection connection = sql2o.beginTransaction()) {
+            Query query = connection.createQuery(sql);
+
+            for(Note note: notes) {
+                if (note != null) {
+                    isEncrypted(note);
+                    query.bind(note)
+                            .addParameter("contenttype", note.getContentType())
+                            .addToBatch();
+                }
+            }
+            query.executeBatch();
+            connection.commit();
+        }
     }
 }
