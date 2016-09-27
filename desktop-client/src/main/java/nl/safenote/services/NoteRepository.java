@@ -4,6 +4,7 @@ import nl.safenote.model.Header;
 import nl.safenote.model.Note;
 import org.springframework.stereotype.Repository;
 import org.sql2o.Connection;
+import org.sql2o.Query;
 import org.sql2o.Sql2o;
 
 import java.util.List;
@@ -15,10 +16,10 @@ public interface NoteRepository {
     List<Note> findAll();
     List<Header> findHeaders();
     List<Note> findAllTextNotes();
-    void create(Note note);
+    void create(Note... notes);
     void update(Note note);
     void delete(Note note);
-    void delete(String id);
+    void delete(String... id);
     String nextId();
 }
 
@@ -47,7 +48,7 @@ class NoteRepositoryImpl implements NoteRepository{
             connection.createQuery(sql).executeUpdate();
         }
     }
-    
+
     @Override
     public Note findOne(String id) {
 
@@ -55,7 +56,10 @@ class NoteRepositoryImpl implements NoteRepository{
                     "FROM note WHERE id=:id";
 
         try(Connection connection = sql2o.open()){
-            Note note = connection.createQuery(sql).addParameter("id", id).executeAndFetchFirst(Note.class);
+            Note note = connection.createQuery(sql)
+                    .addParameter("id", id)
+                    .executeAndFetchFirst(Note.class);
+
             note.setEncrypted(true);
             return note;
         }
@@ -68,7 +72,9 @@ class NoteRepositoryImpl implements NoteRepository{
                     "FROM note ORDER BY created DESC";
 
         try(Connection connection = sql2o.open()){
-            List<Note> notes = connection.createQuery(sql).executeAndFetch(Note.class);
+            List<Note> notes = connection.createQuery(sql)
+                    .executeAndFetch(Note.class);
+
             notes.stream().forEachOrdered(note -> note.setEncrypted(true));
             return notes;
         }
@@ -81,7 +87,8 @@ class NoteRepositoryImpl implements NoteRepository{
                     "FROM note ORDER BY created DESC";
 
         try(Connection connection = sql2o.open()){
-            return connection.createQuery(sql).executeAndFetch(Header.class);
+            return connection.createQuery(sql)
+                    .executeAndFetch(Header.class);
         }
     }
 
@@ -92,19 +99,44 @@ class NoteRepositoryImpl implements NoteRepository{
                 "FROM note WHERE contenttype=:text ORDER BY created DESC";
 
         try(Connection connection = sql2o.open()){
-            return connection.createQuery(sql).addParameter("text", Note.ContentType.TEXT).executeAndFetch(Note.class);
+            return connection.createQuery(sql)
+                    .addParameter("text", Note.ContentType.TEXT)
+                    .executeAndFetch(Note.class);
         }
     }
 
     @Override
-    public void create(Note note) {
-        isEncrypted(note);
+    public void create(Note... notes) {
 
         String sql = "INSERT INTO note(id, content, contenttype, created, hash, header, modified, version) " +
-                    "VALUES(:id, :content, :contenttype, :created, :hash, :header, :modified, :version)";
+                "VALUES(:id, :content, :contenttype, :created, :hash, :header, :modified, :version)";
 
-        try(Connection connection = sql2o.open()){
-            connection.createQuery(sql).bind(note).addParameter("contenttype", note.getContentType()).executeUpdate();
+        if(notes.length==1){
+            Note note = notes[0];
+            isEncrypted(note);
+
+            try(Connection connection = sql2o.open()){
+                connection.createQuery(sql)
+                        .bind(note)
+                        .addParameter("contenttype", note.getContentType())
+                        .executeUpdate();
+            }
+
+        } else {
+
+            try(Connection connection = sql2o.beginTransaction()) {
+                Query query = connection.createQuery(sql);
+
+                for(Note note: notes){
+                    isEncrypted(note);
+                    query.bind(note)
+                            .addParameter("contenttype", note.getContentType())
+                            .addToBatch();
+                }
+
+                query.executeBatch();
+                connection.commit();
+            }
         }
     }
 
@@ -120,31 +152,31 @@ class NoteRepositoryImpl implements NoteRepository{
 
         try(Connection connection=sql2o.open()) {
             contentType = Note.ContentType.valueOf(connection.createQuery(sql)
-                    .addParameter("id", note.getId()).executeAndFetchFirst(String.class));
+                    .addParameter("id", note.getId())
+                    .executeAndFetchFirst(String.class));
+
+            if(contentType.equals(Note.ContentType.TEXT)) {
+
+                sql = "UPDATE note " +
+                        "SET content=:content, " +
+                        "hash=:hash, " +
+                        "header=:header, " +
+                        "modified=:modified, " +
+                        "version=:version " +
+                        "WHERE id=:id";
+
+                    connection.createQuery(sql)
+                            .addParameter("content", note.getContent())
+                            .addParameter("hash", note.getHash())
+                            .addParameter("header", note.getHeader())
+                            .addParameter("modified", System.currentTimeMillis())
+                            .addParameter("version", note.getVersion() + 1)
+                            .addParameter("id", note.getId()).executeUpdate();
+
+            } else
+                throw new IllegalArgumentException("this type of content cannot be updated");
+
         }
-
-        if(contentType.equals(Note.ContentType.TEXT)) {
-
-            sql = "UPDATE note " +
-                    "SET content=:content, " +
-                    "hash=:hash, " +
-                    "header=:header, " +
-                    "modified=:modified, " +
-                    "version=:version " +
-                    "WHERE id=:id";
-
-            try (Connection connection = sql2o.open()) {
-                connection.createQuery(sql)
-                        .addParameter("content", note.getContent())
-                        .addParameter("hash", note.getHash())
-                        .addParameter("header", note.getHeader())
-                        .addParameter("modified", System.currentTimeMillis())
-                        .addParameter("version", note.getVersion() + 1)
-                        .addParameter("id", note.getId()).executeUpdate();
-            }
-
-        } else
-            throw new IllegalArgumentException("this type of content cannot be updated");
     }
 
     @Override
@@ -153,13 +185,29 @@ class NoteRepositoryImpl implements NoteRepository{
     }
 
     @Override
-    public void delete(String id) {
+    public void delete(String... ids) {
 
         String sql = "DELETE FROM note " +
                     "WHERE id=:id";
 
-        try(Connection connection=sql2o.open()){
-            connection.createQuery(sql).addParameter("id", id).executeUpdate();
+        if(ids.length==1) {
+            try (Connection connection = sql2o.open()) {
+                connection.createQuery(sql)
+                        .addParameter("id", ids)
+                        .executeUpdate();
+            }
+        } else {
+            try (Connection connection = sql2o.beginTransaction()){
+                Query query = connection.createQuery(sql);
+
+                for(String id: ids){
+                    query.addParameter("id", id)
+                            .addToBatch();
+                }
+
+                query.executeBatch();
+                connection.commit();
+            }
         }
     }
 
