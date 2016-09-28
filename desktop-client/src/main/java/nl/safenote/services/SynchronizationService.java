@@ -1,26 +1,19 @@
 package nl.safenote.services;
 
 
+import com.google.gson.Gson;
 import nl.safenote.model.*;
+import org.javalite.http.Get;
+import org.javalite.http.Http;
+import org.javalite.http.Post;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.http.*;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.GsonHttpMessageConverter;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 import javax.xml.bind.DatatypeConverter;
 import java.security.PublicKey;
 import java.util.*;
-import java.util.concurrent.Future;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 
@@ -35,15 +28,20 @@ public interface SynchronizationService {
 @Service @Deprecated //TODO PLX FIX ME!!!!!!!!!!!!!!!!!!!!!!!!!!!
 class SynchronizationServiceImpl implements SynchronizationService {
 
-    private final RestTemplate restTemplate;
-
     private final NoteRepository noteRepository;
     private final CryptoService cryptoService;
 
     private final String remoteHostUri;
-    private String userId;
+    private volatile String userId;
     private String publicKey;
-    private long serverTimeOffset = 0;
+    private volatile long serverTimeOffset = 0;
+
+    private final Gson gson = new Gson();
+    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
+
+    private static final String contentType = "Content-Type";
+    private static final String accept = "Accept";
+    private static final String applicationJson = "application/json";
 
     @Autowired
     public SynchronizationServiceImpl(Environment environment, NoteRepository noteRepository, CryptoService cryptoService) {
@@ -51,14 +49,7 @@ class SynchronizationServiceImpl implements SynchronizationService {
         this.noteRepository = noteRepository;
         this.remoteHostUri = "http://"+environment.getProperty("remotehostname")+":"+environment.getProperty("port")+"/"+environment.getProperty("contextroot")+"/";
         this.cryptoService = cryptoService;
-        HttpComponentsClientHttpRequestFactory httpRequestFactory = new HttpComponentsClientHttpRequestFactory();
-        httpRequestFactory.setConnectionRequestTimeout(1000);
-        httpRequestFactory.setConnectTimeout(1000);
-        httpRequestFactory.setReadTimeout(1000);
-        this.restTemplate = new RestTemplate(httpRequestFactory);
-        List<HttpMessageConverter<?>> gson = new ArrayList<>(1);
-        gson.add(new GsonHttpMessageConverter());
-        restTemplate.setMessageConverters(gson);
+
     }
 
     @Override
@@ -76,20 +67,21 @@ class SynchronizationServiceImpl implements SynchronizationService {
             throw new RuntimeException("synchronization failed");
         if(this.serverTimeOffset==0) {
             try {
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
-                HttpEntity<?> entity = new HttpEntity<>(headers);
-                ResponseEntity<Long> responseEntity = restTemplate.exchange(remoteHostUri + "time", HttpMethod.GET, entity, Long.class);
-                this.serverTimeOffset = responseEntity.getBody();
+                System.out.println("servertime");
+                this.serverTimeOffset = getTime() - System.currentTimeMillis();
+                System.out.println("done servertime");
                 if (this.serverTimeOffset == 0)
                     this.serverTimeOffset--;
                 return synchronize(++stackDepth);
-            } catch (RestClientException e) {
+            } catch (Exception e) {
+                e.printStackTrace();
                 return false;
             }
         } else {
             if (this.userId == null) {
-                this.userId = getSupplied(() -> restTemplate.postForObject(remoteHostUri + "enlist", new PublicKeyWrapper(this.publicKey), String.class));
+                System.out.println("userid");
+                this.userId = getUserId(this.publicKey);
+                System.out.println("done userid");
                 return synchronize(++stackDepth);
             } else {
                 try {
@@ -124,98 +116,92 @@ class SynchronizationServiceImpl implements SynchronizationService {
                     return true;
 
                 } catch (Exception e) {
+                    e.printStackTrace();
                     return false;
                 }
             }
         }
     }
 
-    @Async
-    @Override
-    public void send(Note note) {
-        if(!note.isEncrypted())
-            throw new IllegalArgumentException("note must be encrypted");
-        consume(note, n -> restTemplate.put(remoteHostUri, cryptoService.sign(new Message<>(n, getExpires()), this.userId), Message.class));
+    public void send(Note note){
+        executorService.execute(() -> {
+            System.out.println("send");
+            httpPost(remoteHostUri, jsonMessage(note))
+                    .doConnect().dispose();
+            System.out.println("done sending");
+        });
     }
 
-    @Async
-    @Override
-    public void delete(Note note) {
-        if(!note.isEncrypted())
-            throw new IllegalArgumentException("note must be encrypted");
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        consume(note, (n -> restTemplate.exchange(remoteHostUri, HttpMethod.DELETE, new HttpEntity<>(cryptoService.sign(new Message<>(n, getExpires()), this.userId), headers), String.class)));
+    public void delete(Note note){
+        executorService.execute(() -> {
+            System.out.println("delete");
+            httpPost(remoteHostUri + "delete", jsonMessage(note))
+                    .doConnect().dispose();
+            System.out.println("done delete");
+        });
     }
 
-    @Async
     private Future<NoteList> getNotes(List<String> ids){
-        return applyFunction(ids, list -> new AsyncResult<>(restTemplate.postForObject(remoteHostUri+"notes", cryptoService.sign(new Message<>(list, getExpires()), this.userId), NoteList.class)));
+        return executorService.submit(() -> {
+            System.out.println("getnotes");
+            String json = httpPost(remoteHostUri + "notes", jsonMessage(ids)).text();
+            System.out.println("done notes");
+            return gson.fromJson(json, NoteList.class);
+        });
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, String> getChecksums(){
-        return getSupplied(() -> restTemplate.postForObject(remoteHostUri+"checksums", cryptoService.sign(new Message<>(getExpires()), this.userId), HashMap.class));
+
+        String json = httpPost(remoteHostUri + "checksums", jsonMessage()).text();
+        return gson.fromJson(json, StringMap.class);
     }
 
-    @SuppressWarnings("unchecked")
     private List<String> getDeleted(){
-        return getSupplied(() -> restTemplate.postForObject(remoteHostUri+"deleted", cryptoService.sign(new Message<>(getExpires()), this.userId),ArrayList.class));
+        String json = httpPost(remoteHostUri + "deleted", jsonMessage()).text();
+        return gson.fromJson(json, StringList.class);
     }
 
+    private long getTime(){
+        String json = httpGet(remoteHostUri + "time").text();
+        return Long.valueOf(json);
+    }
 
-    private long getExpires(){
+    private String getUserId(String publicKey){
+        String json = gson.toJson(new PublicKeyWrapper(publicKey));
+        return httpPost(remoteHostUri + "enlist", json).text();
+    }
+
+    private long expirationTime(){
         if(serverTimeOffset==0) throw new RuntimeException("Did not connect to server yet.");
         return System.currentTimeMillis()+5000+serverTimeOffset;
+    }
+
+    private String jsonMessage(Object... input){
+        Message message;
+        switch (input.length){
+            case 0: message = new Message(expirationTime());
+                break;
+            case 1: message = new Message(input[0], expirationTime());
+                break;
+            default: throw new IllegalArgumentException();
+        }
+        return gson.toJson(cryptoService.sign(message, this.userId));
+    }
+
+    private static Post httpPost(String uri, String body){
+        return Http.post(uri, body).header(contentType, applicationJson).header(accept, applicationJson);
+    }
+
+    private static Get httpGet(String uri){
+        return Http.get(uri, 1000, 1000).header(contentType, applicationJson).header(accept, applicationJson);
     }
 
     private List<String> getUniqueInX(Map<String, String> x, Map<String, String> y){
         return x.entrySet().stream().filter((e) -> !(y.containsKey(e.getKey())&&y.containsValue(e.getValue()))).map(Map.Entry::getKey).collect(Collectors.toList());
     }
 
-    /**
-     * Convenience method for wrapping consumer in boilerplate code.
-     * @param t
-     * @param consumer
-     * @param <T>
-     */
-    private <T> void consume(T t, Consumer<T> consumer){
-        if(this.serverTimeOffset!=0&&this.userId!=null) {
-            try {
-                consumer.accept(t);
-            } catch (RestClientException e) {}
-        } else {
-            synchronize();
-        }
-    }
+    private class StringList extends ArrayList<String>{}
 
-    /**
-     * Convenience method for wrapping function in boilerplate code.
-     * @param t
-     * @param function
-     * @param <T>
-     * @param <R>
-     * @return
-     */
-    private <T, R> R applyFunction(T t, Function<T, R> function){
-        try{
-            return function.apply(t);
-        } catch (RestClientException e){
-            return null;
-        }
-    }
+    private class StringMap extends HashMap<String, String>{}
 
-    /**
-     * Convenience method for wrapping supplier in boilerplate code.
-     * @param supplier
-     * @param <T>
-     * @return
-     */
-    private <T> T getSupplied(Supplier<T> supplier){
-        try{
-            return supplier.get();
-        } catch (RestClientException e){
-            return null;
-        }
-    }
 }
