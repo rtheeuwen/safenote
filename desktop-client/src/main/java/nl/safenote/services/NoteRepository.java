@@ -2,7 +2,6 @@ package nl.safenote.services;
 
 import nl.safenote.model.Header;
 import nl.safenote.model.Note;
-import org.springframework.stereotype.Repository;
 import org.sql2o.Connection;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
@@ -25,7 +24,6 @@ public interface NoteRepository {
     String nextId();
 }
 
-@Repository
 class NoteRepositoryImpl implements NoteRepository{
 
     private final Sql2o sql2o;

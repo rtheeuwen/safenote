@@ -1,17 +1,12 @@
 package nl.safenote.controllers;
 
-import nl.safenote.utils.FileIO;
-import org.springframework.beans.factory.annotation.Autowired;
 import nl.safenote.services.AuthenticationService;
-import org.springframework.stereotype.Service;
 
 
-@Service
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
 
-    @Autowired
     public AuthenticationController(AuthenticationService authenticationService) {
         assert authenticationService!=null;
         this.authenticationService = authenticationService;

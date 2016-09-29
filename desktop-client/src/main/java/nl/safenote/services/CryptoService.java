@@ -1,6 +1,5 @@
 package nl.safenote.services;
 
-import org.springframework.stereotype.Service;
 import nl.safenote.model.Message;
 import nl.safenote.model.Note;
 
@@ -21,7 +20,6 @@ public interface CryptoService{
     Message sign(Message message, String userId);
 }
 
-@Service
 class CryptoServiceImpl extends AbstractAesService implements CryptoService {
 
     private SecretKeySpec AESKey;

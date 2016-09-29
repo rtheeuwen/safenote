@@ -61,6 +61,9 @@ class SignatureVerificationServiceImpl implements SignatureVerificationService {
             return userId;
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException | SignatureException e) {
             throw new SecurityException();
+        } catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }

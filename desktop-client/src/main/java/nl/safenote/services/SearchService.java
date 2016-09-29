@@ -1,11 +1,8 @@
 package nl.safenote.services;
 
 import nl.safenote.model.Result;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import nl.safenote.model.Header;
 import nl.safenote.model.Note;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Locale;
@@ -16,13 +13,11 @@ public interface SearchService {
     List<Header> search(String args);
 }
 
-@Service
 class SearchServiceImpl implements SearchService {
 
     private final NoteRepository noteRepository;
     private final CryptoService cryptoService;
 
-    @Autowired
     public SearchServiceImpl(NoteRepository noteRepository, CryptoService cryptoService) {
         assert noteRepository !=null&&cryptoService!=null;
         this.noteRepository = noteRepository;
@@ -46,12 +41,26 @@ class SearchServiceImpl implements SearchService {
         Result<Note> result = new Result<>(note);
         String text = note.getContent().toLowerCase(Locale.getDefault());
         for (String query : args) {
-            int count = StringUtils.countOccurrencesOf(text, query.toLowerCase(Locale.getDefault()));
+            int count = countNumberOfMatches(text, query.toLowerCase(Locale.getDefault()));
             if (count == 0)
                 return null; //AND condition -> note will be filtered out
             else
                 result.incrementScore(count);
         }
         return result;
+    }
+
+    private static int countNumberOfMatches(String text, String query) {
+        if (text == null || query == null || text.length() == 0 || query.length() == 0) {
+            return 0;
+        }
+        int count = 0;
+        int from = 0;
+        int index;
+        while ((index = text.indexOf(query, from)) != -1) {
+            ++count;
+            from = index + query.length();
+        }
+        return count;
     }
 }

@@ -3,8 +3,6 @@ package nl.safenote.services;
 import nl.safenote.model.Pair;
 import nl.safenote.model.Quadruple;
 import nl.safenote.utils.KeyUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import nl.safenote.utils.FileIO;
 
 import javax.crypto.*;
@@ -26,13 +24,11 @@ public interface AuthenticationService{
 }
 
 
-@Service
 class AuthenticationServiceImpl extends AbstractAesService implements AuthenticationService{
 
     private final CryptoService cryptoService;
     private final SynchronizationService synchronizationService;
 
-    @Autowired
     AuthenticationServiceImpl(CryptoService cryptoService, SynchronizationService synchronizationService) {
         assert cryptoService!= null&&synchronizationService!=null;
         this.cryptoService = cryptoService;

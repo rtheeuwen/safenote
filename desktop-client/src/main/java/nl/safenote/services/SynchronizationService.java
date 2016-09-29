@@ -2,13 +2,12 @@ package nl.safenote.services;
 
 
 import com.google.gson.Gson;
+import com.google.gson.internal.LinkedTreeMap;
 import nl.safenote.model.*;
 import org.javalite.http.Get;
 import org.javalite.http.Http;
+import org.javalite.http.HttpException;
 import org.javalite.http.Post;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Service;
 
 import javax.xml.bind.DatatypeConverter;
 import java.security.PublicKey;
@@ -25,7 +24,6 @@ public interface SynchronizationService {
     boolean synchronize();
 }
 
-@Service @Deprecated //TODO PLX FIX ME!!!!!!!!!!!!!!!!!!!!!!!!!!!
 class SynchronizationServiceImpl implements SynchronizationService {
 
     private final NoteRepository noteRepository;
@@ -36,20 +34,20 @@ class SynchronizationServiceImpl implements SynchronizationService {
     private String publicKey;
     private volatile long serverTimeOffset = 0;
 
-    private final Gson gson = new Gson();
-    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private final Gson gson;
+    private final ExecutorService executorService;
 
     private static final String contentType = "Content-Type";
     private static final String accept = "Accept";
     private static final String applicationJson = "application/json";
 
-    @Autowired
-    public SynchronizationServiceImpl(Environment environment, NoteRepository noteRepository, CryptoService cryptoService) {
-        assert(environment!=null&&noteRepository!=null&&cryptoService!=null);
+    public SynchronizationServiceImpl(Properties properties, NoteRepository noteRepository, CryptoService cryptoService, ExecutorService executorService, Gson gson) {
+        assert(properties!=null&&noteRepository!=null&&cryptoService!=null);
         this.noteRepository = noteRepository;
-        this.remoteHostUri = "http://"+environment.getProperty("remotehostname")+":"+environment.getProperty("port")+"/"+environment.getProperty("contextroot")+"/";
+        this.remoteHostUri = "http://"+properties.getProperty("remotehostname")+":"+properties.getProperty("port")+"/"+properties.getProperty("contextroot")+"/";
         this.cryptoService = cryptoService;
-
+        this.executorService = executorService;
+        this.gson = gson;
     }
 
     @Override
@@ -62,14 +60,13 @@ class SynchronizationServiceImpl implements SynchronizationService {
     public boolean synchronize(){
         return synchronize(0);
     }
+
     private boolean synchronize(int stackDepth) {
         if(stackDepth>2)
             throw new RuntimeException("synchronization failed");
         if(this.serverTimeOffset==0) {
             try {
-                System.out.println("servertime");
                 this.serverTimeOffset = getTime() - System.currentTimeMillis();
-                System.out.println("done servertime");
                 if (this.serverTimeOffset == 0)
                     this.serverTimeOffset--;
                 return synchronize(++stackDepth);
@@ -79,9 +76,7 @@ class SynchronizationServiceImpl implements SynchronizationService {
             }
         } else {
             if (this.userId == null) {
-                System.out.println("userid");
                 this.userId = getUserId(this.publicKey);
-                System.out.println("done userid");
                 return synchronize(++stackDepth);
             } else {
                 try {
@@ -113,6 +108,7 @@ class SynchronizationServiceImpl implements SynchronizationService {
 
                     newNotes.get().stream().filter(n -> n.getHash().equals(cryptoService.checksum(n))).sorted((a, b) -> (int)(b.getCreated() - a.getCreated())).map(n -> {n.setEncrypted(true); return n;}).forEachOrdered(noteRepository::create);
                     deletedNotes.stream().filter(notes::containsKey).forEachOrdered(noteRepository::delete);
+                    System.out.println("done sync");
                     return true;
 
                 } catch (Exception e) {
@@ -124,28 +120,38 @@ class SynchronizationServiceImpl implements SynchronizationService {
     }
 
     public void send(Note note){
-        executorService.execute(() -> {
-            System.out.println("send");
-            httpPost(remoteHostUri, jsonMessage(note))
-                    .doConnect().dispose();
-            System.out.println("done sending");
-        });
+        if(serverTimeOffset!=0)
+            try {
+                executorService.execute(() -> {
+                    httpPost(remoteHostUri, jsonMessage(note))
+                            .doConnect().dispose();
+                });
+            } catch (HttpException e) {
+                e.printStackTrace();
+                this.serverTimeOffset = 0;
+            }
+        else {
+            synchronize();
+        }
     }
 
     public void delete(Note note){
-        executorService.execute(() -> {
-            System.out.println("delete");
-            httpPost(remoteHostUri + "delete", jsonMessage(note))
-                    .doConnect().dispose();
-            System.out.println("done delete");
-        });
+        if(serverTimeOffset!=0)
+            try {
+                executorService.execute(() -> {
+                    httpPost(remoteHostUri + "delete", jsonMessage(note))
+                            .doConnect().dispose();
+                });
+            } catch (HttpException e) {
+                this.serverTimeOffset = 0;
+            }
+        else
+            synchronize();
     }
 
     private Future<NoteList> getNotes(List<String> ids){
         return executorService.submit(() -> {
-            System.out.println("getnotes");
             String json = httpPost(remoteHostUri + "notes", jsonMessage(ids)).text();
-            System.out.println("done notes");
             return gson.fromJson(json, NoteList.class);
         });
     }
@@ -153,12 +159,12 @@ class SynchronizationServiceImpl implements SynchronizationService {
     private Map<String, String> getChecksums(){
 
         String json = httpPost(remoteHostUri + "checksums", jsonMessage()).text();
-        return gson.fromJson(json, StringMap.class);
+        return gson.fromJson(json, LinkedTreeMap.class);
     }
 
     private List<String> getDeleted(){
         String json = httpPost(remoteHostUri + "deleted", jsonMessage()).text();
-        return gson.fromJson(json, StringList.class);
+        return gson.fromJson(json, ArrayList.class);
     }
 
     private long getTime(){
@@ -168,7 +174,7 @@ class SynchronizationServiceImpl implements SynchronizationService {
 
     private String getUserId(String publicKey){
         String json = gson.toJson(new PublicKeyWrapper(publicKey));
-        return httpPost(remoteHostUri + "enlist", json).text();
+        return gson.fromJson(httpPost(remoteHostUri + "enlist", json).text(), String.class);
     }
 
     private long expirationTime(){
@@ -189,19 +195,15 @@ class SynchronizationServiceImpl implements SynchronizationService {
     }
 
     private static Post httpPost(String uri, String body){
-        return Http.post(uri, body).header(contentType, applicationJson).header(accept, applicationJson);
+        return Http.post(uri, body.getBytes(), 500, 500).header(contentType, applicationJson).header(accept, applicationJson);
     }
 
     private static Get httpGet(String uri){
-        return Http.get(uri, 1000, 1000).header(contentType, applicationJson).header(accept, applicationJson);
+        return Http.get(uri, 500, 500).header(contentType, applicationJson).header(accept, applicationJson);
     }
 
     private List<String> getUniqueInX(Map<String, String> x, Map<String, String> y){
         return x.entrySet().stream().filter((e) -> !(y.containsKey(e.getKey())&&y.containsValue(e.getValue()))).map(Map.Entry::getKey).collect(Collectors.toList());
     }
-
-    private class StringList extends ArrayList<String>{}
-
-    private class StringMap extends HashMap<String, String>{}
 
 }

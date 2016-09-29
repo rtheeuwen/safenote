@@ -1,25 +1,60 @@
 package nl.safenote.app;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.security.NoSuchAlgorithmException;
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
 
+import com.google.gson.Gson;
+import nl.safenote.controllers.AuthenticationController;
+import nl.safenote.controllers.NoteController;
+import nl.safenote.services.*;
 import nl.safenote.utils.FileIO;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.sql2o.Sql2o;
 
 import javax.crypto.Cipher;
 
 
 class Launcher {
 
-    public static void main(String[] args) throws Exception {
-            enableCrypto();
+    private static Logger logger = LoggerFactory.getLogger("info");
 
-        LoadingScreen loadingScreen = new LoadingScreen();
-        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(Config.class);
-        loadingScreen.done();
-        applicationContext.getBean(View.class).open(!FileIO.dataExists());
+    public static void main(String[] args) throws Exception {
+        enableCrypto();
+        Config config = new Config();
+        Sql2o sql2o = config.sql2o();
+        Properties properties = config.properties();
+        Gson gson = config.gson();
+        ExecutorService executorService = config.executorService();
+
+        CryptoService cryptoService = instantiate(CryptoService.class);
+        NoteRepository noteRepository = instantiate(NoteRepository.class, config.sql2o());
+        SearchService searchService = instantiate(SearchService.class, noteRepository, cryptoService);
+        SynchronizationService synchronizationService = instantiate(SynchronizationService.class, config.properties(), noteRepository, cryptoService, executorService, gson);
+        AuthenticationService authenticationService = instantiate(AuthenticationService.class, cryptoService, synchronizationService);
+        AuthenticationController authenticationController = new AuthenticationController(authenticationService);
+        NoteController noteController = new NoteController(noteRepository, cryptoService, searchService, synchronizationService);
+
+        try {
+            new View(authenticationController, noteController).open(!FileIO.dataExists());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw e;
+        } finally {
+            executorService.shutdown();
+        }
+    }
+
+    private static <T> T instantiate(Class clazz, Object... params) throws ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Class<?> service = Class.forName(clazz.getCanonicalName()+"Impl");
+        Constructor<?> constructor = service.getDeclaredConstructors()[0];
+        constructor.setAccessible(true);
+        return (T) constructor.newInstance(params);
     }
 
     private static void enableCrypto(){

@@ -1,33 +1,27 @@
 package nl.safenote.app;
 
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import com.google.gson.Gson;
 import com.zaxxer.hikari.HikariDataSource;
-import nl.safenote.controllers.AuthenticationController;
-import org.springframework.context.annotation.*;
-import org.springframework.scheduling.annotation.EnableAsync;
-import nl.safenote.controllers.NoteController;
-import nl.safenote.services.CryptoService;
-import nl.safenote.services.NoteRepository;
-import nl.safenote.services.SynchronizationService;
-import nl.safenote.services.SearchService;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Sql2o;
 
 import javax.sql.DataSource;
 
-
-@Configuration
-@EnableAsync
-@PropertySource(value = {"classpath:application.properties"})
-@ComponentScan(basePackageClasses = {View.class, NoteController.class, AuthenticationController.class, NoteRepository.class, SynchronizationService.class, CryptoService.class, SearchService.class})
 public class Config {
 
-    @Bean
-    public DataSource dataSource(){
+    private DataSource dataSource(Properties properties){
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setDriverClassName("org.h2.Driver");
-        dataSource.setJdbcUrl("jdbc:h2:~/.safenote/database");
-        dataSource.setUsername("safenote");
-        dataSource.setPassword("safenote");
+        dataSource.setJdbcUrl(properties.getProperty("jdbcurl"));
+        dataSource.setUsername(properties.getProperty("username"));
+        dataSource.setPassword(properties.getProperty("password"));
         dataSource.setMaximumPoolSize(1);
         dataSource.addDataSourceProperty("cachePrepStmts", true);
         dataSource.addDataSourceProperty("prepStmtCacheSize", 15);
@@ -36,9 +30,25 @@ public class Config {
         return dataSource;
     }
 
-    @Bean
     public Sql2o sql2o(){
-        return new Sql2o(dataSource());
+        return new Sql2o(dataSource(properties()));
     }
 
+    public Properties properties(){
+        try(InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("application.properties")) {
+            Properties properties = new Properties();
+            properties.load(inputStream);
+            return properties;
+        } catch (IOException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    public Gson gson(){
+        return new Gson();
+    }
+
+    public ExecutorService executorService(){
+        return Executors.newFixedThreadPool(5);
+    }
 }

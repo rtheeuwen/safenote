@@ -19,18 +19,13 @@ import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.TimeZone;
 
-@Component
 public class View {
 
     private Shell shell;
@@ -48,7 +43,6 @@ public class View {
 
     private static Note activeNote;
 
-    @Autowired
     public View(AuthenticationController authenticationController, NoteController noteController) {
         View.authenticationController = authenticationController;
         View.noteController = noteController;
@@ -60,14 +54,20 @@ public class View {
         createContents(display, generate);
         shell.open();
         shell.layout();
+
+        shell.addListener(SWT.Close, event -> {
+            shell.dispose();
+            if(activeNote!=null&&!Objects.equals(activeNote.getContent(), text)){
+                activeNote.setContent(text);
+                noteController.updateNote(activeNote);
+            }
+        });
+
+
         while (!shell.isDisposed()) {
             if (!display.readAndDispatch()) {
                 display.sleep();
             }
-        }
-        if(activeNote!=null&&!Objects.equals(activeNote.getContent(), text)){
-            activeNote.setContent(text);
-            noteController.updateNote(activeNote);
         }
     }
 
@@ -75,7 +75,7 @@ public class View {
         shell = new Shell();
         shell.setSize(1080, 695);
         shell.setText("SafeNote");
-        shell.setImage(getImage("/logo.png"));
+        shell.setImage(getImage("/img/logo.png"));
 
 
         final StackLayout layout = new StackLayout();
@@ -129,7 +129,7 @@ public class View {
         gd_middleFiller.heightHint = 1;
         middleFiller.setLayoutData(gd_middleFiller);
 
-        Image loginIcon = getImage("/lock.gif");
+        Image loginIcon = getImage("/img/lock.gif");
 
         loginButton = new Button(login, SWT.NONE | SWT.CENTER);
         loginButton.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
@@ -214,7 +214,7 @@ public class View {
             }
         });
 
-        Image loadingIcon = getImage("/loading.gif");
+        Image loadingIcon = getImage("/img/loading.gif");
 
         Label loadingLabel = new Label(login, SWT.CENTER);
         loadingLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
@@ -244,8 +244,8 @@ public class View {
         topLeftFiller.setLayoutData(gd_topLeftFiller);
 
         searchText = new Text(workbench, SWT.BORDER);
-        final Image searchIcon = getImage("/search.gif");
-        final Image clearIcon = getImage("/clear.gif");
+        final Image searchIcon = getImage("/img/search.gif");
+        final Image clearIcon = getImage("/img/clear.gif");
         final Label searchLabel = new Label(workbench, SWT.NONE);
         searchLabel.setImage(searchIcon);
 
@@ -257,32 +257,32 @@ public class View {
         searchText.setLocation(new Point(location.x+80, location.y));
         searchText.setLayoutData(gd_text);
 
-        Image newIcon = getImage("/new.gif");
+        Image newIcon = getImage("/img/new.gif");
 
         Button newButton = new Button(workbench, SWT.PUSH);
         newButton.setBackground(backGroundColor);
         newButton.setImage(newIcon);
         newButton.setText("   new note    ");
 
-        Image deleteIcon = getImage("/delete.gif");
+        Image deleteIcon = getImage("/img/delete.gif");
         Button deleteButton = new Button(workbench, SWT.PUSH);
         deleteButton.setBackground(backGroundColor);
         deleteButton.setImage(deleteIcon);
         deleteButton.setText("  delete note  ");
 
-        Image infoIcon = getImage("/info.gif");
+        Image infoIcon = getImage("/img/info.gif");
         Button infoButton = new Button(workbench, SWT.PUSH);
         infoButton.setBackground(backGroundColor);
         infoButton.setImage(infoIcon);
         infoButton.setText("   note info   ");
 
-        Image syncIcon = getImage("/sync.gif");
+        Image syncIcon = getImage("/img/sync.gif");
         Button syncButton = new Button(workbench, SWT.PUSH);
         syncButton.setBackground(backGroundColor);
         syncButton.setImage(syncIcon);
         syncButton.setText("  synchronize  ");
 
-        Image exportIcon = getImage("/lock.gif");
+        Image exportIcon = getImage("/img/lock.gif");
 
         Button exportButton = new Button(workbench, SWT.PUSH);
         exportButton.setBackground(backGroundColor);
@@ -484,15 +484,11 @@ public class View {
     }
 
     private static Image getImage(String path) {
-        try {
             Display display = Display.getCurrent();
-            ImageData data = new ImageData(new ClassPathResource(path).getInputStream());
+            ImageData data = new ImageData(Object.class.getResourceAsStream(path));
             if (data.transparentPixel > 0)
                 return new Image(display, data, data.getTransparencyMask());
             return new Image(display, data);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private void create(){

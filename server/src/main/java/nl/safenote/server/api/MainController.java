@@ -37,15 +37,20 @@ public class MainController {
         return signatureVerificationService.enlist(publicKey);
     }
 
-    @RequestMapping(method = RequestMethod.PUT, consumes = {"text/plain", "application/json"})
+    @RequestMapping(method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
     public Message<SafeNote> save(@RequestBody Message<SafeNote> message){
-        SafeNote safeNote = message.getBody();
-        safeNote.setUserId(signatureVerificationService.verifySignature(message));
-        safeNoteRepository.save(safeNote);
-        return message;
+        try {
+            SafeNote safeNote = message.getBody();
+            safeNote.setUserId(signatureVerificationService.verifySignature(message));
+            safeNoteRepository.save(safeNote);
+            return message;
+        }catch (RuntimeException e){
+            e.printStackTrace();
+            throw e;
+        }
     }
 
-    @RequestMapping(method = RequestMethod.DELETE, consumes = {"text/plain", "application/json"})
+    @RequestMapping(value = "delete", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
     public void delete(@RequestBody Message<SafeNote> message){
         SafeNote safeNote = message.getBody();
         safeNote.setUserId(signatureVerificationService.verifySignature(message));

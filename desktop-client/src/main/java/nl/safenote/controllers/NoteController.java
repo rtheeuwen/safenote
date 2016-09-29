@@ -6,17 +6,12 @@ import nl.safenote.services.CryptoService;
 import nl.safenote.services.NoteRepository;
 import nl.safenote.services.SearchService;
 import nl.safenote.services.SynchronizationService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
 public class NoteController {
 
     private final NoteRepository noteRepository;
@@ -24,7 +19,6 @@ public class NoteController {
     private final SearchService searchService;
     private final SynchronizationService synchronizationService;
 
-    @Autowired
     public NoteController(NoteRepository noteRepository, CryptoService cryptoService, SearchService searchService, SynchronizationService synchronizationService) {
         assert noteRepository !=null&&cryptoService!=null&& searchService !=null&&synchronizationService!=null;
         this.noteRepository = noteRepository;
@@ -78,10 +72,7 @@ public class NoteController {
     }
 
     public String info(){
-        try {
-            return new BufferedReader(new InputStreamReader(new ClassPathResource("/gpl.txt").getInputStream())).lines().collect(Collectors.joining("\n"));
-        } catch (IOException e) {
-            throw new AssertionError(e.getCause());
-        }
+            return new BufferedReader(new InputStreamReader(Object.class.getResourceAsStream("/gpl.txt"))).lines().collect(Collectors.joining("\n"));
     }
+
 }
