@@ -108,7 +108,6 @@ class SynchronizationServiceImpl implements SynchronizationService {
 
                     newNotes.get().stream().filter(n -> n.getHash().equals(cryptoService.checksum(n))).sorted((a, b) -> (int)(b.getCreated() - a.getCreated())).map(n -> {n.setEncrypted(true); return n;}).forEachOrdered(noteRepository::create);
                     deletedNotes.stream().filter(notes::containsKey).forEachOrdered(noteRepository::delete);
-                    System.out.println("done sync");
                     return true;
 
                 } catch (Exception e) {
