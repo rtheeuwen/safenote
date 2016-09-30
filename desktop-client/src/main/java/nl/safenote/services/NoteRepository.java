@@ -223,10 +223,9 @@ class NoteRepositoryImpl implements NoteRepository{
         try (Connection connection = sql2o.beginTransaction()){
             Query query = connection.createQuery(sql);
 
-            for(String id: ids){
-                query.addParameter("id", id)
-                        .addToBatch();
-            }
+            ids.stream()
+                    .forEachOrdered(id -> query.addParameter("id", id)
+                            .addToBatch());
 
             query.executeBatch();
             connection.commit();
@@ -238,23 +237,21 @@ class NoteRepositoryImpl implements NoteRepository{
         return UUID.randomUUID().toString();
     }
 
-    private void isEncrypted(Note note){
+    private boolean isEncrypted(Note note){
         if(!note.isEncrypted())
             throw new IllegalStateException("note must be encrypted");
+        return true;
     }
 
     private void executeBulkUpdate(List<Note> notes, String sql){
         try(Connection connection = sql2o.beginTransaction()) {
             Query query = connection.createQuery(sql);
 
-            for(Note note: notes) {
-                if (note != null) {
-                    isEncrypted(note);
-                    query.bind(note)
-                            .addParameter("contenttype", note.getContentType())
-                            .addToBatch();
-                }
-            }
+            notes.stream().filter(n -> n!=null&&isEncrypted(n))
+                    .forEachOrdered(n -> query.bind(n)
+                            .addParameter("contenttype", n.getContentType())
+                            .addToBatch());
+
             query.executeBatch();
             connection.commit();
         }
