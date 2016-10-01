@@ -44,15 +44,7 @@ class SignatureVerificationServiceImpl implements SignatureVerificationService {
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(userPublicKeyRepository.findOne(userId).getPublicKey()));
             PublicKey publicKey = kf.generatePublic(keySpec);
             Object messageBody = message.getBody();
-            byte[] data;
-            if(messageBody!=null&&messageBody instanceof SafeNote){
-                SafeNote safeNote = (SafeNote) messageBody;
-                data = (safeNote.getContent() +
-                        safeNote.getHeader() +
-                        message.getExpires()).getBytes();
-            } else {
-                data = Long.valueOf(message.getExpires()).toString().getBytes();
-            }
+            byte[] data = (Long.valueOf(message.getExpires()).toString() + userId).getBytes();
             Signature signature = Signature.getInstance("SHA512withRSA");
             signature.initVerify(publicKey);
             signature.update(data);
