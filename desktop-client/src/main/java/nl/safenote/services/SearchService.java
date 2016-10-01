@@ -1,7 +1,6 @@
 package nl.safenote.services;
 
 import nl.safenote.model.SearchResult;
-import nl.safenote.model.Header;
 import nl.safenote.model.Searchable;
 
 import java.util.List;
