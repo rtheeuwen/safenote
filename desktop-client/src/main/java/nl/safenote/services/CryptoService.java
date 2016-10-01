@@ -17,7 +17,7 @@ public interface CryptoService{
     Note decipher(Note note);
     String decipher(String header);
     String checksum(Note note);
-    Message sign(Message message, String userId);
+    Message sign(Message message);
 }
 
 class CryptoServiceImpl extends AbstractAesService implements CryptoService {
@@ -96,22 +96,13 @@ class CryptoServiceImpl extends AbstractAesService implements CryptoService {
     }
 
     @Override
-    public Message sign(Message message, String userId) {
-        if(userId==null)throw new SecurityException("No user ID yet");
+    public Message sign(Message message) {
         try {
             Signature signature = Signature.getInstance("SHA512withRSA");
             signature.initSign(this.privateKey);
-            Object object = message.getBody();
-            if(object instanceof Note) {
-                Note note = (Note) object;
-                signature.update((
-                        note.getContent() +
-                        note.getHeader() +
-                        message.getExpires()).getBytes(StandardCharsets.UTF_8));
-            } else {
-                signature.update(Long.valueOf(message.getExpires()).toString().getBytes(StandardCharsets.UTF_8));
-            }
-            message.setSignature(userId + DatatypeConverter.printBase64Binary(signature.sign()));
+            String signee = message.getSignee();
+            signature.update((Long.valueOf(message.getExpires()).toString()+signee).getBytes(StandardCharsets.UTF_8));
+            message.setSignature(DatatypeConverter.printBase64Binary(signature.sign()));
             return message;
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             throw new RuntimeException(e);

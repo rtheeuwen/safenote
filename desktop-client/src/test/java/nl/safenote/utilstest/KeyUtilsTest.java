@@ -1,6 +1,6 @@
 //package nl.safenote.utilstest;
 //
-//import nl.safenote.model.Quadruple;
+//import nl.safenote.model.KeyStore;
 //import nl.safenote.utils.KeyUtils;
 //import org.junit.Test;
 //import nl.safenote.utils.KeyUtils;
@@ -16,7 +16,7 @@
 //    @Test
 //    public void keysAreConvertedToByteArrayAndBackCorrectly(){
 //        byte[] keystore = KeyUtils.generateKeyStore();
-//        Quadruple<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> quadruple = KeyUtils.keyStoreFromByteArray(KeyUtils.generateKeyStore());
+//        KeyStore<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> quadruple = KeyUtils.keyStoreFromByteArray(KeyUtils.generateKeyStore());
 //
 //    }
 //}

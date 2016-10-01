@@ -1,7 +1,7 @@
 package nl.safenote.model;
 
 
-public class Note implements Cloneable{
+public class Note implements Searchable, Cloneable{
 
     public final static String NEWNOTEHEADER = "New note...";
 
@@ -15,10 +15,26 @@ public class Note implements Cloneable{
     private long created;
     private long version;
     private ContentType contentType;
+    private boolean deleted;
     private String hash;
 
     public Note() {
 
+    }
+
+    @Override
+    public String getText() {
+        return content;
+    }
+
+    @Override
+    public String getIdentifier() {
+        return id;
+    }
+
+    @Override
+    public String getTitle() {
+        return header;
     }
 
     public Object clone(){
@@ -93,6 +109,10 @@ public class Note implements Cloneable{
 
     public ContentType getContentType() {
         return contentType;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 
     public String getHash() {

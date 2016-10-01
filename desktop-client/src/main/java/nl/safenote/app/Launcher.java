@@ -19,7 +19,7 @@ import org.sql2o.Sql2o;
 
 import javax.crypto.Cipher;
 
-
+//todo refactor
 class Launcher {
 
     private static Logger logger = LoggerFactory.getLogger("info");
@@ -33,8 +33,8 @@ class Launcher {
         ExecutorService executorService = config.executorService();
 
         CryptoService cryptoService = instantiate(CryptoService.class);
+        SearchService searchService = instantiate(SearchService.class);
         NoteRepository noteRepository = instantiate(NoteRepository.class, config.sql2o());
-        SearchService searchService = instantiate(SearchService.class, noteRepository, cryptoService);
         SynchronizationService synchronizationService = instantiate(SynchronizationService.class, config.properties(), noteRepository, cryptoService, executorService, gson);
         AuthenticationService authenticationService = instantiate(AuthenticationService.class, cryptoService, synchronizationService);
         AuthenticationController authenticationController = new AuthenticationController(authenticationService);

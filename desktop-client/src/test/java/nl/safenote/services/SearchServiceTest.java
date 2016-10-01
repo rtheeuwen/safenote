@@ -5,7 +5,7 @@
 //import nl.safenote.mock.NoteRepositoryMock;
 //import nl.safenote.model.Header;
 //import nl.safenote.model.Note;
-//import nl.safenote.model.Result;
+//import nl.safenote.model.SearchResult;
 //
 //import java.lang.reflect.Method;
 //import java.util.ArrayList;
@@ -46,7 +46,7 @@
 //        params[1] = String[].class;
 //        Method getResult = SearchServiceImpl.class.getDeclaredMethod("getResult", params);
 //        getResult.setAccessible(true);
-//        Result<Note> result = (Result<Note>) getResult.invoke(searchService, note, new String[]{"test"});
+//        SearchResult<Note> result = (SearchResult<Note>) getResult.invoke(searchService, note, new String[]{"test"});
 //        assertEquals(result.getScore(), 3);
 //    }
 //}

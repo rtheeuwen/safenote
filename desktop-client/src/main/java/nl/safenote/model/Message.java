@@ -1,41 +1,36 @@
 package nl.safenote.model;
 
-
 public final class Message<T> {
 
-    private T body;
-    private long expires;
+    private final T body;
+    private final long expires;
+    private final String signee;
     private String signature;
 
-    public Message(T body, long expires){
+    public Message(T body, long expires, String signee){
         if(body==null)
             throw new IllegalArgumentException("Body cannot be null.");
         this.body = body;
         this.expires = expires;
+        this.signee = signee;
     }
 
-    public Message(long expires){
+    public Message(long expires, String signee){
         this.expires = expires;
         this.body = null;
-    }
-
-    public Message() {
+        this.signee = signee;
     }
 
     public T getBody() {
         return body;
     }
 
-    public void setBody(T body) {
-        this.body = body;
-    }
-
     public long getExpires() {
         return expires;
     }
 
-    public void setExpires(long expires) {
-        this.expires = expires;
+    public String getSignee() {
+        return signee;
     }
 
     public String getSignature() {

@@ -1,6 +1,6 @@
 //package nl.safenote.services;
 //
-//import nl.safenote.model.Quadruple;
+//import nl.safenote.model.KeyStore;
 //import nl.safenote.utils.KeyUtils;
 //import org.junit.Test;
 //import nl.safenote.model.Message;
@@ -22,7 +22,7 @@
 //    private final PublicKey publicKey;
 //
 //    public CryptoServiceTest(){
-//        Quadruple<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> keyStore = KeyUtils.keyStoreFromByteArray(KeyUtils.generateKeyStore(new SecureRandom()));
+//        KeyStore<SecretKeySpec, SecretKeySpec, PrivateKey, PublicKey> keyStore = KeyUtils.keyStoreFromByteArray(KeyUtils.generateKeyStore(new SecureRandom()));
 //        cryptoService.init(keyStore.getA(), keyStore.getB(), keyStore.getC());
 //        this.publicKey = keyStore.getD();
 //    }

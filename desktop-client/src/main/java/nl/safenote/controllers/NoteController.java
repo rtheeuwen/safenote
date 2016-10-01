@@ -37,7 +37,10 @@ public class NoteController {
     }
 
     public List<Header> search(String args){
-        return searchService.search(args);
+        return searchService.search(noteRepository.findAllTextNotes()
+                .parallelStream().map(note -> cryptoService.decipher(note))
+                .collect(Collectors.toList()), args)
+              .stream().map(Header::new).collect(Collectors.toList());
     }
 
     public Note getNote(String id){

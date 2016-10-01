@@ -38,9 +38,8 @@ class SignatureVerificationServiceImpl implements SignatureVerificationService {
     public String verifySignature(Message message) {
         if(message.getExpires()<=System.currentTimeMillis()) throw new SecurityException("Message is expired");
         try {
-            String messageSignature = message.getSignature();
-            String userId = messageSignature.substring(0, 5);
-            byte[] claimedSignature = DatatypeConverter.parseBase64Binary(messageSignature.substring(5));
+            String userId = message.getSignee();
+            byte[] claimedSignature = DatatypeConverter.parseBase64Binary(message.getSignature());
             KeyFactory kf = KeyFactory.getInstance("RSA");
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(userPublicKeyRepository.findOne(userId).getPublicKey()));
             PublicKey publicKey = kf.generatePublic(keySpec);

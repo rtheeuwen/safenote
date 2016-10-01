@@ -14,6 +14,7 @@ import org.sql2o.Sql2o;
 
 import javax.sql.DataSource;
 
+//todo refactor
 public class Config {
 
     private DataSource dataSource(Properties properties){

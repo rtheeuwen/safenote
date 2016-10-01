@@ -1,7 +1,7 @@
 package nl.safenote.services;
 
-import nl.safenote.model.Pair;
-import nl.safenote.model.Quadruple;
+import nl.safenote.model.*;
+import nl.safenote.model.KeyStore;
 import nl.safenote.utils.KeyUtils;
 import nl.safenote.utils.FileIO;
 
@@ -57,12 +57,9 @@ class AuthenticationServiceImpl extends AbstractAesService implements Authentica
         initializeServices(keyStoreFromByteArray(decipherStorage(FileIO.read(), passphrase)));
     }
 
-    private void initializeServices(Quadruple<SecretKeySpec, SecretKeySpec, PublicKey, PrivateKey> keyStore){
-        if(!Objects.equals(keyStore.getA().getAlgorithm(), "AES") || !Objects.equals(keyStore.getB().getAlgorithm(), "HmacSHA512")) {
-            throw new IllegalArgumentException("Invalid keys");
-        }
-            this.cryptoService.init(keyStore.getA(), keyStore.getB(), keyStore.getD());
-            this.synchronizationService.enlist(keyStore.getC());
+    private void initializeServices(KeyStore keyStore){
+            this.cryptoService.init(keyStore.getAes(), keyStore.getHmac(), keyStore.getPrivateKey());
+            this.synchronizationService.enlist(keyStore.getPublicKey());
     }
 
     private byte[] encipherStorage(byte[] keyStore, String password, SecureRandom secureRandom){

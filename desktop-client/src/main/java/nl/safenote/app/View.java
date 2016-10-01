@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.TimeZone;
 
+//todo refactor
 public class View {
 
     private Shell shell;

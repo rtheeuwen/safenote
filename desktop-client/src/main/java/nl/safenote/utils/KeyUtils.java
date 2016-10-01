@@ -1,6 +1,6 @@
 package nl.safenote.utils;
 
-import nl.safenote.model.Quadruple;
+import nl.safenote.model.KeyStore;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.SecretKeySpec;
@@ -52,9 +52,9 @@ public final class KeyUtils {
         ).assertSize(32, 64, 294, privateBytes.length).read();
     }
 
-    public static Quadruple<SecretKeySpec, SecretKeySpec, PublicKey, PrivateKey> keyStoreFromByteArray(byte[] total) {
+    public static KeyStore keyStoreFromByteArray(byte[] total) {
         ByteStream byteStream = new ByteStream(total);
-        return new Quadruple<>(
+        return new KeyStore(
                 new SecretKeySpec(byteStream.read(32), "AES"),
                 new SecretKeySpec(byteStream.read(64), "HmacSHA512"),
                 decodePublicKey(byteStream.read(294)),

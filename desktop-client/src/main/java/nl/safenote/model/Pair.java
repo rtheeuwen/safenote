@@ -1,6 +1,5 @@
 package nl.safenote.model;
 
-
 public final class Pair<A, B> {
 
     private final A a;

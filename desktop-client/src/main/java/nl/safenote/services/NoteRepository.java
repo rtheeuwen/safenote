@@ -36,13 +36,15 @@ class NoteRepositoryImpl implements NoteRepository{
                 "content CLOB NOT NULL, " +
                 "contenttype VARCHAR(255) NOT NULL, " +
                 "created BIGINT NOT NULL, " +
+                "deleted BOOLEAN NOT NULL, " +
                 "hash VARCHAR(255) NOT NULL, " +
                 "header VARCHAR(255) NOT NULL, " +
                 "modified BIGINT NOT NULL, " +
                 "version BIGINT NOT NULL, " +
                 "PRIMARY KEY (id)); " +
                 "CREATE INDEX IF NOT EXISTS created_index ON NOTE (created); "+
-                "CREATE INDEX IF NOT EXISTS type_index ON NOTE (contenttype);";
+                "CREATE INDEX IF NOT EXISTS type_index ON NOTE (contenttype); " +
+                "CREATE INDEX IF NOT EXISTS deleted_index ON NOTE (deleted);";
 
         try(Connection connection = sql2o.open()){
             connection.createQuery(sql).executeUpdate();
@@ -53,7 +55,7 @@ class NoteRepositoryImpl implements NoteRepository{
     public Note findOne(String id) {
 
         String sql = "SELECT id, content, contenttype, created, hash, header, modified, version " +
-                    "FROM note WHERE id=:id";
+                    "FROM note WHERE deleted=FALSE AND id=:id";
 
         try(Connection connection = sql2o.open()){
             Note note = connection.createQuery(sql)
@@ -69,7 +71,7 @@ class NoteRepositoryImpl implements NoteRepository{
     public List<Note> findAll() {
 
         String sql = "SELECT id, content, contenttype, created, hash, header, modified, version " +
-                    "FROM note ORDER BY created DESC";
+                    "FROM note WHERE deleted=FALSE ORDER BY created DESC";
 
         try(Connection connection = sql2o.open()){
             List<Note> notes = connection.createQuery(sql)
@@ -84,7 +86,7 @@ class NoteRepositoryImpl implements NoteRepository{
     public List<Header> findHeaders() {
 
         String sql = "SELECT id, header " +
-                    "FROM note ORDER BY created DESC";
+                    "FROM note WHERE deleted = FALSE ORDER BY created DESC";
 
         try(Connection connection = sql2o.open()){
             return connection.createQuery(sql)
@@ -96,7 +98,7 @@ class NoteRepositoryImpl implements NoteRepository{
     public List<Note> findAllTextNotes() {
 
         String sql = "SELECT id, content, contenttype, created, hash, header, modified, version " +
-                "FROM note WHERE contenttype=:text ORDER BY created DESC";
+                "FROM note WHERE deleted=FALSE AND contenttype=:text ORDER BY created DESC";
 
         try(Connection connection = sql2o.open()){
             return connection.createQuery(sql)
@@ -108,8 +110,8 @@ class NoteRepositoryImpl implements NoteRepository{
     @Override
     public void create(Note note) {
 
-        String sql = "INSERT INTO note(id, content, contenttype, created, hash, header, modified, version) " +
-                "VALUES(:id, :content, :contenttype, :created, :hash, :header, :modified, :version)";
+        String sql = "INSERT INTO note(id, content, contenttype, created, deleted, hash, header, modified, version) " +
+                "VALUES(:id, :content, :contenttype, :created, FALSE, :hash, :header, :modified, :version)";
 
         try(Connection connection = sql2o.open()){
             connection.createQuery(sql)
@@ -122,8 +124,8 @@ class NoteRepositoryImpl implements NoteRepository{
     @Override
     public void create(List<Note> notes) {
 
-        String sql = "INSERT INTO note(id, content, contenttype, created, hash, header, modified, version) " +
-                "VALUES(:id, :content, :contenttype, :created, :hash, :header, :modified, :version)";
+        String sql = "INSERT INTO note(id, content, contenttype, created, deleted, hash, header, modified, version) " +
+                "VALUES(:id, :content, :contenttype, :created, FALSE, :hash, :header, :modified, :version)";
 
 
         executeBulkUpdate(notes, sql);
@@ -204,7 +206,8 @@ class NoteRepositoryImpl implements NoteRepository{
     @Override
     public void delete(String id) {
 
-        String sql = "DELETE FROM note " +
+        String sql = "UPDATE note " +
+                "SET deleted=TRUE " +
                 "WHERE id=:id";
 
         try (Connection connection = sql2o.open()) {
@@ -217,7 +220,8 @@ class NoteRepositoryImpl implements NoteRepository{
     @Override
     public void delete(List<String> ids) {
 
-        String sql = "DELETE FROM note " +
+        String sql = "UPDATE note " +
+                "SET deleted = TRUE " +
                 "WHERE id=:id";
 
         try (Connection connection = sql2o.beginTransaction()){

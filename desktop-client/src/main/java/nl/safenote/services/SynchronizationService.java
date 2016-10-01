@@ -57,66 +57,54 @@ class SynchronizationServiceImpl implements SynchronizationService {
     }
 
     @Override
-    public boolean synchronize(){
-        return synchronize(0);
-    }
+    public boolean synchronize() {
 
-    private boolean synchronize(int stackDepth) {
-        if(stackDepth>2)
-            throw new RuntimeException("synchronization failed");
-        if(this.serverTimeOffset==0) {
-            try {
+        try {
+            if(this.serverTimeOffset==0) {
                 this.serverTimeOffset = getTime() - System.currentTimeMillis();
                 if (this.serverTimeOffset == 0)
                     this.serverTimeOffset--;
-                return synchronize(++stackDepth);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return false;
             }
-        } else {
-            if (this.userId == null) {
+
+            if (this.userId == null)
                 this.userId = getUserId(this.publicKey);
-                return synchronize(++stackDepth);
+
+            List<Note> notesList = noteRepository.findAll();
+            Map<String, Note> notes = notesList.stream().collect(Collectors.toMap(Note::getId, n -> n));
+            Map<String, String> localChecksums = notesList.stream().collect(Collectors.toMap(Note::getId, Note::getHash));
+            Map<String, String> remoteChecksums = getChecksums();
+            List<String> deletedNotes = getDeleted();
+
+            List<String> idsOfNotesToSend;
+            if (remoteChecksums!=null&&!remoteChecksums.isEmpty()) {
+                idsOfNotesToSend = getUniqueInX(localChecksums, remoteChecksums);
             } else {
-                try {
-                    List<Note> notesList = noteRepository.findAll();
-                    Map<String, Note> notes = notesList.stream().collect(Collectors.toMap(Note::getId, n -> n));
-                    Map<String, String> localChecksums = notesList.stream().collect(Collectors.toMap(Note::getId, Note::getHash));
-                    Map<String, String> remoteChecksums = getChecksums();
-                    List<String> deletedNotes = getDeleted();
-
-                    List<String> idsOfNotesToSend;
-                    if (remoteChecksums!=null&&!remoteChecksums.isEmpty()) {
-                        idsOfNotesToSend = getUniqueInX(localChecksums, remoteChecksums);
-                    } else {
-                        idsOfNotesToSend = notesList.stream().map(Note::getId).collect(Collectors.toList());
-                    }
-
-                    List<String> idsOfNotesToGet;
-                    if (localChecksums!=null&&!localChecksums.isEmpty()) {
-                        idsOfNotesToGet = getUniqueInX(remoteChecksums, localChecksums);
-                    } else {
-                        idsOfNotesToGet = remoteChecksums.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
-                    }
-
-                    Future<NoteList> newNotes = getNotes(idsOfNotesToGet);
-                    notes.entrySet().stream().filter(e -> idsOfNotesToSend.contains(e.getKey())).map(e -> {Note n = e.getValue(); n.setEncrypted(true); return n;}).forEachOrdered(this::send);
-                    while (!newNotes.isDone()) {
-                        Thread.sleep(10L);
-                    }
-
-                    newNotes.get().stream().filter(n -> n.getHash().equals(cryptoService.checksum(n))).sorted((a, b) -> (int)(b.getCreated() - a.getCreated())).map(n -> {n.setEncrypted(true); return n;}).forEachOrdered(noteRepository::create);
-                    deletedNotes.stream().filter(notes::containsKey).forEachOrdered(noteRepository::delete);
-                    return true;
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return false;
-                }
+                idsOfNotesToSend = notesList.stream().map(Note::getId).collect(Collectors.toList());
             }
+
+            List<String> idsOfNotesToGet;
+            if (localChecksums!=null&&!localChecksums.isEmpty()) {
+                idsOfNotesToGet = getUniqueInX(remoteChecksums, localChecksums);
+            } else {
+                idsOfNotesToGet = remoteChecksums.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
+            }
+
+            Future<NoteList> newNotes = getNotes(idsOfNotesToGet);
+            notes.entrySet().stream().filter(e -> idsOfNotesToSend.contains(e.getKey())).map(e -> {Note n = e.getValue(); n.setEncrypted(true); return n;}).forEachOrdered(this::send);
+            while (!newNotes.isDone()) {
+                Thread.sleep(10L);
+            }
+
+            newNotes.get().stream().filter(n -> n.getHash().equals(cryptoService.checksum(n))).sorted((a, b) -> (int)(b.getCreated() - a.getCreated())).map(n -> {n.setEncrypted(true); return n;}).forEachOrdered(noteRepository::create);
+            deletedNotes.stream().filter(notes::containsKey).forEachOrdered(noteRepository::delete);
+            return true;
+
+        } catch (InterruptedException | ExecutionException | HttpException e) {
+            return false;
         }
     }
+
+
 
     public void send(Note note){
         if(serverTimeOffset!=0)
@@ -172,7 +160,7 @@ class SynchronizationServiceImpl implements SynchronizationService {
     }
 
     private String getUserId(String publicKey){
-        String json = gson.toJson(new PublicKeyWrapper(publicKey));
+        String json = gson.toJson(publicKey);
         return gson.fromJson(httpPost(remoteHostUri + "enlist", json).text(), String.class);
     }
 
@@ -182,15 +170,17 @@ class SynchronizationServiceImpl implements SynchronizationService {
     }
 
     private String jsonMessage(Object... input){
+        if(this.userId==null)
+            synchronize();
         Message message;
         switch (input.length){
-            case 0: message = new Message(expirationTime());
+            case 0: message = new Message(expirationTime(), this.userId);
                 break;
-            case 1: message = new Message(input[0], expirationTime());
+            case 1: message = new Message(input[0], expirationTime(), this.userId);
                 break;
             default: throw new IllegalArgumentException();
         }
-        return gson.toJson(cryptoService.sign(message, this.userId));
+        return gson.toJson(cryptoService.sign(message));
     }
 
     private static Post httpPost(String uri, String body){
