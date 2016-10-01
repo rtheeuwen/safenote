@@ -5,7 +5,7 @@
 //import nl.safenote.mock.NoteRepositoryMock;
 //import nl.safenote.model.Header;
 //import nl.safenote.model.Note;
-//import nl.safenote.model.SearchResult;
+//import nl.safenote.utils.search.SearchResult;
 //
 //import java.lang.reflect.Method;
 //import java.util.ArrayList;
@@ -17,24 +17,24 @@
 //
 //    private final CryptoService cryptoService = new CryptoServiceMock();
 //    private final NoteRepositoryMock noteRepository = new NoteRepositoryMock(cryptoService);
-//    private final SearchService searchService = new SearchServiceImpl(noteRepository, cryptoService);
+//    private final TextSearchEngine textSearchEngine = new SearchServiceImpl(noteRepository, cryptoService);
 //
 //    @Test
 //    public void ensureAllNotesAreFoundWhenNoArgs(){
-////        ArrayList<Header> found = (ArrayList<Header>) searchService.search("");
+////        ArrayList<Header> found = (ArrayList<Header>) textSearchEngine.search("");
 ////        List<Header> allHeaders = noteRepository.findHeaders();
 ////        assertTrue(found.equals(allHeaders));
 //    }
 //
 //    @Test
 //    public void ensureMostRelevantNoteIsFirst(){
-//        Header found = searchService.search("hello").get(0);
+//        Header found = textSearchEngine.search("hello").get(0);
 //        assertEquals("note1", found.getHeader());
 //    }
 //
 //    @Test
 //    public void ensureNoNotesAreReturnedWhenNoRelevantResults(){
-//        assertTrue(searchService.search("gibberish").isEmpty());
+//        assertTrue(textSearchEngine.search("gibberish").isEmpty());
 //    }
 //
 //    @Test
@@ -46,7 +46,7 @@
 //        params[1] = String[].class;
 //        Method getResult = SearchServiceImpl.class.getDeclaredMethod("getResult", params);
 //        getResult.setAccessible(true);
-//        SearchResult<Note> result = (SearchResult<Note>) getResult.invoke(searchService, note, new String[]{"test"});
+//        SearchResult<Note> result = (SearchResult<Note>) getResult.invoke(textSearchEngine, note, new String[]{"test"});
 //        assertEquals(result.getScore(), 3);
 //    }
 //}

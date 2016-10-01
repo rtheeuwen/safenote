@@ -1,7 +1,9 @@
 package nl.safenote.model;
 
 
-public class Note implements Searchable, Cloneable{
+import nl.safenote.utils.textsearch.TextSearchable;
+
+public class Note implements TextSearchable, Cloneable{
 
     public final static String NEWNOTEHEADER = "New note...";
 
@@ -28,15 +30,6 @@ public class Note implements Searchable, Cloneable{
     }
 
     @Override
-    public String getIdentifier() {
-        return id;
-    }
-
-    @Override
-    public String getTitle() {
-        return header;
-    }
-
     public Object clone(){
         try {
             return super.clone();

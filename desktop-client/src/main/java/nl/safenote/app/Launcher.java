@@ -5,17 +5,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.security.NoSuchAlgorithmException;
-import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 
-import com.google.gson.Gson;
 import nl.safenote.controllers.AuthenticationController;
 import nl.safenote.controllers.NoteController;
 import nl.safenote.services.*;
 import nl.safenote.utils.FileIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sql2o.Sql2o;
 
 import javax.crypto.Cipher;
 
@@ -27,18 +24,14 @@ class Launcher {
     public static void main(String[] args) throws Exception {
         enableCrypto();
         Config config = new Config();
-        Sql2o sql2o = config.sql2o();
-        Properties properties = config.properties();
-        Gson gson = config.gson();
         ExecutorService executorService = config.executorService();
 
         CryptoService cryptoService = instantiate(CryptoService.class);
-        SearchService searchService = instantiate(SearchService.class);
         NoteRepository noteRepository = instantiate(NoteRepository.class, config.sql2o());
-        SynchronizationService synchronizationService = instantiate(SynchronizationService.class, config.properties(), noteRepository, cryptoService, executorService, gson);
+        SynchronizationService synchronizationService = instantiate(SynchronizationService.class, config.properties(), noteRepository, cryptoService, executorService, config.gson());
         AuthenticationService authenticationService = instantiate(AuthenticationService.class, cryptoService, synchronizationService);
         AuthenticationController authenticationController = new AuthenticationController(authenticationService);
-        NoteController noteController = new NoteController(noteRepository, cryptoService, searchService, synchronizationService);
+        NoteController noteController = new NoteController(noteRepository, cryptoService, config.textSearchEngine(), synchronizationService);
 
         try {
             new View(authenticationController, noteController).open(!FileIO.dataExists());

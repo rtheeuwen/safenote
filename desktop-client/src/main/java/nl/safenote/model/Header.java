@@ -9,9 +9,9 @@ public class Header {
         this.header = header;
     }
 
-    public Header(SearchResult searchResult){
-        this.id = searchResult.getIdentifier();
-        this.header = searchResult.getTitle();
+    public Header(Note note){
+        this.id = note.getId();
+        this.header = note.getHeader();
     }
 
     private final String id;

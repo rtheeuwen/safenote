@@ -4,7 +4,7 @@ import nl.safenote.model.Header;
 import nl.safenote.model.Note;
 import nl.safenote.services.CryptoService;
 import nl.safenote.services.NoteRepository;
-import nl.safenote.services.SearchService;
+import nl.safenote.utils.textsearch.TextSearchEngine;
 import nl.safenote.services.SynchronizationService;
 
 import java.io.BufferedReader;
@@ -16,14 +16,14 @@ public class NoteController {
 
     private final NoteRepository noteRepository;
     private final CryptoService cryptoService;
-    private final SearchService searchService;
+    private final TextSearchEngine<Note> textSearchEngine;
     private final SynchronizationService synchronizationService;
 
-    public NoteController(NoteRepository noteRepository, CryptoService cryptoService, SearchService searchService, SynchronizationService synchronizationService) {
-        assert noteRepository !=null&&cryptoService!=null&& searchService !=null&&synchronizationService!=null;
+    public NoteController(NoteRepository noteRepository, CryptoService cryptoService, TextSearchEngine<Note> textSearchEngine, SynchronizationService synchronizationService) {
+        assert noteRepository !=null&&cryptoService!=null&& textSearchEngine !=null&&synchronizationService!=null;
         this.noteRepository = noteRepository;
         this.cryptoService = cryptoService;
-        this.searchService = searchService;
+        this.textSearchEngine = textSearchEngine;
         this.synchronizationService = synchronizationService;
     }
 
@@ -37,9 +37,11 @@ public class NoteController {
     }
 
     public List<Header> search(String args){
-        return searchService.search(noteRepository.findAllTextNotes()
-                .parallelStream().map(note -> cryptoService.decipher(note))
-                .collect(Collectors.toList()), args)
+        return textSearchEngine.search(
+                    noteRepository.findAllTextNotes()
+                    .stream().map(note -> cryptoService.decipher(note))
+                    .collect(Collectors.toList()), args
+                )
               .stream().map(Header::new).collect(Collectors.toList());
     }
 

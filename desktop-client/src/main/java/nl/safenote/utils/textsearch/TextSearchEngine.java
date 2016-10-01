@@ -1,33 +1,27 @@
-package nl.safenote.services;
+package nl.safenote.utils.textsearch;
 
-import nl.safenote.model.SearchResult;
-import nl.safenote.model.Searchable;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public interface SearchService {
 
-    List<SearchResult> search(List<Searchable> haystack, String needle);
-}
+public class TextSearchEngine<T extends TextSearchable> {
 
-class SearchServiceImpl implements SearchService {
-
-    @Override
-    public List<SearchResult> search(List<Searchable> haystack, String needle) {
+    public List<T> search(List<T> haystack, String needle) {
         if(needle.length()==0)
             throw new IllegalArgumentException("Query must be provided");
         return haystack.parallelStream()
                 .map(searchable -> this.getResult(searchable, (needle.split(" "))))
                 .filter(searchResult -> Objects.nonNull(searchResult))
                 .sorted((a, b) -> b.getScore() - a.getScore())
+                .map(SearchResult::getSearchable)
                 .collect(Collectors.toList());
     }
 
-    private SearchResult getResult(Searchable searchable, String[] args){
-        SearchResult searchResult = new SearchResult(searchable);
+    private SearchResult<T> getResult(T searchable, String[] args){
+        SearchResult<T> searchResult = new SearchResult<>(searchable);
         String text = searchable.getText().toLowerCase(Locale.getDefault());
         for (String query : args) {
             int count = countNumberOfMatches(text, query.toLowerCase(Locale.getDefault()));

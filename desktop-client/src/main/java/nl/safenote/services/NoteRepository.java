@@ -101,9 +101,12 @@ class NoteRepositoryImpl implements NoteRepository{
                 "FROM note WHERE deleted=FALSE AND contenttype=:text ORDER BY created DESC";
 
         try(Connection connection = sql2o.open()){
-            return connection.createQuery(sql)
+            List<Note> notes = connection.createQuery(sql)
                     .addParameter("text", Note.ContentType.TEXT)
                     .executeAndFetch(Note.class);
+
+            notes.stream().forEachOrdered(note -> note.setEncrypted(true));
+            return notes;
         }
     }
 

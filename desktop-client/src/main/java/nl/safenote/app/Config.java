@@ -9,7 +9,7 @@ import java.util.concurrent.Executors;
 
 import com.google.gson.Gson;
 import com.zaxxer.hikari.HikariDataSource;
-import org.slf4j.LoggerFactory;
+import nl.safenote.utils.textsearch.TextSearchEngine;
 import org.sql2o.Sql2o;
 
 import javax.sql.DataSource;
@@ -51,5 +51,9 @@ public class Config {
 
     public ExecutorService executorService(){
         return Executors.newFixedThreadPool(5);
+    }
+
+    public TextSearchEngine textSearchEngine(){
+        return new TextSearchEngine();
     }
 }
