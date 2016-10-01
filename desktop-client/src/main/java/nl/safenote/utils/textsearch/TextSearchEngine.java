@@ -14,7 +14,7 @@ public class TextSearchEngine<T extends TextSearchable> {
             throw new IllegalArgumentException("Query must be provided");
         return haystack.parallelStream()
                 .map(searchable -> this.getResult(searchable, (needle.split(" "))))
-                .filter(searchResult -> Objects.nonNull(searchResult))
+                .filter(Objects::nonNull)
                 .sorted((a, b) -> b.getScore() - a.getScore())
                 .map(SearchResult::getSearchable)
                 .collect(Collectors.toList());
