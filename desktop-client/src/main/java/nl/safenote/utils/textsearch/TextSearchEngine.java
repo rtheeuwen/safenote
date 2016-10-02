@@ -77,13 +77,16 @@ class TextSearchEngineImpl<T extends TextSearchable> implements TextSearchEngine
 	}
 
 	private void startEngine(List<T> haystack) {
-		Field[] fields = haystack.get(0).getClass().getDeclaredFields();
+		Class clazz = haystack.get(0).getClass();
+		Field[] fields = clazz.getDeclaredFields();
 		this.fields = Arrays.stream(fields).filter(field -> field.isAnnotationPresent(Text.class))
 				.map(field -> {
 					field.setAccessible(true);
 					return field;
 				})
 				.collect(Collectors.toMap(f -> f, f -> f.getAnnotation(Text.class).weight()));
+		if(this.fields.size()==0)
+			throw new RuntimeException(clazz.getCanonicalName() + " does not have any fields marked as Text");
 	}
 
 	private static int countNumberOfMatches(String text, String query) {
