@@ -10,13 +10,13 @@ import javax.servlet.ServletRegistration;
 
 public class WebMVCApplicationInitializer implements WebApplicationInitializer {
 
-    @Override
-    public void onStartup(ServletContext servletContext) {
-        AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
-        context.register(Config.class);
-        servletContext.addListener(new ContextLoaderListener(context));
-        ServletRegistration.Dynamic dispatcher = servletContext.addServlet("DispatcherServlet", new DispatcherServlet(context));
-        dispatcher.setLoadOnStartup(1);
-        dispatcher.addMapping("/*");
-    }
+	@Override
+	public void onStartup(ServletContext servletContext) {
+		AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
+		context.register(Config.class);
+		servletContext.addListener(new ContextLoaderListener(context));
+		ServletRegistration.Dynamic dispatcher = servletContext.addServlet("DispatcherServlet", new DispatcherServlet(context));
+		dispatcher.setLoadOnStartup(1);
+		dispatcher.addMapping("/*");
+	}
 }

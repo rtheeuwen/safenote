@@ -37,66 +37,66 @@ import java.util.Properties;
 public class Config extends WebMvcConfigurerAdapter {
 
 
-    public static boolean inDev;
+	public static boolean inDev;
 
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/**").addResourceLocations("WEB-INF/");
-    }
+	@Override
+	public void addResourceHandlers(ResourceHandlerRegistry registry) {
+		registry.addResourceHandler("/**").addResourceLocations("WEB-INF/");
+	}
 
-    @Override
-    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-        converters.add(new GsonHttpMessageConverter());
-    }
+	@Override
+	public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+		converters.add(new GsonHttpMessageConverter());
+	}
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedMethods("GET", "POST","PUT", "DELETE")
-                .allowedHeaders("*");
-    }
+	@Override
+	public void addCorsMappings(CorsRegistry registry) {
+		registry.addMapping("/**")
+				.allowedOrigins("*")
+				.allowedMethods("GET", "POST", "PUT", "DELETE")
+				.allowedHeaders("*");
+	}
 
-    @Bean
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-        LocalContainerEntityManagerFactoryBean factoryBean = new LocalContainerEntityManagerFactoryBean();
-        factoryBean.setDataSource(dataSource());
-        factoryBean.setPackagesToScan("nl.safenote.server.model");
-        JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-        factoryBean.setJpaVendorAdapter(vendorAdapter);
-        Properties properties = new Properties();
-        properties.setProperty("hibernate.hbm2ddl.auto", "update");
-        properties.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-        if(inDev) properties.setProperty("hibernate.show_sql", "true");
-        factoryBean.setJpaProperties(properties);
-        return factoryBean;
-    }
+	@Bean
+	public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+		LocalContainerEntityManagerFactoryBean factoryBean = new LocalContainerEntityManagerFactoryBean();
+		factoryBean.setDataSource(dataSource());
+		factoryBean.setPackagesToScan("nl.safenote.server.model");
+		JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+		factoryBean.setJpaVendorAdapter(vendorAdapter);
+		Properties properties = new Properties();
+		properties.setProperty("hibernate.hbm2ddl.auto", "update");
+		properties.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
+		if (inDev) properties.setProperty("hibernate.show_sql", "true");
+		factoryBean.setJpaProperties(properties);
+		return factoryBean;
+	}
 
-    @Bean
-    public DataSource dataSource(){
-        DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName("org.h2.Driver");
-        dataSource.setUrl("jdbc:h2:mem:safenote;DB_CLOSE_DELAY=-1");
-        dataSource.setUsername( "safenote" );
-        dataSource.setPassword( "safenote" );
-        return dataSource;
-    }
+	@Bean
+	public DataSource dataSource() {
+		DriverManagerDataSource dataSource = new DriverManagerDataSource();
+		dataSource.setDriverClassName("org.h2.Driver");
+		dataSource.setUrl("jdbc:h2:mem:safenote;DB_CLOSE_DELAY=-1");
+		dataSource.setUsername("safenote");
+		dataSource.setPassword("safenote");
+		return dataSource;
+	}
 
-    @Bean(initMethod="start",destroyMethod="stop")
-    public Server h2WebConsoleServer () throws SQLException {
-        return Server.createWebServer("-web","-webAllowOthers","-webDaemon","-webPort", "8081");
-    }
+	@Bean(initMethod = "start", destroyMethod = "stop")
+	public Server h2WebConsoleServer() throws SQLException {
+		return Server.createWebServer("-web", "-webAllowOthers", "-webDaemon", "-webPort", "8081");
+	}
 
-    @Bean
-    public PlatformTransactionManager transactionManager(EntityManagerFactory emf){
-        JpaTransactionManager transactionManager = new JpaTransactionManager();
-        transactionManager.setEntityManagerFactory(emf);
-        return transactionManager;
-    }
+	@Bean
+	public PlatformTransactionManager transactionManager(EntityManagerFactory emf) {
+		JpaTransactionManager transactionManager = new JpaTransactionManager();
+		transactionManager.setEntityManagerFactory(emf);
+		return transactionManager;
+	}
 
-    @Bean
-    public PersistenceExceptionTranslationPostProcessor exceptionTranslation(){
-        return new PersistenceExceptionTranslationPostProcessor();
-    }
+	@Bean
+	public PersistenceExceptionTranslationPostProcessor exceptionTranslation() {
+		return new PersistenceExceptionTranslationPostProcessor();
+	}
 
 }

@@ -18,181 +18,193 @@ import java.util.stream.Collectors;
 
 public interface SynchronizationService {
 
-    boolean enlist(PublicKey publicKey);
-    void send(Note note);
-    void delete(Note note);
-    boolean synchronize();
+	boolean enlist(PublicKey publicKey);
+
+	void send(Note note);
+
+	void delete(Note note);
+
+	boolean synchronize();
 }
 
 class SynchronizationServiceImpl implements SynchronizationService {
 
-    private final NoteRepository noteRepository;
-    private final CryptoService cryptoService;
+	private final NoteRepository noteRepository;
+	private final CryptoService cryptoService;
 
-    private final String remoteHostUri;
-    private volatile String userId;
-    private String publicKey;
-    private volatile long serverTimeOffset = 0;
+	private final String remoteHostUri;
+	private volatile String userId;
+	private String publicKey;
+	private volatile long serverTimeOffset = 0;
 
-    private final Gson gson;
-    private final ExecutorService executorService;
+	private final Gson gson;
+	private final ExecutorService executorService;
 
-    private static final String contentType = "Content-Type";
-    private static final String accept = "Accept";
-    private static final String applicationJson = "application/json";
+	private static final String contentType = "Content-Type";
+	private static final String accept = "Accept";
+	private static final String applicationJson = "application/json";
 
-    public SynchronizationServiceImpl(Properties properties, NoteRepository noteRepository, CryptoService cryptoService, ExecutorService executorService, Gson gson) {
-        assert(properties!=null&&noteRepository!=null&&cryptoService!=null);
-        this.noteRepository = noteRepository;
-        this.remoteHostUri = "http://"+properties.getProperty("remotehostname")+":"+properties.getProperty("port")+"/"+properties.getProperty("contextroot")+"/";
-        this.cryptoService = cryptoService;
-        this.executorService = executorService;
-        this.gson = gson;
-    }
+	public SynchronizationServiceImpl(Properties properties, NoteRepository noteRepository, CryptoService cryptoService, ExecutorService executorService, Gson gson) {
+		assert (properties != null && noteRepository != null && cryptoService != null);
+		this.noteRepository = noteRepository;
+		this.remoteHostUri = "http://" + properties.getProperty("remotehostname") + ":" + properties.getProperty("port") + "/" + properties.getProperty("contextroot") + "/";
+		this.cryptoService = cryptoService;
+		this.executorService = executorService;
+		this.gson = gson;
+	}
 
-    @Override
-    public boolean enlist(PublicKey publicKey) {
-        this.publicKey = DatatypeConverter.printBase64Binary(publicKey.getEncoded());
-        return synchronize();
-    }
+	@Override
+	public boolean enlist(PublicKey publicKey) {
+		this.publicKey = DatatypeConverter.printBase64Binary(publicKey.getEncoded());
+		return synchronize();
+	}
 
-    @Override
-    public boolean synchronize() {
+	@Override
+	public boolean synchronize() {
 
-        try {
-            if(this.serverTimeOffset==0) {
-                this.serverTimeOffset = getTime() - System.currentTimeMillis();
-                if (this.serverTimeOffset == 0)
-                    this.serverTimeOffset--;
-            }
+		try {
+			if (this.serverTimeOffset == 0) {
+				this.serverTimeOffset = getTime() - System.currentTimeMillis();
+				if (this.serverTimeOffset == 0)
+					this.serverTimeOffset--;
+			}
 
-            if (this.userId == null)
-                this.userId = getUserId(this.publicKey);
+			if (this.userId == null)
+				this.userId = getUserId(this.publicKey);
 
-            List<Note> notesList = noteRepository.findAll();
-            Map<String, Note> notes = notesList.stream().collect(Collectors.toMap(Note::getId, n -> n));
-            Map<String, String> localChecksums = notesList.stream().collect(Collectors.toMap(Note::getId, Note::getHash));
-            Map<String, String> remoteChecksums = getChecksums();
-            List<String> deletedNotes = getDeleted();
+			List<Note> notesList = noteRepository.findAll();
+			Map<String, Note> notes = notesList.stream().collect(Collectors.toMap(Note::getId, n -> n));
+			Map<String, String> localChecksums = notesList.stream().collect(Collectors.toMap(Note::getId, Note::getHash));
+			Map<String, String> remoteChecksums = getChecksums();
+			List<String> deletedNotes = getDeleted();
 
-            List<String> idsOfNotesToSend;
-            if (remoteChecksums!=null&&!remoteChecksums.isEmpty()) {
-                idsOfNotesToSend = getUniqueInX(localChecksums, remoteChecksums);
-            } else {
-                idsOfNotesToSend = notesList.stream().map(Note::getId).collect(Collectors.toList());
-            }
+			List<String> idsOfNotesToSend;
+			if (remoteChecksums != null && !remoteChecksums.isEmpty()) {
+				idsOfNotesToSend = getUniqueInX(localChecksums, remoteChecksums);
+			} else {
+				idsOfNotesToSend = notesList.stream().map(Note::getId).collect(Collectors.toList());
+			}
 
-            List<String> idsOfNotesToGet;
-            if (localChecksums!=null&&!localChecksums.isEmpty()) {
-                idsOfNotesToGet = getUniqueInX(remoteChecksums, localChecksums);
-            } else {
-                idsOfNotesToGet = remoteChecksums.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
-            }
+			List<String> idsOfNotesToGet;
+			if (localChecksums != null && !localChecksums.isEmpty()) {
+				idsOfNotesToGet = getUniqueInX(remoteChecksums, localChecksums);
+			} else {
+				idsOfNotesToGet = remoteChecksums.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
+			}
 
-            Future<NoteList> newNotes = getNotes(idsOfNotesToGet);
-            notes.entrySet().stream().filter(e -> idsOfNotesToSend.contains(e.getKey())).map(e -> {Note n = e.getValue(); n.setEncrypted(true); return n;}).forEachOrdered(this::send);
-            while (!newNotes.isDone()) {
-                Thread.sleep(10L);
-            }
+			Future<NoteList> newNotes = getNotes(idsOfNotesToGet);
+			notes.entrySet().stream().filter(e -> idsOfNotesToSend.contains(e.getKey())).map(e -> {
+				Note n = e.getValue();
+				n.setEncrypted(true);
+				return n;
+			}).forEachOrdered(this::send);
+			while (!newNotes.isDone()) {
+				Thread.sleep(10L);
+			}
 
-            newNotes.get().stream().filter(n -> n.getHash().equals(cryptoService.checksum(n))).sorted((a, b) -> (int)(b.getCreated() - a.getCreated())).map(n -> {n.setEncrypted(true); return n;}).forEachOrdered(noteRepository::create);
-            deletedNotes.stream().filter(notes::containsKey).forEachOrdered(noteRepository::delete);
-            return true;
+			newNotes.get().stream().filter(n -> n.getHash().equals(cryptoService.checksum(n))).sorted((a, b) -> (int) (b.getCreated() - a.getCreated())).map(n -> {
+				n.setEncrypted(true);
+				return n;
+			}).forEachOrdered(noteRepository::create);
+			deletedNotes.stream().filter(notes::containsKey).forEachOrdered(noteRepository::delete);
+			return true;
 
-        } catch (InterruptedException | ExecutionException | HttpException e) {
-            return false;
-        }
-    }
+		} catch (InterruptedException | ExecutionException | HttpException e) {
+			return false;
+		}
+	}
 
 
+	public void send(Note note) {
+		if (serverTimeOffset != 0)
+			try {
+				executorService.execute(() -> {
+					httpPost(remoteHostUri, jsonMessage(note))
+							.doConnect().dispose();
+				});
+			} catch (HttpException e) {
+				e.printStackTrace();
+				this.serverTimeOffset = 0;
+			}
+		else {
+			synchronize();
+		}
+	}
 
-    public void send(Note note){
-        if(serverTimeOffset!=0)
-            try {
-                executorService.execute(() -> {
-                    httpPost(remoteHostUri, jsonMessage(note))
-                            .doConnect().dispose();
-                });
-            } catch (HttpException e) {
-                e.printStackTrace();
-                this.serverTimeOffset = 0;
-            }
-        else {
-            synchronize();
-        }
-    }
+	public void delete(Note note) {
+		if (serverTimeOffset != 0)
+			try {
+				executorService.execute(() -> {
+					httpPost(remoteHostUri + "delete", jsonMessage(note))
+							.doConnect().dispose();
+				});
+			} catch (HttpException e) {
+				this.serverTimeOffset = 0;
+			}
+		else
+			synchronize();
+	}
 
-    public void delete(Note note){
-        if(serverTimeOffset!=0)
-            try {
-                executorService.execute(() -> {
-                    httpPost(remoteHostUri + "delete", jsonMessage(note))
-                            .doConnect().dispose();
-                });
-            } catch (HttpException e) {
-                this.serverTimeOffset = 0;
-            }
-        else
-            synchronize();
-    }
+	private Future<NoteList> getNotes(List<String> ids) {
+		return executorService.submit(() -> {
+			String json = httpPost(remoteHostUri + "notes", jsonMessage(ids)).text();
+			return gson.fromJson(json, NoteList.class);
+		});
+	}
 
-    private Future<NoteList> getNotes(List<String> ids){
-        return executorService.submit(() -> {
-            String json = httpPost(remoteHostUri + "notes", jsonMessage(ids)).text();
-            return gson.fromJson(json, NoteList.class);
-        });
-    }
+	private Map<String, String> getChecksums() {
 
-    private Map<String, String> getChecksums(){
+		String json = httpPost(remoteHostUri + "checksums", jsonMessage()).text();
+		return gson.fromJson(json, LinkedTreeMap.class);
+	}
 
-        String json = httpPost(remoteHostUri + "checksums", jsonMessage()).text();
-        return gson.fromJson(json, LinkedTreeMap.class);
-    }
+	private List<String> getDeleted() {
+		String json = httpPost(remoteHostUri + "deleted", jsonMessage()).text();
+		return gson.fromJson(json, ArrayList.class);
+	}
 
-    private List<String> getDeleted(){
-        String json = httpPost(remoteHostUri + "deleted", jsonMessage()).text();
-        return gson.fromJson(json, ArrayList.class);
-    }
+	private long getTime() {
+		String json = httpGet(remoteHostUri + "time").text();
+		return Long.valueOf(json);
+	}
 
-    private long getTime(){
-        String json = httpGet(remoteHostUri + "time").text();
-        return Long.valueOf(json);
-    }
+	private String getUserId(String publicKey) {
+		String json = gson.toJson(publicKey);
+		return gson.fromJson(httpPost(remoteHostUri + "enlist", json).text(), String.class);
+	}
 
-    private String getUserId(String publicKey){
-        String json = gson.toJson(publicKey);
-        return gson.fromJson(httpPost(remoteHostUri + "enlist", json).text(), String.class);
-    }
+	private long expirationTime() {
+		if (serverTimeOffset == 0) throw new RuntimeException("Did not connect to server yet.");
+		return System.currentTimeMillis() + 5000 + serverTimeOffset;
+	}
 
-    private long expirationTime(){
-        if(serverTimeOffset==0) throw new RuntimeException("Did not connect to server yet.");
-        return System.currentTimeMillis()+5000+serverTimeOffset;
-    }
+	private String jsonMessage(Object... input) {
+		if (this.userId == null)
+			synchronize();
+		Message message;
+		switch (input.length) {
+			case 0:
+				message = new Message(expirationTime(), this.userId);
+				break;
+			case 1:
+				message = new Message(input[0], expirationTime(), this.userId);
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+		return gson.toJson(cryptoService.sign(message));
+	}
 
-    private String jsonMessage(Object... input){
-        if(this.userId==null)
-            synchronize();
-        Message message;
-        switch (input.length){
-            case 0: message = new Message(expirationTime(), this.userId);
-                break;
-            case 1: message = new Message(input[0], expirationTime(), this.userId);
-                break;
-            default: throw new IllegalArgumentException();
-        }
-        return gson.toJson(cryptoService.sign(message));
-    }
+	private static Post httpPost(String uri, String body) {
+		return Http.post(uri, body.getBytes(), 500, 500).header(contentType, applicationJson).header(accept, applicationJson);
+	}
 
-    private static Post httpPost(String uri, String body){
-        return Http.post(uri, body.getBytes(), 500, 500).header(contentType, applicationJson).header(accept, applicationJson);
-    }
+	private static Get httpGet(String uri) {
+		return Http.get(uri, 500, 500).header(contentType, applicationJson).header(accept, applicationJson);
+	}
 
-    private static Get httpGet(String uri){
-        return Http.get(uri, 500, 500).header(contentType, applicationJson).header(accept, applicationJson);
-    }
-
-    private List<String> getUniqueInX(Map<String, String> x, Map<String, String> y){
-        return x.entrySet().stream().filter((e) -> !(y.containsKey(e.getKey())&&y.containsValue(e.getValue()))).map(Map.Entry::getKey).collect(Collectors.toList());
-    }
+	private List<String> getUniqueInX(Map<String, String> x, Map<String, String> y) {
+		return x.entrySet().stream().filter((e) -> !(y.containsKey(e.getKey()) && y.containsValue(e.getValue()))).map(Map.Entry::getKey).collect(Collectors.toList());
+	}
 
 }

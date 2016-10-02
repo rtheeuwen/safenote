@@ -15,65 +15,65 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping(value="/", headers = "Accept=*/*", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/", headers = "Accept=*/*", produces = MediaType.APPLICATION_JSON_VALUE)
 public class MainController {
 
-    private final SafeNoteRepository safeNoteRepository;
-    private final SignatureVerificationService signatureVerificationService;
+	private final SafeNoteRepository safeNoteRepository;
+	private final SignatureVerificationService signatureVerificationService;
 
-    @Autowired
-    public MainController(SafeNoteRepository safeNoteRepository, SignatureVerificationService signatureVerificationService) {
-        this.safeNoteRepository = safeNoteRepository;
-        this.signatureVerificationService = signatureVerificationService;
-    }
+	@Autowired
+	public MainController(SafeNoteRepository safeNoteRepository, SignatureVerificationService signatureVerificationService) {
+		this.safeNoteRepository = safeNoteRepository;
+		this.signatureVerificationService = signatureVerificationService;
+	}
 
-    @ExceptionHandler(SecurityException.class)
-    public ResponseEntity invalidSignature(SecurityException e){
-        return new ResponseEntity(HttpStatus.FORBIDDEN);
-    }
+	@ExceptionHandler(SecurityException.class)
+	public ResponseEntity invalidSignature(SecurityException e) {
+		return new ResponseEntity(HttpStatus.FORBIDDEN);
+	}
 
-    @RequestMapping(value = "enlist", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
-    public String enlist(@RequestBody String publicKey){
-        return signatureVerificationService.enlist(new UserPublicKey(publicKey));
-    }
+	@RequestMapping(value = "enlist", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
+	public String enlist(@RequestBody String publicKey) {
+		return signatureVerificationService.enlist(new UserPublicKey(publicKey));
+	}
 
-    @RequestMapping(method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
-    public Message<SafeNote> save(@RequestBody Message<SafeNote> message){
-        try {
-            SafeNote safeNote = message.getBody();
-            safeNote.setUserId(signatureVerificationService.verifySignature(message));
-            safeNoteRepository.save(safeNote);
-            return message;
-        }catch (RuntimeException e){
-            e.printStackTrace();
-            throw e;
-        }
-    }
+	@RequestMapping(method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
+	public Message<SafeNote> save(@RequestBody Message<SafeNote> message) {
+		try {
+			SafeNote safeNote = message.getBody();
+			safeNote.setUserId(signatureVerificationService.verifySignature(message));
+			safeNoteRepository.save(safeNote);
+			return message;
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			throw e;
+		}
+	}
 
-    @RequestMapping(value = "delete", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
-    public void delete(@RequestBody Message<SafeNote> message){
-        SafeNote safeNote = message.getBody();
-        safeNote.setUserId(signatureVerificationService.verifySignature(message));
-        safeNoteRepository.setDelete(safeNote);
-    }
+	@RequestMapping(value = "delete", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
+	public void delete(@RequestBody Message<SafeNote> message) {
+		SafeNote safeNote = message.getBody();
+		safeNote.setUserId(signatureVerificationService.verifySignature(message));
+		safeNoteRepository.setDelete(safeNote);
+	}
 
-    @RequestMapping(value = "time", method = RequestMethod.GET, consumes = {"text/plain", "application/json"})
-    public Long getTime(){
-        return System.currentTimeMillis();
-    }
+	@RequestMapping(value = "time", method = RequestMethod.GET, consumes = {"text/plain", "application/json"})
+	public Long getTime() {
+		return System.currentTimeMillis();
+	}
 
-    @RequestMapping(value = "notes", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
-    public List<SafeNote> getNotes(@RequestBody Message<List<String>> message){
-        return safeNoteRepository.findNotes(message.getBody(), signatureVerificationService.verifySignature(message));
-    }
+	@RequestMapping(value = "notes", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
+	public List<SafeNote> getNotes(@RequestBody Message<List<String>> message) {
+		return safeNoteRepository.findNotes(message.getBody(), signatureVerificationService.verifySignature(message));
+	}
 
-    @RequestMapping(value = "checksums", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
-    public Map<String, String> getChecksums(@RequestBody Message message){
-            return safeNoteRepository.findChecksums(signatureVerificationService.verifySignature(message));
-    }
+	@RequestMapping(value = "checksums", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
+	public Map<String, String> getChecksums(@RequestBody Message message) {
+		return safeNoteRepository.findChecksums(signatureVerificationService.verifySignature(message));
+	}
 
-    @RequestMapping(value = "deleted", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
-    public List<String> getDeletedIds(@RequestBody Message message){
-            return safeNoteRepository.findDeleted(signatureVerificationService.verifySignature(message));
-    }
+	@RequestMapping(value = "deleted", method = RequestMethod.POST, consumes = {"text/plain", "application/json"})
+	public List<String> getDeletedIds(@RequestBody Message message) {
+		return safeNoteRepository.findDeleted(signatureVerificationService.verifySignature(message));
+	}
 }
