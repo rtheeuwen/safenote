@@ -1,4 +1,4 @@
-package nl.safenote.model;
+package nl.safenote.utils;
 
 public final class Pair<A, B> {
 

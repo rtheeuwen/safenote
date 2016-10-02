@@ -19,6 +19,7 @@ public interface TextSearchEngine<T extends TextSearchable> {
 		AND, OR
 	}
 
+	List<T> search(List<T> haystack, String needle);
 	List<T> search(List<T> haystack, String needle, Condition condition);
 
 }
@@ -27,6 +28,12 @@ class TextSearchEngineImpl<T extends TextSearchable> implements TextSearchEngine
 
 	private Map<Field, Integer> fields;
 
+	@Override
+	public List<T> search(List<T> haystack, String needle) {
+		return this.search(haystack, needle, Condition.AND);
+	}
+
+	@Override
 	public List<T> search(List<T> haystack, String needle, Condition condition) {
 		if (needle.length() == 0 || haystack == null || needle == null || condition == null)
 			throw new NullPointerException();
@@ -62,7 +69,7 @@ class TextSearchEngineImpl<T extends TextSearchable> implements TextSearchEngine
 					searchResult.incrementScore(score);
 			}
 
-			return searchResult;
+			return condition==Condition.OR?searchResult.getScore()==0?null:searchResult:searchResult;
 
 		} catch (IllegalAccessException e) {
 			throw new AssertionError(e);

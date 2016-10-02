@@ -44,7 +44,6 @@ class SignatureVerificationServiceImpl implements SignatureVerificationService {
 			KeyFactory kf = KeyFactory.getInstance("RSA");
 			X509EncodedKeySpec keySpec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(userPublicKeyRepository.findOne(userId).getPublicKey()));
 			PublicKey publicKey = kf.generatePublic(keySpec);
-			Object messageBody = message.getBody();
 			byte[] data = (Long.valueOf(message.getExpires()).toString() + userId).getBytes();
 			Signature signature = Signature.getInstance("SHA512withRSA");
 			signature.initVerify(publicKey);
@@ -53,9 +52,6 @@ class SignatureVerificationServiceImpl implements SignatureVerificationService {
 			return userId;
 		} catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException | SignatureException e) {
 			throw new SecurityException();
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
 		}
 	}
 }

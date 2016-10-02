@@ -1,9 +1,9 @@
 package nl.safenote.services;
 
-import nl.safenote.model.*;
 import nl.safenote.model.KeyStore;
 import nl.safenote.utils.KeyUtils;
 import nl.safenote.utils.FileIO;
+import nl.safenote.utils.Pair;
 
 import javax.crypto.*;
 import javax.crypto.spec.PBEKeySpec;
@@ -12,7 +12,6 @@ import java.io.*;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 

@@ -41,9 +41,7 @@ public class NoteController {
 		return textSearchEngine.search(
 				noteRepository.findAllTextNotes()
 						.stream().map(note -> cryptoService.decipher(note))
-						.collect(Collectors.toList()),
-				args,
-				TextSearchEngine.Condition.AND)
+						.collect(Collectors.toList()), args)
 				.stream().map(Header::new).collect(Collectors.toList());
 	}
 

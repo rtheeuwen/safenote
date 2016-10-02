@@ -26,10 +26,6 @@ public class Note implements TextSearchable, Cloneable {
 	private boolean deleted;
 	private String hash;
 
-	public Note() {
-
-	}
-
 	@Override
 	public Object clone() {
 		try {
