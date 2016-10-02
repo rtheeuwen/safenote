@@ -35,7 +35,7 @@ class TextSearchEngineImpl<T extends TextSearchable> implements TextSearchEngine
 
 	@Override
 	public List<T> search(List<T> haystack, String needle, Condition condition) {
-		if (needle.length() == 0 || haystack == null || needle == null || condition == null)
+		if (needle.length() == 0 || haystack == null || condition == null)
 			throw new NullPointerException();
 
 		if (this.fields == null)
