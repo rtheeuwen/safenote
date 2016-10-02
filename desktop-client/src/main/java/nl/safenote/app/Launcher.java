@@ -5,8 +5,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.security.NoSuchAlgorithmException;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 
+import com.google.gson.Gson;
 import nl.safenote.controllers.AuthenticationController;
 import nl.safenote.controllers.NoteController;
 import nl.safenote.model.Note;
@@ -15,10 +17,10 @@ import nl.safenote.utils.FileIO;
 import nl.safenote.utils.textsearch.TextSearchEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sql2o.Sql2o;
 
 import javax.crypto.Cipher;
 
-//todo refactor
 class Launcher {
 
 	private static Logger logger = LoggerFactory.getLogger("info");
@@ -26,12 +28,13 @@ class Launcher {
 	public static void main(String[] args) throws Exception {
 		enableCrypto();
 		Config config = new Config();
+		Properties properties = config.properties();
 		ExecutorService executorService = config.executorService();
 
 		CryptoService cryptoService = instantiate(CryptoService.class);
 		TextSearchEngine<Note> textSearchEngine = instantiate(TextSearchEngine.class);
-		NoteRepository noteRepository = instantiate(NoteRepository.class, config.sql2o());
-		SynchronizationService synchronizationService = instantiate(SynchronizationService.class, config.properties(), noteRepository, cryptoService, executorService, config.gson());
+		NoteRepository noteRepository = instantiate(NoteRepository.class, new Sql2o(config.dataSource(properties)));
+		SynchronizationService synchronizationService = instantiate(SynchronizationService.class, properties, noteRepository, cryptoService, executorService, new Gson());
 		AuthenticationService authenticationService = instantiate(AuthenticationService.class, cryptoService, synchronizationService);
 		AuthenticationController authenticationController = new AuthenticationController(authenticationService);
 		NoteController noteController = new NoteController(noteRepository, cryptoService, textSearchEngine, synchronizationService);

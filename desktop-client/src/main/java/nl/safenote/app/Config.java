@@ -7,17 +7,13 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.google.gson.Gson;
 import com.zaxxer.hikari.HikariDataSource;
-import nl.safenote.utils.textsearch.TextSearchEngine;
-import org.sql2o.Sql2o;
 
 import javax.sql.DataSource;
 
-//todo refactor
 public class Config {
 
-	private DataSource dataSource(Properties properties) {
+	DataSource dataSource(Properties properties) {
 		HikariDataSource dataSource = new HikariDataSource();
 		dataSource.setDriverClassName("org.h2.Driver");
 		dataSource.setJdbcUrl(properties.getProperty("jdbcurl"));
@@ -31,11 +27,7 @@ public class Config {
 		return dataSource;
 	}
 
-	public Sql2o sql2o() {
-		return new Sql2o(dataSource(properties()));
-	}
-
-	public Properties properties() {
+	Properties properties() {
 		try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("application.properties")) {
 			Properties properties = new Properties();
 			properties.load(inputStream);
@@ -45,11 +37,7 @@ public class Config {
 		}
 	}
 
-	public Gson gson() {
-		return new Gson();
-	}
-
-	public ExecutorService executorService() {
+	ExecutorService executorService() {
 		return Executors.newFixedThreadPool(5);
 	}
 
