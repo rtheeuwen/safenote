@@ -1,24 +1,24 @@
 package nl.safenote.utils.textsearch;
 
-class SearchResult<T>{
+class SearchResult<T> {
 
-    private final T searchable;
-    private int score;
+	private final T searchable;
+	private int score;
 
-    SearchResult(T searchable) {
-        this.searchable = searchable;
-        this.score = 0;
-    }
+	SearchResult(T searchable) {
+		this.searchable = searchable;
+		this.score = 0;
+	}
 
-    void incrementScore(int incr){
-        this.score += incr;
-    }
+	void incrementScore(int incr) {
+		this.score += incr;
+	}
 
-    int getScore() {
-        return score;
-    }
+	int getScore() {
+		return score;
+	}
 
-    T getSearchable(){
-        return this.searchable;
-    }
+	T getSearchable() {
+		return this.searchable;
+	}
 }
